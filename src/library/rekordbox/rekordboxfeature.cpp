@@ -146,6 +146,14 @@ bool createLibraryTable(QSqlDatabase& database, const QString& tableName) {
         return false;
     }
 
+    // Adapted from pablo-feijo/custom-bitedj (GPL-2.0), release 0.0.7.
+    // Index the exported identity used while importing tracks and resolving playlists.
+    if (!query.exec("CREATE INDEX IF NOT EXISTS " + tableName +
+                    "_rb_device ON " + tableName + " (rb_id, device)")) {
+        LOG_FAILED_QUERY(query);
+        return false;
+    }
+
     return true;
 }
 
@@ -182,6 +190,14 @@ bool createPlaylistTracksTable(QSqlDatabase& database, const QString& tableName)
             ");");
 
     if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+        return false;
+    }
+
+    // Adapted from pablo-feijo/custom-bitedj (GPL-2.0), release 0.0.7.
+    // Keep ordered playlist reads indexed for large exported USB libraries.
+    if (!query.exec("CREATE INDEX IF NOT EXISTS " + tableName +
+                    "_playlist ON " + tableName + " (playlist_id, position)")) {
         LOG_FAILED_QUERY(query);
         return false;
     }

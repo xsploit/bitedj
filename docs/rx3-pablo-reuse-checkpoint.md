@@ -1,0 +1,81 @@
+# RX3 graphics and Pablo fork reuse checkpoint
+
+This checkpoint preserves the useful findings from the RX3/Engine research and
+comparison with [Pablo’s Custom Bite DJ](https://github.com/pablo-feijo/custom-bitedj).
+It is not a completed waveform-preview or RX3-skin port.
+
+## Implemented here
+
+Add two non-unique indexes to BiteDJ’s internal Rekordbox tables:
+
+- `(rb_id, device)` for exported-track lookup.
+- `(playlist_id, position)` for ordered playlist reads.
+
+Adapted from Pablo’s release 0.0.7, commit
+`c1a3fb4` (see the full revision in the PR description). Preserve this fork’s
+`.PIONEER` discovery and non-unique analysis paths; copying Pablo’s entire
+reader would lose those fixes. No exported USB database is modified by these
+indexes: they belong to BiteDJ’s internal tables.
+
+`python os/tests/test_rekordbox_indexes.py` compiles the production table-creation
+functions with Qt6Core/Qt6Sql and exercises SQLite with 20,000 tracks. It checks
+indexed lookup, ordered duplicate playlist entries without a temporary sort,
+shared analysis paths, duplicate-location rejection and repeated initialization
+of an existing table missing its index. It requires a C++20 compiler,
+`pkg-config`, Qt6 development packages and the QSQLITE driver.
+
+## Next: playlist waveform thumbnails
+
+Pablo implements thumbnails in
+`src/library/tabledelegates/previewbuttondelegate.{h,cpp}`, supported by
+`src/waveform/renderers/waveformpreviewrenderer.{h,cpp}` and
+`src/test/waveformpreview_test.cpp`.
+
+Useful behavior includes background summary loading, 128-entry caches,
+location-keyed results that survive sorting, visible-row refreshes and
+invalidation when analysis or display settings change. Existing summaries are
+required; this does not promise instant waveforms for unanalyzed tracks.
+
+Integration must preserve our audition behavior: Pablo replaces the current
+preview-play button/editor. His implementation also needs added interfaces such
+as `lookupPublishedTrackByLocation` and `previewDbConnectionPool`, plus build
+registration. Do not copy the delegate alone.
+
+- [ ] Port the renderer and dependency interfaces.
+- [ ] Add asynchronous thumbnails while preserving a separate audition action.
+- [ ] Port/adapt tests for cache limits, sorting, progress and palette changes.
+- [ ] Test missing/slow USB media and large playlists on the Pi.
+- [ ] Verify the full application build and live browsing before deployment.
+
+PSSI phrase and PWV6/PWV7 import already exist in this fork. Avoid duplicating
+that work while importing the preview improvements.
+
+## RX3 graphics extraction result
+
+The existing Pi filesystem backup contains
+`root/gui/pset/imagedata/imagedata.dat`, 40,762,695 bytes. Its 245,564-byte table
+contains 5,581 records of 44 bytes. The observed width/height and data-offset
+fields describe consecutive two-byte-per-pixel images. Little-endian RGB565
+decoding produced 5,581 PNGs; sample inspection showed a background and BPM
+button. Every pixel range fits consecutively; 7,707 trailing bytes remain
+uninterpreted. All generated PNG chunk CRCs passed.
+
+These are graphics, not a complete BiteDJ skin. Widget identifiers, screen
+layouts, control bindings and transparency semantics are not recovered.
+Magenta/color-key pixels were retained. No proprietary graphics, firmware,
+keys or user library data are included in this repository or PR. Use the local
+extraction as visual reference and establish asset rights before distribution.
+The earlier separate updater PNGs contain only firmware-status messages.
+
+- [ ] Design the desired layout with BiteDJ XML/QSS and existing controls.
+- [ ] Recreate distributable assets or establish their reuse rights.
+- [ ] Preserve FLX6 mappings, existing layout choices and touch target sizes.
+
+## Validation and handoff boundary
+
+The source base was `4c1dfec590` on xsploit/bitedj main. The Windows PiFlex
+checkout matched it, with separate local OBS-overlay changes. That volume was
+read-only, so it was not edited. The index patch passed an apply check against
+that checkout. No firmware, Pi runtime or installed BiteDJ binary was changed.
+The component test passed; a full application build and Pi performance
+benchmark have not been performed for this change.
