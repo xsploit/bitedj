@@ -100,3 +100,24 @@ apply it only after that same track loads. Coalesce seeks without copying RX3's
 exact 3% threshold. Test rapid track switching, sorting during loading, media
 removal, final drag release and headphone routing. This follow-up records a design
 target; it does not implement or validate the new UI.
+
+## Whole-player map and library-analysis follow-up
+
+The local RX3 1.20 research now includes an offline searchable map combining
+18,296 function entry addresses, 75,519 static call references and 745 retained
+source filenames. Category assignments are heuristic; indirect calls, message
+queues, external libraries and some tail calls remain incomplete. This maps the
+player executable, not the entire firmware or an original buildable source tree.
+
+Eleven more library/analysis routines were decompiled locally. `DBSA_SongAnalyze`
+queues a message via `SendMsgToDBSA`; it is not an extracted BPM/key detector.
+`DBAnalyzeInit` initializes database/traversal state. The inspected
+`DiscDB_AnlzMusicFile` is a stub. `MAnlz_WriteQTZ` serializes quantize/beat records,
+while `MAnlz_ReadAnlzFile` also reaches writers in some branches. Before importing
+behavior, distinguish read-only parsing from mutation and compare against real
+fixture files. No claim of a complete standalone/bulk analyzer is justified yet.
+
+Next research target: follow the DBSA message dispatch into workers, then compare
+library identity, playlist hierarchy and ANLZ/cue behavior with BiteDJ's existing
+implementation. Original firmware, pseudocode and the binary map remain outside
+this repository; this checkpoint contains only findings and implementation goals.
