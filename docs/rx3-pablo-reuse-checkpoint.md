@@ -136,3 +136,19 @@ song-analysis worker routes to container/tag parsers. One misleading interface,
 resolve the detector's indirect filter stages and sample/state units before any
 comparison with BiteDJ's existing beat/key/waveform analyzers. Do not infer a
 complete offline analysis suite or better detection quality from exported names.
+
+### Filter verification and export recovery
+
+Both detector filter objects resolve through their vtables to a four-lane
+second-order IIR leaf. Executing the actual ARM leaf in isolated emulation matched
+an independent difference-equation model in 21 synthetic cases. Partitioning input
+changed output by at most about 6e-8 in the tested sequence; it was not bit-identical.
+This validates arithmetic/layout for chosen coefficients, not BPM accuracy or speed.
+
+The stock audio startup initializes detector/effect processing at 44.1 kHz even
+while querying the device rate. Preserve explicit rate conversion in porting work;
+do not infer correct internal timing merely from opening a different-rate device.
+
+Both previously failed function exports were recovered using different decompiler
+settings. There are now 17,378 non-external pseudocode exports, but semantic and
+runtime validation remain limited. No proprietary pseudocode is included here.
