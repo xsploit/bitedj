@@ -79,3 +79,24 @@ read-only, so it was not edited. The index patch passed an apply check against
 that checkout. No firmware, Pi runtime or installed BiteDJ binary was changed.
 The component test passed; a full application build and Pi performance
 benchmark have not been performed for this change.
+
+## Follow-up: preview behavior from RX3 1.20 static analysis
+
+A focused local Ghidra pass recovered approximate pseudocode for fifteen preview
+functions. The stock 1.20 player differs from the inspected 1.19 player by only
+three bytes, so this does not imply a new preview feature in 1.20.
+
+Observed behavior includes message-based preview requests, a loaded-state guard
+before seeking, a separate preview channel, and attenuator fade commands. The
+ready-path fractional seek routine suppresses changes smaller than approximately
+0.03 and adjusts positions near the end. These are static observations, not live
+behavior measurements; uncertain decompiler float signatures were checked against
+ARM instructions where used. No proprietary pseudocode is included here.
+
+BiteDJ already has asynchronous loading and stale-completion rejection. For a
+combined thumbnail/audition feature, preserve the current preview play button,
+associate pending seeks with track identity, retain the last drag position, and
+apply it only after that same track loads. Coalesce seeks without copying RX3's
+exact 3% threshold. Test rapid track switching, sorting during loading, media
+removal, final drag release and headphone routing. This follow-up records a design
+target; it does not implement or validate the new UI.
