@@ -121,3 +121,18 @@ Next research target: follow the DBSA message dispatch into workers, then compar
 library identity, playlist hierarchy and ANLZ/cue behavior with BiteDJ's existing
 implementation. Original firmware, pseudocode and the binary map remain outside
 this repository; this checkpoint contains only findings and implementation goals.
+
+### Broader static pass
+
+The next pass exported 17,376 non-external player functions as approximate local
+pseudocode, recovered 21 initially missed symbol ranges and expanded the static
+call map to 86,742 references. Two decompiler failures remain. Export completion
+is not semantic validation; 1,383 outputs carry warnings.
+
+Actual audio-block processing exists separately in `BpmWaveDetectManager` and
+`BpmWaveDetect`, including BPM checking and waveform generation. The database
+song-analysis worker routes to container/tag parsers. One misleading interface,
+`MAnlz_LoadKey`, is an ARM return-zero stub in this build. Next investigation:
+resolve the detector's indirect filter stages and sample/state units before any
+comparison with BiteDJ's existing beat/key/waveform analyzers. Do not infer a
+complete offline analysis suite or better detection quality from exported names.
