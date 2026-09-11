@@ -172,3 +172,22 @@ features against its existing analyzers on controlled clicks and a labeled music
 corpus. Preserve rate conversion, half/double-tempo handling and confidence in the
 evaluation. No recovered coefficient table, firmware or proprietary pseudocode is
 included in this repository. Full peak/interval semantics remain under analysis.
+
+### Executed tempo path and confidence separation
+
+The isolated stock ARM detector now processes controlled stereo audio through its
+actual global initializer, constructor, init, filters and tempo routines. Six
+30-second pulse fixtures (90/120/128/174 BPM mixed tones, plus bass/noise at 120)
+finished within 0.02 BPM of the input. Silence kept detection unset. No music
+corpus, live hardware or comparison with BiteDJ has been validated.
+
+Actual provider/manager getter tests confirm tempo and validity are separate:
+the default 12000 (BPM times 100) remains readable while detection is false.
+Validity checks a separate detector byte and manager/unit gates. Keep confidence
+and lifecycle state separate from a plausible numeric BPM in any analyzer UI.
+
+A further limitation is now proven: the default checkBeat pseudocode removes
+35 block addresses that executed in the 128 BPM fixture. Two decompiler-settings
+retries remain wrong. Export success is not correctness; use the original ARM
+behavior for reference until the reconstruction is repaired. No proprietary
+source, firmware or coefficient tables are included in this repository.
