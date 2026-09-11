@@ -1,0 +1,131 @@
+--- a/src/djinterop/engine/encode_decode_utils.cpp
++++ b/src/djinterop/engine/encode_decode_utils.cpp
+@@ -32,84 +32,54 @@
+     const std::vector<std::byte>& compressed,
+     std::vector<std::byte> uncompressed)
+ {
+-    if (!compressed.empty() && compressed.size() < 4)
+-        throw std::length_error(
+-            "Compressed data is less than the minimum size of 4 bytes");
++    // Reader resource policy: reject unusually large individual blobs before
++    // allocation. This is a local limit, not an Engine format specification.
++    constexpr std::size_t max_blob_size = 128 * 1024 * 1024;
++    uncompressed.clear();
++    if (compressed.empty())
++        return uncompressed;
++    if (compressed.size() < 4)
++        throw std::length_error("Compressed data has an incomplete size header");
++    const auto declared = decode_int32_be(compressed.data()).first;
++    if (declared < 0 || static_cast<std::size_t>(declared) > max_blob_size ||
++        compressed.size() - 4 > max_blob_size)
++        throw std::length_error("Compressed blob exceeds reader size limit");
++    if (declared == 0 && compressed.size() == 4)
++        return uncompressed;
+ 
+-    uncompressed.clear();
++    z_stream strm{};
++    const int init = inflateInit(&strm);
++    if (init != Z_OK)
++        throw std::runtime_error("Cannot initialize blob decompressor");
++    struct cleanup {
++        z_stream* stream;
++        ~cleanup() { inflateEnd(stream); }
++    } guard{&strm};
+ 
+-    auto apparent_size =
+-        compressed.empty() ? 0 : decode_int32_be(compressed.data()).first;
+-
+-    if (apparent_size == 0)
++    strm.next_in = reinterpret_cast<Bytef*>(
++        const_cast<std::byte*>(compressed.data() + 4));
++    strm.avail_in = static_cast<uInt>(compressed.size() - 4);
++    std::byte out[16384];
++    for (;;)
+     {
+-        // No data, which is a valid situation
+-        return uncompressed;  // Named RVO
++        const auto input_before = strm.avail_in;
++        strm.next_out = reinterpret_cast<Bytef*>(out);
++        strm.avail_out = sizeof(out);
++        const int ret = inflate(&strm, Z_NO_FLUSH);
++        const auto have = sizeof(out) - strm.avail_out;
++        if (have > static_cast<std::size_t>(declared) - uncompressed.size())
++            throw std::length_error("Blob expands beyond declared size");
++        uncompressed.insert(uncompressed.end(), out, out + have);
++        if (ret == Z_STREAM_END)
++        {
++            if (strm.avail_in != 0 || uncompressed.size() !=
++                static_cast<std::size_t>(declared))
++                throw std::invalid_argument("Blob length or trailing data mismatch");
++            return uncompressed;
++        }
++        if (ret != Z_OK || (input_before == strm.avail_in && have == 0))
++            throw std::invalid_argument("Invalid or truncated compressed blob");
+     }
+-
+-    uncompressed.reserve(apparent_size);
+-
+-    auto* ptr = &compressed[4];
+-    auto* end = ptr + compressed.size();
+-    const uInt chunk_size = 16384;
+-    int ret;
+-    unsigned int have;
+-    std::byte out[chunk_size];
+-
+-    z_stream strm;
+-    strm.zalloc = Z_NULL;
+-    strm.zfree = Z_NULL;
+-    strm.opaque = Z_NULL;
+-    strm.avail_in = 0;
+-    strm.next_in = Z_NULL;
+-
+-    ret = inflateInit(&strm);
+-    if (ret != Z_OK)
+-        throw std::system_error{
+-            ret, std::system_category(), "Error calling inflateInit from zlib"};
+-
+-    // Take chunks from the input vector
+-    do
+-    {
+-        strm.next_in = (Bytef*)ptr;
+-        strm.avail_in = (ptr + chunk_size) < end ? chunk_size
+-                                                 : static_cast<uInt>(end - ptr);
+-        ptr += strm.avail_in;
+-
+-        // Run inflate() on until we are no longer filling the output buffer
+-        do
+-        {
+-            strm.next_out = reinterpret_cast<Bytef*>(out);
+-            strm.avail_out = chunk_size;
+-
+-            ret = inflate(&strm, Z_NO_FLUSH);
+-            switch (ret)
+-            {
+-                case Z_NEED_DICT: ret = Z_DATA_ERROR;  // Fall through
+-                case Z_DATA_ERROR:
+-                case Z_MEM_ERROR:
+-                    inflateEnd(&strm);
+-                    throw std::system_error{
+-                        ret, std::system_category(),
+-                        "Error calling inflate from zlib"};
+-            }
+-
+-            have = chunk_size - strm.avail_out;
+-            uncompressed.insert(uncompressed.end(), out, out + have);
+-        } while (strm.avail_out == 0);
+-
+-        // done when inflate() says it's done
+-    } while (ret != Z_STREAM_END);
+-
+-    // Clean up
+-    inflateEnd(&strm);
+-    if (ret != Z_STREAM_END)
+-    {
+-        throw std::system_error{
+-            Z_DATA_ERROR, std::system_category(), "Error at end of inflation"};
+-    }
+-
+-    return uncompressed;  // Named RVO
+ }
+ 
+ // Compress a byte array using zlib

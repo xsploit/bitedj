@@ -9,6 +9,7 @@
 #include "util/class.h"
 
 class AutoDJProcessor;
+class SqlTransaction;
 class QSqlDatabase;
 
 constexpr int kInvalidPlaylistId = -1;
@@ -36,6 +37,31 @@ class PlaylistDAO : public QObject, public virtual DAO {
     ~PlaylistDAO() override = default;
 
     void initialize(const QSqlDatabase& database) override;
+
+    struct StagedPlaylist {
+        int id = kInvalidPlaylistId;
+        QString name;
+        QList<TrackId> tracks;
+        QList<qint64> entryIds;
+        bool isNew = true;
+        QString previousName;
+        QList<TrackId> previousTracks;
+    };
+    // Shares the caller transaction. No signals or membership-cache changes.
+    // Returned occurrence IDs can be staged in the Engine source registry.
+    bool stageNewPlaylist(const SqlTransaction& transaction, const QString& name,
+            const QList<TrackId>& tracks, StagedPlaylist* result, QString* error);
+    // Caller supplies the previously read exact name/ordered occurrence IDs.
+    // Desired entry ID0 inserts a new occurrence; retained IDs stay stable.
+    bool stagePlaylistUpdate(const SqlTransaction& transaction,
+            const StagedPlaylist& expected, const QString& name,
+            const QList<TrackId>& tracks, const QList<qint64>& entryIds,
+            StagedPlaylist* result, QString* error);
+    // Validate all staged rows, commit the caller's entire transaction, then
+    // publish staged playlists. Call only after ALL import writes are staged.
+    // Existing-playlist merge and live Track publication remain caller concerns.
+    bool commitStagedPlaylists(SqlTransaction& transaction,
+            const QList<StagedPlaylist>& playlists, QString* error);
 
     // Create a playlist, fails with -1 if already exists
     int createPlaylist(const QString& name, const HiddenType type = PLHT_NOT_HIDDEN);

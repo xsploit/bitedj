@@ -1,0 +1,335 @@
+{
+  "scope": "Synthetic 3-second stereo 44100-Hz fixtures; native ARM wrapper under PC emulation versus completed BiteDJ providers. Not Pi performance or database cue verification.",
+  "engineSHA256": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
+  "nativeProbeSHA256": "e4c1db933fe7e4a9f39473e3320b8c1e443a73851a735d985a5656b18af7d550",
+  "bitedjBinarySHA256": "976ae771510b42e1f9569fd49dda865b21f66791b68222d1a665179932dbb9f4",
+  "fixtures": [
+    {
+      "file": "signal.wav",
+      "nativeFrames": 132300,
+      "ffmpegFrames": 132300,
+      "sameOffsetMaxDifference": 0.0,
+      "seeks": [
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 128,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2304,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 88200,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264598,
+          "returnedSamples": 2,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264728,
+          "returnedSamples": 0,
+          "maxSequentialDifference": 0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 8190,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        }
+      ],
+      "bitedj": {
+        "channels": 2,
+        "endFrame": "132300",
+        "file": "signal.wav",
+        "firstFrame": "0",
+        "firstReadFrames": 64,
+        "frameLength": "132300",
+        "provider": "libsndfile",
+        "sampleRate": 44100,
+        "tailSeekMatchesSequential": true
+      },
+      "nativeVsBitedjMaxDifference": 0.0,
+      "inputSHA256": "e198822fd67493341854cec0966df8fd857a3e0150adfa8c9a3ea73bdb5d2882",
+      "nativeHarnessPassed": true,
+      "inputUnchanged": true
+    },
+    {
+      "file": "signal-cbr.mp3",
+      "nativeFrames": 132300,
+      "ffmpegFrames": 132300,
+      "sameOffsetMaxDifference": 5.066394805908203e-07,
+      "seeks": [
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 128,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2304,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 88200,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264598,
+          "returnedSamples": 2,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264728,
+          "returnedSamples": 0,
+          "maxSequentialDifference": 0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 8190,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        }
+      ],
+      "bitedj": {
+        "channels": 2,
+        "endFrame": "132300",
+        "file": "signal-cbr.mp3",
+        "firstFrame": "0",
+        "firstReadFrames": 64,
+        "frameLength": "132300",
+        "provider": "FFmpeg n9.0.1",
+        "sampleRate": 44100,
+        "tailSeekMatchesSequential": true
+      },
+      "nativeVsBitedjMaxDifference": 5.066394805908203e-07,
+      "inputSHA256": "9d9659fa2fd006ed02e620869a85f1087818c5cdda46e61617c8b373c59f3926",
+      "nativeHarnessPassed": true,
+      "inputUnchanged": true
+    },
+    {
+      "file": "signal-vbr.mp3",
+      "nativeFrames": 132300,
+      "ffmpegFrames": 132300,
+      "sameOffsetMaxDifference": 5.364418029785156e-07,
+      "seeks": [
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 128,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2304,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 88200,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264598,
+          "returnedSamples": 2,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264728,
+          "returnedSamples": 0,
+          "maxSequentialDifference": 0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 8190,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        }
+      ],
+      "bitedj": {
+        "channels": 2,
+        "endFrame": "132300",
+        "file": "signal-vbr.mp3",
+        "firstFrame": "0",
+        "firstReadFrames": 64,
+        "frameLength": "132300",
+        "provider": "FFmpeg n9.0.1",
+        "sampleRate": 44100,
+        "tailSeekMatchesSequential": true
+      },
+      "nativeVsBitedjMaxDifference": 5.364418029785156e-07,
+      "inputSHA256": "fc54cca2c6b2b7bee3b1af2df040fbc10fdf401b038b39e1e482464ae0ef88df",
+      "nativeHarnessPassed": true,
+      "inputUnchanged": true
+    },
+    {
+      "file": "signal.m4a",
+      "nativeFrames": 132096,
+      "ffmpegFrames": 132300,
+      "sameOffsetMaxDifference": 0.4249570220708847,
+      "seeks": [
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 128,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 2304,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 4.073232412338257e-05,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 88200,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 2.3074448108673096e-05,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264190,
+          "returnedSamples": 2,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 0,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 0.0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 264320,
+          "returnedSamples": 0,
+          "maxSequentialDifference": 0,
+          "sameLength": true
+        },
+        {
+          "positionSamples": 8190,
+          "returnedSamples": 256,
+          "maxSequentialDifference": 1.7955899238586426e-05,
+          "sameLength": true
+        }
+      ],
+      "candidateOffsetRMS": {
+        "-2112": 0.1877070398261408,
+        "-2048": 0.23697617199196463,
+        "-1105": 0.18139477422423936,
+        "-1024": 0.17400411092366813,
+        "-512": 0.1350125560948678,
+        "0": 0.09326958798549385,
+        "512": 0.05002045753248178,
+        "1024": 8.676971056183818e-06,
+        "1105": 0.2422946762583517,
+        "2048": 0.09051760597763175,
+        "2112": 0.26608074845975416
+      },
+      "bitedj": {
+        "channels": 2,
+        "endFrame": "132300",
+        "file": "signal.m4a",
+        "firstFrame": "0",
+        "firstReadFrames": 64,
+        "frameLength": "132300",
+        "provider": "FFmpeg n9.0.1",
+        "sampleRate": 44100,
+        "tailSeekMatchesSequential": false
+      },
+      "nativeVsBitedjMaxDifference": 0.4249572716653347,
+      "inputSHA256": "1c815ecbc14bc88a2e289f6dac4e2c1bad63eb35bb935a31982a91eacab445cd",
+      "nativeVsBitedjOffsetRMS": {
+        "0": 0.0932695966977199,
+        "1024": 8.69653798439027e-06
+      },
+      "nativeHarnessPassed": true,
+      "inputUnchanged": true
+    }
+  ],
+  "databaseCueAlignmentVerified": false,
+  "aacFrameOriginMatches": false
+}

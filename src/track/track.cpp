@@ -297,14 +297,31 @@ mixxx::TrackRecord Track::getRecord(
 bool Track::replaceRecord(
         mixxx::TrackRecord newRecord,
         mixxx::BeatsPointer pOptionalBeats) {
+    return replaceRecordInternal(std::move(newRecord), std::move(pOptionalBeats), nullptr) ==
+            RecordReplaceResult::Updated;
+}
+
+Track::RecordReplaceResult Track::replaceRecordIfUnchanged(
+        const mixxx::TrackRecord& expectedRecord,
+        mixxx::TrackRecord newRecord) {
+    return replaceRecordInternal(std::move(newRecord), nullptr, &expectedRecord);
+}
+
+Track::RecordReplaceResult Track::replaceRecordInternal(
+        mixxx::TrackRecord newRecord,
+        mixxx::BeatsPointer pOptionalBeats,
+        const mixxx::TrackRecord* pExpectedRecord) {
     const auto newReplayGain = newRecord.getMetadata().getTrackInfo().getReplayGain();
     const auto newColor = newRecord.getColor();
     const auto newRating = newRecord.getRating();
 
     auto locked = lockMutex(&m_qMutex);
+    if (pExpectedRecord && m_record != *pExpectedRecord) {
+        return RecordReplaceResult::Stale;
+    }
     const bool recordUnchanged = m_record == newRecord;
     if (recordUnchanged && !pOptionalBeats) {
-        return false;
+        return RecordReplaceResult::Unchanged;
     }
 
     const auto oldReplayGain = m_record.getMetadata().getTrackInfo().getReplayGain();
@@ -315,7 +332,7 @@ bool Track::replaceRecord(
     if (pOptionalBeats) {
         bpmUpdatedFlag = trySetBeatsWhileLocked(pOptionalBeats);
         if (recordUnchanged && !bpmUpdatedFlag) {
-            return false;
+            return RecordReplaceResult::Unchanged;
         }
     } else {
         // Setting the bpm manually may in turn update the beat grid
@@ -347,7 +364,7 @@ bool Track::replaceRecord(
     }
 
     emitChangedSignalsForAllMetadata();
-    return true;
+    return RecordReplaceResult::Updated;
 }
 
 mixxx::ReplayGain Track::getReplayGain() const {

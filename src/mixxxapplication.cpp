@@ -70,13 +70,12 @@ namespace {
 // reasonable threshold.
 constexpr int kDefaultEventNotifyExecTimeWarningThreshold = 10;
 
-// Bite DJ: the preferences dialog is the one dialog we keep, so the
-// engine can still be tuned on the unit. Any dialog spawned from within
-// it (file pickers, mapping prompts, ...) is exempt as well, otherwise
-// those workflows would silently cancel themselves.
-bool belongsToPreferencesDialog(const QWidget* pWidget) {
+// Keep preferences and the explicit Engine library preview available in kiosk
+// mode. Their child file pickers/prompts must remain open as well. Other dialogs
+// continue to be handled by in-skin pages and the NotificationStrip.
+bool belongsToAllowedUtilityDialog(const QWidget* pWidget) {
     for (const QWidget* p = pWidget; p; p = p->parentWidget()) {
-        if (p->inherits("DlgPreferences")) {
+        if (p->inherits("DlgPreferences") || p->inherits("mixxx::DlgEngineImport")) {
             return true;
         }
     }
@@ -148,15 +147,15 @@ bool MixxxApplication::notify(QObject* pTarget, QEvent* pEvent) {
     // Bite DJ: kiosk-style UI. The unit is touch-only, so tooltips and
     // modal dialog boxes are suppressed application-wide; all interaction
     // that stock Mixxx routes through dialogs is handled by in-skin pages
-    // and the NotificationStrip instead. Sole exception: DlgPreferences
-    // (and its child dialogs), kept for tuning the engine.
+    // and the NotificationStrip instead. Preferences and the explicit Engine
+    // library preview (including their file pickers) remain available.
     switch (pEvent->type()) {
     case QEvent::ToolTip:
         // Swallow every tooltip event before it reaches any widget.
         return true;
     case QEvent::Show:
         if (auto* pDialog = qobject_cast<QDialog*>(pTarget)) {
-            if (!belongsToPreferencesDialog(pDialog)) {
+            if (!belongsToAllowedUtilityDialog(pDialog)) {
                 // Dismiss as soon as the event loop spins again: a queued
                 // reject() also quits a modal exec() loop right after it starts,
                 // and callers get the safe "cancelled" result.

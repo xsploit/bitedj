@@ -410,8 +410,17 @@ void LibraryScanner::slotFinishUnhashedScan() {
 
     // Finish adding the tracks -- rollback the transaction if the scan did not
     // finish cleanly and the user did not cancel the transaction.
-    m_trackDao.addTracksFinish(!m_scannerGlobal->shouldCancel() &&
-                               !bScanFinishedCleanly);
+    QList<TrackPointer> committedTracks;
+    if (!m_trackDao.addTracksFinish(!m_scannerGlobal->shouldCancel() &&
+                    !bScanFinishedCleanly, &committedTracks)) {
+        bScanFinishedCleanly = false;
+        kLogger.warning() << "Track insertion batch did not commit";
+    }
+    // Notify external collections only after the inserted rows have committed.
+    for (const auto& track : committedTracks) {
+        emit trackAdded(track);
+    }
+    committedTracks.clear();
 
     if (!m_scannerGlobal->shouldCancel() && bScanFinishedCleanly) {
         cleanUpScan();
@@ -598,7 +607,7 @@ void LibraryScanner::slotAddNewTrack(const QString& trackPath) {
         return;
     }
 
-    DEBUG_ASSERT(!pTrack->isDirty());
+    // New tracks remain dirty until the insertion transaction commits.
     // The track's actual location might differ from the
     // given trackPath
     const QString trackLocation = pTrack->getLocation();
@@ -606,9 +615,7 @@ void LibraryScanner::slotAddNewTrack(const QString& trackPath) {
     if (m_scannerGlobal) {
         m_scannerGlobal->trackAdded(trackLocation);
     }
-    // Signal the main instance of TrackDAO, that there is
-    // a new track in the database.
-    emit trackAdded(pTrack);
+    // Success publication is deferred to slotFinishUnhashedScan after commit.
     emit progressLoading(trackLocation);
 }
 

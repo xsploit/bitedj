@@ -66,6 +66,7 @@ class WMainMenuBar : public QMenuBar {
     void rescanLibrary();
 #ifdef __ENGINEPRIME__
     void exportLibrary();
+    void previewEngineLibrary();
 #endif
     void menubarAutoHideChanged(bool autohide);
     void showAbout();

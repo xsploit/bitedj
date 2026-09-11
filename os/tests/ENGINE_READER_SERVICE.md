@@ -1,0 +1,25 @@
+# Asynchronous Engine reader service
+
+`mixxx::EngineReaderService` is owned and called on the GUI thread. `start(launcher, library, mediaRoot)` rejects a concurrent request and runs the executable, JSON decoding and package validation on a private QThread. The launcher must be an absolute executable path; both directories must exist. Connect `packageReady(QJsonObject)`, `failed(QString)` and `cancelled()` on the owner thread.
+
+A request stays busy until its terminal result is delivered to the owner thread. Cancellation also suppresses an already-completed but undelivered package. This prevents a new request from overtaking old queued output. Destruction requests cancellation and joins the worker; cancellation is polled during process reads and JSON scans. Qt's parser and the final package validator are not interrupted mid-call.
+
+The worker accepts output only after a successful helper exit, caps stdout at64MiB and diagnostics at1MiB, and limits the subprocess phase to150 seconds. On Unix the launcher runs in a dedicated process group. Cancellation first allows500ms for Python to unwind its temporary snapshot and reap the native reader, then kills remaining descendants. A retained process-group identity permits cleanup even if the launcher itself has already exited. The packaged launcher catches SIGTERM to enable this cleanup; SIGKILL cannot run Python cleanup.
+
+Qt parsing alone was insufficient: it accepted invalid escapes, raw controls and .5/1. numeric spellings. The service checks UTF-8 and lexical JSON grammar first, then syntax with Qt, then rejects duplicate object members (including equivalent Unicode-escaped names), then applies the typed package validator. Limits and parsing run off the GUI/audio thread.
+
+Run `python os/tests/test_engine_reader_service.py`. The test compiles actual service/validator code and Qt moc, then uses controlled executable helpers. Thirteen process cases cover a responsive event-loop heartbeat, busy rejection, repeated requests, cancellation of a queued result, one terminal result per request, success/failure, stdout/stderr limits and cancellation/orphan cleanup. Thirty-four raw-JSON cases independently cover valid structural characters and sibling names, Unicode, escaped duplicates, malformed strings/numbers, bad UTF-8 and truncated/trailing input. The timeout branch is not exercised by this short test.
+
+`python os/tests/test_engine_import_package.py` covers67 typed-package cases, including all24 musical key ordinals and malformed metadata. Key ordinals belong to libdjinterop; do not cast them to BiteDJ's key enum. `sourceTitle` preserves SQL NULL versus empty title, while legacy `title` remains a display fallback. An absent optional source field remains unmanaged by the merge policy. Engine rating0 means unrated in this dependency and is emitted as null. Exact byte/sample counts use decimal strings.
+
+The separately installed reader is checked with `tools/engine-reader/tests/check_metadata.py GENERATOR LAUNCHER` and `check_raw_metadata.py GENERATOR LAUNCHER`. The latter changes SQL directly for schemas3.0.0 and3.0.2 and checks source bytes are unchanged. `check_cancellation.py` tests the actual Python launcher with a controlled adjacent child.
+
+This service delivers a validated import package. It does not yet mutate Track/playlist objects, coordinate library caches, expose an import dialog, resolve edit/deletion conflicts or allocate saved-loop controls. Those are required before claiming a complete Engine import feature. The included package and process-group behavior are verified on Linux; Windows packaging/runtime remains unverified.
+
+## Parent-side media resolution
+
+The service canonicalizes the caller-selected library/root, requires the library inside that root, and passes those same canonical paths to the helper. After protocol validation it replaces every helper-supplied media result and path context with its own filesystem resolution on the worker thread. Absolute/foreign references, NULs, lexical escapes and existing symlinks outside the root do not produce an eligible path. Missing/unreadable files remain explicit statuses. Cancellation is checked between tracks.
+
+`python3 os/tests/test_engine_media_resolver.py` covers valid and missing files, Windows/UNC references, root-prefix/traversal rejection, symlinks and retargeting. The asynchronous service test includes forged media/context claims and a selected directory alias; the result must use the actual selected canonical folder, actual file size, and no path for the outside reference. Existing strict-JSON, lifecycle, limits and descendant-cancellation checks remain enabled.
+
+These observations are not an atomic filesystem snapshot or an audio-identity match. Recheck on actual open and establish decoded frame/sample-rate/origin compatibility before applying cues. Database-to-local Track matching remains the coordinator's responsibility.

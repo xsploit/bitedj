@@ -1,0 +1,30 @@
+diff --git i/src/djinterop/engine/v2/overview_waveform_data_blob.cpp w/src/djinterop/engine/v2/overview_waveform_data_blob.cpp
+index 482ee99..c7ccd61 100644
+--- i/src/djinterop/engine/v2/overview_waveform_data_blob.cpp
++++ w/src/djinterop/engine/v2/overview_waveform_data_blob.cpp
+@@ -56,7 +56,7 @@ std::vector<std::byte> overview_waveform_data_blob::to_blob() const
+ overview_waveform_data_blob overview_waveform_data_blob::from_blob(
+     const std::vector<std::byte>& blob)
+ {
+-    if (blob.empty())
++    if (blob.empty() || blob == std::vector<std::byte>(4, std::byte{0}))
+     {
+         return overview_waveform_data_blob{
+             .samples_per_waveform_point = 0,
+diff --git i/src/djinterop/engine/v2/track_data_blob.cpp w/src/djinterop/engine/v2/track_data_blob.cpp
+index 452395e..4c7d802 100644
+--- i/src/djinterop/engine/v2/track_data_blob.cpp
++++ w/src/djinterop/engine/v2/track_data_blob.cpp
+@@ -62,10 +62,10 @@ track_data_blob track_data_blob::from_blob(const std::vector<std::byte>& blob)
+     auto ptr = uncompressed.data();
+     const auto end = ptr + uncompressed.size();
+ 
+-    if (uncompressed.size() != 44)
++    if (uncompressed.size() < 44)
+     {
+         throw std::invalid_argument{
+-            "Track data blob doesn't have expected decompressed length of 28 "
++            "Track data blob is shorter than the minimum decompressed length of 44 "
+             "bytes"};
+     }
+ 
