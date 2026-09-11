@@ -80,3 +80,9 @@ The public reader now retains all three fields as optional `mainCueState`, and t
 A 420-second synthetic stereo CBR MP3 at 44100 Hz extends the short-fixture evidence. Fresh native readers sought to frames 44100, 16777100, 16777216, 17640000 and 18521872, requesting 128 stereo frames each. Against BiteDJ's actual sequential provider output, the best match within ±4 frames was zero shift at every position; maximum PCM difference was below 6.56e-7. This includes positions around the 2^24 float-integer precision boundary and near seven minutes. BiteDJ's tail seek matched its own sequential output exactly.
 
 See `tools/engine-reader/diagnostics/long-mp3-findings.json` for the synthetic encoding command, hashes and per-position metrics. The native probe used unmodified preroll and `--fresh-seek` (interleaved positions are twice the listed frame numbers). This rules out an observed drift at these sampled positions, not every long-file/codec case, fractional cue coordinate, or source database cue convention. PC emulation time is not a Pi performance measurement.
+
+## Native cue accessor boundary
+
+Qt metadata and RTTI identify the native `CueDataInterface` and concrete `CueData` implementation independently of stripped-symbol labels. The main-cue getter at image offset 0x15ed3b0 returns the stored double at object offset 0x28 directly. Its setter at 0x15f4000 writes that field and emits signal index 4, identified by Qt metadata as `mainCueChanged`. The verified `quickCuePosition` method also returns its stored double directly, without a sample-rate conversion.
+
+Thus default/adjusted selection is not performed inside these getters. Library loading or earlier state updates still need tracing before mapping preserved `mainCueState` to playable cues. Adjacent fields and constructor initial values alone are not proof of their database semantics. This is static evidence, not a native database-load execution or cue-import acceptance test.
