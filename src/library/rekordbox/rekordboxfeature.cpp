@@ -18,6 +18,7 @@
 #include <QStringList>
 #include <QTextCodec>
 #include <QtDebug>
+#include <map>
 #include <vector>
 
 #include "engine/engine.h"
@@ -146,6 +147,14 @@ bool createLibraryTable(QSqlDatabase& database, const QString& tableName) {
         return false;
     }
 
+    // Adapted from pablo-feijo/custom-bitedj (GPL-2.0), release 0.0.7.
+    // Index the exported identity used while importing tracks and resolving playlists.
+    if (!query.exec("CREATE INDEX IF NOT EXISTS " + tableName +
+                    "_rb_device ON " + tableName + " (rb_id, device)")) {
+        LOG_FAILED_QUERY(query);
+        return false;
+    }
+
     return true;
 }
 
@@ -182,6 +191,14 @@ bool createPlaylistTracksTable(QSqlDatabase& database, const QString& tableName)
             ");");
 
     if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+        return false;
+    }
+
+    // Adapted from pablo-feijo/custom-bitedj (GPL-2.0), release 0.0.7.
+    // Keep ordered playlist reads indexed for large exported USB libraries.
+    if (!query.exec("CREATE INDEX IF NOT EXISTS " + tableName +
+                    "_playlist ON " + tableName + " (playlist_id, position)")) {
         LOG_FAILED_QUERY(query);
         return false;
     }
@@ -528,12 +545,13 @@ void buildPlaylistTree(
         QSqlDatabase& database,
         TreeItem* parent,
         uint32_t parentID,
-        QMap<uint32_t, QString>& playlistNameMap,
-        QMap<uint32_t, bool>& playlistIsFolderMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, QString>& playlistNameMap,
+        const QMap<uint32_t, bool>& playlistIsFolderMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
-        const QString& device);
+        const QString& device,
+        QSet<uint32_t> ancestors = {});
 
 QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* deviceItem) {
     QString device = deviceItem->getLabel();
@@ -620,8 +638,8 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
     QMap<uint32_t, QString> albumsMap;
     QMap<uint32_t, QString> playlistNameMap;
     QMap<uint32_t, bool> playlistIsFolderMap;
-    QMap<uint32_t, QMap<uint32_t, uint32_t>> playlistTreeMap;
-    QMap<uint32_t, QMap<uint32_t, uint32_t>> playlistTrackMap;
+    QMap<uint32_t, std::multimap<uint32_t, uint32_t>> playlistTreeMap;
+    QMap<uint32_t, std::multimap<uint32_t, uint32_t>> playlistTrackMap;
     std::vector<rekordbox_pdb_t::track_row_t*> trackRows;
 
     bool folderOrPlaylistFound = false;
@@ -671,11 +689,9 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
                                         auto* playlistEntry =
                                                 static_cast<rekordbox_pdb_t::playlist_entry_row_t*>(
                                                         rowRef->body());
-                                        playlistTrackMap
-                                                [playlistEntry->playlist_id()]
-                                                [playlistEntry->entry_index()] =
-                                                        playlistEntry
-                                                                ->track_id();
+                                        playlistTrackMap[playlistEntry->playlist_id()].emplace(
+                                                playlistEntry->entry_index(),
+                                                playlistEntry->track_id());
                                     } break;
                                     case rekordbox_pdb_t::PAGE_TYPE_TRACKS: {
                                         // Written out below, once the device
@@ -694,10 +710,9 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
                                         playlistIsFolderMap[playlistTree
                                                                     ->id()] =
                                                 playlistTree->is_folder();
-                                        playlistTreeMap
-                                                [playlistTree->parent_id()]
-                                                [playlistTree->sort_order()] =
-                                                        playlistTree->id();
+                                        playlistTreeMap[playlistTree->parent_id()].emplace(
+                                                playlistTree->sort_order(),
+                                                playlistTree->id());
 
                                         folderOrPlaylistFound = true;
                                     } break;
@@ -798,20 +813,31 @@ void buildPlaylistTree(
         QSqlDatabase& database,
         TreeItem* parent,
         uint32_t parentID,
-        QMap<uint32_t, QString>& playlistNameMap,
-        QMap<uint32_t, bool>& playlistIsFolderMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, QString>& playlistNameMap,
+        const QMap<uint32_t, bool>& playlistIsFolderMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
-        const QString& device) {
-    for (uint32_t childIndex = 0;
-            childIndex < (uint32_t)playlistTreeMap[parentID].size();
-            childIndex++) {
-        uint32_t childID = playlistTreeMap[parentID][childIndex];
+        const QString& device,
+        QSet<uint32_t> ancestors) {
+    ancestors.insert(parentID);
+    // Sort keys may have gaps or ties. Multimaps retain every exported row
+    // in key order, preserving source order among equal keys.
+    const auto childrenIt = playlistTreeMap.constFind(parentID);
+    if (childrenIt == playlistTreeMap.constEnd()) {
+        return;
+    }
+    const auto& children = childrenIt.value();
+    for (auto childIt = children.cbegin(); childIt != children.cend(); ++childIt) {
+        const uint32_t childID = childIt->second;
         if (childID == 0) {
             continue;
         }
-        QString playlistItemName = playlistNameMap[childID];
+        if (ancestors.contains(childID)) {
+            qWarning() << "Skipping cyclic Rekordbox playlist hierarchy" << childID;
+            continue;
+        }
+        QString playlistItemName = playlistNameMap.value(childID);
 
         QString currentPath = playlistPath + kPLaylistPathDelimiter + playlistItemName;
 
@@ -870,12 +896,12 @@ void buildPlaylistTree(
                 " (playlist_id, track_id, position) "
                 "VALUES (:playlist_id, :track_id, :position)");
 
-        if (playlistID != kInvalidPlaylistId && playlistTrackMap.contains(childID)) {
-            // Add playlist tracks for children
-            for (uint32_t trackIndex = 1; trackIndex <=
-                    static_cast<uint32_t>(playlistTrackMap[childID].size());
-                    trackIndex++) {
-                uint32_t rbTrackID = playlistTrackMap[childID][trackIndex];
+        const auto tracksIt = playlistTrackMap.constFind(childID);
+        if (playlistID != kInvalidPlaylistId && tracksIt != playlistTrackMap.constEnd()) {
+            const auto& tracks = tracksIt.value();
+            for (auto trackIt = tracks.cbegin(); trackIt != tracks.cend(); ++trackIt) {
+                const uint32_t trackIndex = trackIt->first;
+                const uint32_t rbTrackID = trackIt->second;
 
                 const int trackID = findTrackId(
                         database, static_cast<int>(rbTrackID), device);
@@ -889,7 +915,7 @@ void buildPlaylistTree(
 
                 queryInsertIntoPlaylistTracks.bindValue(":playlist_id", playlistID);
                 queryInsertIntoPlaylistTracks.bindValue(":track_id", trackID);
-                queryInsertIntoPlaylistTracks.bindValue(":position", static_cast<int>(trackIndex));
+                queryInsertIntoPlaylistTracks.bindValue(":position", static_cast<qint64>(trackIndex));
 
                 if (!queryInsertIntoPlaylistTracks.exec()) {
                     LOG_FAILED_QUERY(queryInsertIntoPlaylistTracks)
@@ -900,7 +926,7 @@ void buildPlaylistTree(
             }
         }
 
-        if (playlistIsFolderMap[childID]) {
+        if (playlistIsFolderMap.value(childID)) {
             // If this child is a folder (playlists are only leaf nodes), build playlist tree for it
             buildPlaylistTree(database,
                     child,
@@ -910,7 +936,8 @@ void buildPlaylistTree(
                     playlistTreeMap,
                     playlistTrackMap,
                     currentPath,
-                    device);
+                    device,
+                    ancestors);
         }
     }
 }
@@ -973,6 +1000,19 @@ void clearDeviceTables(QSqlDatabase& database, TreeItem* child) {
     }
 
     transaction.commit();
+}
+
+mixxx::RgbColor::optional_t extendedHotCueColor(
+        const rekordbox_anlz_t::cue_extended_entry_t& entry) {
+    // The parser only initializes RGB fields when the complete optional tail
+    // is present. Check lengths before accessing any optional scalar field.
+    if (entry.len_entry() < 48 ||
+            entry.len_comment() > entry.len_entry() - 48) {
+        return mixxx::RgbColor::nullopt();
+    }
+    return mixxx::RgbColor(qRgb(entry.color_red(),
+            entry.color_green(),
+            entry.color_blue()));
 }
 
 void setHotCue(TrackPointer track,
@@ -1401,13 +1441,7 @@ void readAnalyze(TrackPointer track,
                             endPosition,
                             hotCueIndex,
                             fromUtf16BeString(cueExtendedEntry->comment()),
-                            mixxx::RgbColor(qRgb(
-                                    static_cast<int>(
-                                            cueExtendedEntry->color_red()),
-                                    static_cast<int>(
-                                            cueExtendedEntry->color_green()),
-                                    static_cast<int>(cueExtendedEntry
-                                                    ->color_blue()))),
+                            extendedHotCueColor(*cueExtendedEntry),
                             &importedHotcueIndices);
                 } break;
                 }
