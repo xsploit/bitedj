@@ -74,3 +74,9 @@ The Engine/BiteDJ frame-origin difference persists without PNS. For the no-PNS s
 The low-level Engine quick-cue blob contains a default main cue, an adjusted main cue and an adjustment flag. The configured high-level libdjinterop snapshot uses only the adjusted value and maps zero to null. A synthetic fixture retaining default=12345.5, adjusted=0, isAdjusted=false therefore reports no high-level main cue. This is information loss in the high-level representation, not proof of which field native playback selects.
 
 The public reader now retains all three fields as optional `mainCueState`, and the actual import coordinator saves them in deferred timing provenance. `mainCueFrame` is unchanged for compatibility. The full-app regression covers the default-only state and a distinct adjusted state, including zero values, without importing Engine-origin cues.
+
+## Seven-minute MP3 position check
+
+A 420-second synthetic stereo CBR MP3 at 44100 Hz extends the short-fixture evidence. Fresh native readers sought to frames 44100, 16777100, 16777216, 17640000 and 18521872, requesting 128 stereo frames each. Against BiteDJ's actual sequential provider output, the best match within ±4 frames was zero shift at every position; maximum PCM difference was below 6.56e-7. This includes positions around the 2^24 float-integer precision boundary and near seven minutes. BiteDJ's tail seek matched its own sequential output exactly.
+
+See `tools/engine-reader/diagnostics/long-mp3-findings.json` for the synthetic encoding command, hashes and per-position metrics. The native probe used unmodified preroll and `--fresh-seek` (interleaved positions are twice the listed frame numbers). This rules out an observed drift at these sampled positions, not every long-file/codec case, fractional cue coordinate, or source database cue convention. PC emulation time is not a Pi performance measurement.
