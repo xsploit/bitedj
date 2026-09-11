@@ -33,6 +33,7 @@ def compile_command(entry, source, target):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('build_dir',type=Path)
+    parser.add_argument('--probe-source',type=Path,help='Alternative local C++ persistence/planning probe')
     parser.add_argument('--ninja',default='ninja',help='Ninja executable path')
     parser.add_argument('--fresh-cues',action='store_true',help='Compile current Cue/CueDAO sources separately; not a full-build validation')
     args=parser.parse_args()
@@ -51,7 +52,7 @@ def main():
     if '&&' in link:link=link[:link.index('&&')]
     with tempfile.TemporaryDirectory(prefix='bitedj-cue-origin-test-') as temp:
         work=Path(temp);obj=work/'probe.o';exe=work/'probe'
-        source=Path(__file__).with_name('engine_cue_origin_probe.cpp')
+        source=args.probe_source.resolve() if args.probe_source else Path(__file__).with_name('engine_cue_origin_probe.cpp')
         subprocess.run(compile_command(dao,source,obj),cwd=build,check=True)
         objects=[obj]
         if args.fresh_cues:
