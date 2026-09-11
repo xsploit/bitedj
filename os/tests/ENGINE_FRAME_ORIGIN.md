@@ -23,3 +23,9 @@ An additional blanket1105-sample adjustment is not justified: the decoder and na
 The next gate is an actual native-wrapper PCM and seek comparison against BiteDJ using identical synthetic MP3 and AAC files. Establish byte identity, map an audible event to source/local frame positions, and include beginning/end and repeated-seek cases. Direct FFmpeg output alone does not prove native-wrapper behavior. AAC needs independent evidence.
 
 Until that gate passes, the metadata/playlist importer retains timing values in provenance and leaves Engine timing unapplied. Pi and physical-controller testing remain separate requirements.
+
+## PC execution checkpoint
+
+The optional `tools/engine-reader/diagnostics/check-decoder-entry.py` probe passed under ARM emulation with the preserved executable's real shared libraries. It verifies relocated RTTI and the read-wrapper function pointer, then exits before Engine main or any decoder call. This establishes a PC execution entry point; it does not close the audio/seek gate.
+
+The verified constructor is0x1619610, with a0x150-byte reader allocation observed at its caller. It consumes an owning input-object pointer and opens through that object's virtual interface. The constructor initializes origin field0xd0 and skip field0xd8 to zero before opening. A filename string or fabricated file-object layout must not be substituted for the native provider in a claimed full-wrapper test.
