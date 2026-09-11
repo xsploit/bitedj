@@ -223,3 +223,15 @@ content lookup, cancellation checks and explicit sorting in selected modes.
 Internal table names include djdbPlaylist, djdbSongPlaylist and djdbContent.
 These static findings do not establish direct exported-format equivalence or
 complete OneLibrary support. No proprietary code was used for the BiteDJ fix.
+
+### Supporting component inventory
+
+The wider RX3 inventory now verifies 311 ELF occurrences representing 262 unique
+contents and records their symbols plus 830 declared dependency edges. This is
+inventory coverage, not complete source recovery. All 19 direct player libraries
+have candidates; 463 of 465 dynamic imports have symbol-name matches, with the two
+unmatched entries weak. Loader precedence, symbol-version compatibility and actual
+runtime plugin loading remain unverified. MP3/FLAC decoding, ALSA I/O, g2d/DirectFB
+graphics and JPEG/text conversion are separately identifiable dependency boundaries
+for further source matching and porting research. No supporting firmware binaries
+are added to this repository.
