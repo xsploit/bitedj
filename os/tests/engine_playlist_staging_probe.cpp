@@ -155,6 +155,27 @@ int main(int argc, char** argv) {
             check(replaced.entryIds[2] != updated.entryIds[2], "removed occurrence ID reused");
             check(tx.rollback(), "replacement rollback");
         }
+        {
+            check(q.exec("SELECT COUNT(*) FROM Playlists") && q.next(), "count before outer rollback");
+            const int beforeCount = q.value(0).toInt();
+            q.finish();
+            const int beforeSignals = added;
+            check(q.exec("CREATE TEMP TRIGGER rollback_import BEFORE INSERT ON PlaylistTracks WHEN NEW.track_id=43 BEGIN SELECT RAISE(ROLLBACK,'outer transaction aborted'); END"), "outer rollback trigger");
+            SqlTransaction tx(db);
+            PlaylistDAO::StagedPlaylist rejected;
+            check(!dao.stageNewPlaylist(tx, "Aborted", {TrackId(QVariant(43))}, &rejected, &error), "outer rollback stage accepted");
+            check(!tx, "wrapper remained active after SQLite rollback");
+            check(!dao.stageNewPlaylist(tx, "Unsafe retry", {track}, &rejected, &error), "dead transaction retry accepted");
+            check(!tx.commit() && !tx.rollback(), "dead transaction completed twice");
+            check(q.exec("SELECT COUNT(*) FROM Playlists") && q.next() && q.value(0).toInt() == beforeCount, "retry persisted outside transaction");
+            q.finish();
+            check(added == beforeSignals, "aborted transaction published");
+            check(q.exec("DROP TRIGGER rollback_import"), "drop outer rollback trigger");
+            SqlTransaction fresh(db);
+            check(fresh && !tx, "dead wrapper revived with new transaction");
+            check(dao.stageNewPlaylist(fresh, "Fresh retry", {track}, &rejected, &error), "fresh transaction retry failed");
+            check(fresh.rollback(), "fresh retry rollback");
+        }
         check(q.exec("PRAGMA integrity_check") && q.next() && q.value(0) == "ok", "integrity");
         std::cout << "PASS staged playlists: rollback silence, ordered duplicate occurrence IDs, commit-only notifications/cache, changed-row rejection, missing-track savepoint recovery, failed-commit silence and integrity\n";
     } catch (const std::exception& e) {

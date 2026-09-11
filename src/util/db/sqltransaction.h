@@ -9,9 +9,7 @@ class SqlTransaction final {
     SqlTransaction(SqlTransaction&& other);
     ~SqlTransaction();
 
-    operator bool() const {
-        return m_active;
-    }
+    operator bool() const;
 
     const QSqlDatabase& database() const {
         return m_database;
@@ -29,5 +27,5 @@ class SqlTransaction final {
 
   private:
     QSqlDatabase m_database;
-    bool m_active;
+    mutable bool m_active;
 };

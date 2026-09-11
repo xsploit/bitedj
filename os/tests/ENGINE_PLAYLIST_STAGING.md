@@ -15,3 +15,19 @@ Existing updates require an exact prior name and ordered occurrence ID/track sna
 Additional actual-archive tests passed for existing reorder/rename, stable occurrence IDs, locked and stale rejection, foreign ID rejection, partial-update trigger rollback and retry, update publication and highest-occurrence replacement. The ordered readback uses PlaylistTracks ORDER BY position,id. PlaylistDAO::getTrackIds uses DISTINCT and is not an ordered occurrence snapshot API. The initial test incorrectly used it; correcting the readback confirmed the stored order without changing that existing API.
 
 The full application rebuild and version smoke check passed. The complete Engine import coordinator, conflict decisions and UI remain unfinished. This is a persistence layer, not a completed end-user import workflow.
+
+Transaction-abort regression: a trigger raising ROLLBACK ends SQLite's outer
+transaction. The transaction wrapper must then reject staging retries, commit
+and rollback; a new transaction must still stage and roll back normally. A dead
+wrapper must not become active again when that new transaction starts. This is
+distinct from the existing RAISE(ABORT) savepoint-recovery cases, which retain
+the outer transaction and permit retry. Native state checking uses the existing
+`__SQLITE3__` / LOCALECOMPARE Qt/native-SQLite linkage contract. Builds without
+that integration retain cached transaction-state behavior; this regression is
+not claimed fixed for those configurations, and importer integration there
+remains blocked pending equivalent transaction-state handling.
+
+With native SQLite enabled, the full Linux application rebuild and expanded
+completed-archive playlist probe pass. An isolated actual-app metadata/BPM save
+and restart also pass, preserving eight cue rows/source identities and the
+updated beat blob across restart. No installed profile or Pi was changed.
