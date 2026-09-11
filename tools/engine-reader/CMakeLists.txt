@@ -27,3 +27,7 @@ install(PROGRAMS engine-import.py DESTINATION libexec/bitedj-engine)
 install(FILES engine_limits.py engine_import_package.py engine_playlist_manifest.py engine_reader_protocol.py engine_media_path.py DESTINATION libexec/bitedj-engine)
 install(FILES "${engine_djinterop_SOURCE_DIR}/LICENSE" DESTINATION share/licenses/bitedj-engine-reader RENAME libdjinterop-LICENSE)
 install(FILES README.md DESTINATION share/doc/bitedj-engine-reader)
+
+# Explicit opt-in synthetic fixture generator; never installed with the reader.
+add_executable(engine-reimport-fixture EXCLUDE_FROM_ALL tests/create_reimport_fixture.cpp)
+target_link_libraries(engine-reimport-fixture PRIVATE DjInterop)

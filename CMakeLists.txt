@@ -1931,6 +1931,7 @@ if(ENGINEPRIME)
     src/library/engine/enginereaderservice.h
     src/library/engine/engineimportpackage.cpp
     src/library/engine/enginemetadataimport.cpp
+    src/library/engine/enginecueimport.cpp
     src/library/engine/engineimportmerge.cpp
     src/library/engine/engineimportregistry.cpp
     src/library/export/dlglibraryexport.cpp
