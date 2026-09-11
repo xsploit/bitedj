@@ -275,6 +275,15 @@ bool CueDAO::stageTrackCues(const SqlTransaction& transaction,
         const QList<CuePointer>& cues,
         QList<CuePointer>* staged,
         QString* error) const {
+    return stageTrackCuesInternal(transaction, trackId, cues, staged, error, nullptr);
+}
+
+bool CueDAO::stageTrackCuesInternal(const SqlTransaction& transaction,
+        TrackId trackId, const QList<CuePointer>& cues,
+        QList<CuePointer>* staged, QString* error,
+        QList<DbId>* originalIds) const {
+    if (originalIds)
+        originalIds->clear();
     if (error)
         error->clear();
     auto fail = [error](const QString& message) {
@@ -299,7 +308,13 @@ bool CueDAO::stageTrackCues(const SqlTransaction& transaction,
         // snapshot; callers must separately check that live data did not change
         // between planning and postcommit publication.
         QMutexLocker lock(&cue->m_mutex);
-        CuePointer copy(new Cue(cue->m_type, cue->m_iHotCue, cue->m_startPosition, cue->m_endPosition, cue->m_color));
+        // Existing cues may have had both bounds cleared since construction.
+        CuePointer copy(new Cue(cue->m_type, cue->m_iHotCue,
+                mixxx::audio::kStartFramePos, mixxx::audio::kInvalidFramePos, cue->m_color));
+        copy->m_startPosition = cue->m_startPosition;
+        copy->m_endPosition = cue->m_endPosition;
+        if (originalIds)
+            originalIds->append(cue->m_dbId);
         copy->m_dbId = cue->m_dbId;
         copy->m_label = cue->m_label;
         copy->m_engineOrigin = cue->m_engineOrigin;
@@ -351,4 +366,54 @@ bool CueDAO::stageTrackCues(const SqlTransaction& transaction,
         return rollback(query.lastError().text());
     *staged = std::move(copies);
     return true;
+}
+
+
+bool CueDAO::prepareTrackCueSave(const SqlTransaction& transaction,
+        TrackId trackId, const QList<CuePointer>& cues,
+        PendingCueSave* pending, QString* error) const {
+    if (!pending) {
+        if (error)
+            *error = "Missing pending cue save";
+        return false;
+    }
+    *pending = PendingCueSave{};
+    QList<CuePointer> staged;
+    QList<DbId> originalIds;
+    if (!stageTrackCuesInternal(transaction, trackId, cues, &staged, error, &originalIds))
+        return false;
+    pending->originals = cues;
+    pending->staged = std::move(staged);
+    pending->originalIds = std::move(originalIds);
+    return true;
+}
+
+bool CueDAO::finishTrackCueSave(PendingCueSave* pending) const {
+    if (!pending)
+        return false;
+    bool unchanged = true;
+    for (int i = 0; i < pending->originals.size(); ++i) {
+        const auto& original = pending->originals[i];
+        const auto& saved = pending->staged[i];
+        QMutexLocker lock(&original->m_mutex);
+        if (original->m_dbId != pending->originalIds[i]) {
+            original->m_bDirty = true;
+            unchanged = false;
+            continue;
+        }
+        // Preserve an intervening edit but attach a newly committed row ID,
+        // so a retry updates that row instead of inserting a duplicate.
+        original->m_dbId = saved->m_dbId;
+        const bool same = original->m_type == saved->m_type &&
+                original->m_iHotCue == saved->m_iHotCue &&
+                original->m_startPosition == saved->m_startPosition &&
+                original->m_endPosition == saved->m_endPosition &&
+                original->m_label == saved->m_label &&
+                original->m_color == saved->m_color &&
+                original->m_engineOrigin == saved->m_engineOrigin;
+        original->m_bDirty = !same;
+        unchanged = unchanged && same;
+    }
+    *pending = PendingCueSave{};
+    return unchanged;
 }

@@ -1822,9 +1822,19 @@ bool TrackDAO::updateTrack(const Track& track) const {
                 track.getWaveform(),
                 track.getWaveformSummary());
     }
-    m_cueDao.saveTrackCues(
-            trackId, track.getCuePoints());
+    const auto cues = track.getCuePoints();
+    CueDAO::PendingCueSave pendingCues;
+    if (!m_cueDao.prepareTrackCueSave(transaction, trackId, cues, &pendingCues, &error)) {
+        kLogger.warning() << "Failed to save track cues" << trackId << error;
+        return false;
+    }
     if (!transaction.commit()) {
+        return false;
+    }
+    if (!m_cueDao.finishTrackCueSave(&pendingCues) || track.getCuePoints() != cues) {
+        // SQL contains the captured state. Leave the track dirty when a newer
+        // cue edit or list change still needs saving; do not accept provenance.
+        kLogger.warning() << "Track cues changed while saving" << trackId;
         return false;
     }
 

@@ -32,3 +32,20 @@ Cue materialization must map the detached `endFrame == Cue::kNoPosition` sentine
 The metadata importer currently preserves source timing in `deferredTiming`; it does not call this planner. The native decoder and track-load cue findings in `ENGINE_FRAME_ORIGIN.md` do not supply a live publication mechanism. `Track::replaceRecordIfUnchanged` compares TrackRecord only; it does not protect independently mutable Cue objects or the beat grid. `Track::setCuePoints` replaces the list and marks it dirty without checking an expected cue snapshot. Calling it after a staged database commit would leave an unprotected interval in which a user's cue edit could be overwritten.
 
 Before exposing cue import, capture consistent cue/beat state, reject or retry concurrent edits, and establish how successful staged writes are published to the Track and loaded deck controls. Verify rollback, postcommit publication, repeated import, local edits during import, stable cue IDs and preserved FLX6 control assignments in the actual application. Frame-origin matching and native main-cue/beat-grid semantics remain separate requirements. The persistence probe exercises the current schema42, but its detached DAO objects do not prove these live-track behaviors.
+
+
+## Existing-track cue save commit boundary
+
+`TrackDAO::updateTrack` now uses `CueDAO::prepareTrackCueSave` inside its transaction, checks every cue write/delete, and calls `finishTrackCueSave` only after successful commit. Failed staging or commit leaves the original Cue IDs and dirty flags untouched. Successful commit attaches saved IDs to the original QObjects; it never replaces their identity. A cue edited during the SQL phase keeps its newer values and stays dirty, while a newly committed row ID is retained so retry updates that row. If a captured cue or the cue list changed, updateTrack returns false so the caller does not mark that Track clean or accept import provenance. This is not a general atomic snapshot of metadata, beats and every cue, and does not eliminate the separate live-import handoff requirements above.
+
+The legacy new-track insertion path still uses `saveTrackCues`; this change targets existing-track updates. File analysis cache side effects are also outside the SQL rollback guarantee.
+
+Run the commit-boundary regression against a completed application build:
+
+```sh
+python os/tests/test_engine_cue_origin.py BUILD --ninja NINJA \
+  --probe-source /absolute/repo/os/tests/engine_cue_save_commit_probe.cpp \
+  --probe-arg /absolute/repo/res/schema.xml
+```
+
+It uses synthetic schema42 data and the native SQLite commit hook to reject an outer commit. It covers partial cue write failure, delete failure, rollback preserving original IDs/dirty state, edits between preparation and commit, retry without duplicate IDs, and staging cues whose bounds were cleared. The full rebuilt app also passed the existing ordinary metadata/BPM save/restart check with eight unchanged cue rows, plus an injected cue-update failure leaving metadata, beat data and cue rows unchanged with SQLite integrity intact.
