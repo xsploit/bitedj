@@ -34,4 +34,22 @@ The Linux Qt preload test uses temporary profiles and synthetic WAV files. It co
 
 Run `test_engine_preview_app.py` with the same arguments plus `--installed-reader` to test normal helper discovery without a development override and confirm that preview alone adds no tracks.
 
-These desktop tests do not establish physical USB removal behavior, removable-rating preservation, Windows runtime behavior, Pi touch interaction, FLX6 mapping or audio performance. The Pi remains off during this work.
+For the portable-rating path, run the same test inside an isolated mount namespace with `--portable-mount /mnt/usbtest`. The option requires an empty disposable mount, writes a four-star override and an explicit zero-star override, and checks their application, database contents and unchanged update markers across every case. It also checks that deferred source ratings are not accepted into the metadata baseline.
+
+```sh
+unshare -Umr --propagation private bash -c '
+  mount -t tmpfs tmpfs /mnt &&
+  mkdir -p /mnt/usbtest &&
+  mount -t tmpfs tmpfs /mnt/usbtest &&
+  python3 os/tests/test_engine_apply_app.py \
+    --build /path/to/app-build \
+    --reader-prefix /path/to/reader-stage \
+    --fixture-generator /path/to/reader-build/engine-reimport-fixture \
+    --portable-mount /mnt/usbtest \
+    --output /path/to/results
+'
+```
+
+The mounts exist only in the private namespace. Do not pass a real USB drive to this fixture generator. A tmpfs test exercises the app's removable-storage code path, not physical USB behavior.
+
+These desktop tests do not establish physical USB removal behavior, Windows runtime behavior, Pi touch interaction, FLX6 mapping or audio performance. The Pi remains off during this work.

@@ -8,22 +8,35 @@ p.add_argument('--build',type=Path,required=True)
 p.add_argument('--reader-prefix',type=Path,required=True)
 p.add_argument('--fixture-generator',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--portable-mount',type=Path,help='Empty disposable mount in a private namespace; never use a real USB drive')
 a=p.parse_args()
 build=a.build.resolve(); source=Path(__file__).resolve().parents[2]
 helper=a.reader_prefix.resolve()/'libexec/bitedj-engine/engine-import.py'
 generator=a.fixture_generator.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
 results={}
+portable=a.portable_mount.resolve() if a.portable_mount else None
+if portable:
+ assert str(portable).startswith('/mnt/') and os.path.ismount(portable), 'use a disposable private mount below /mnt'
+ assert not list(portable.iterdir()), 'portable test mount must be empty'
 with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
  root=Path(temporary);driver=root/'driver.so'
  flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Widgets','Qt6Sql'],text=True))
  subprocess.run(['c++','-std=c++20','-fPIC','-shared',str(Path(__file__).with_name('engine_apply_app_driver.cpp')),'-o',str(driver),*flags],check=True)
- drive=root/'drive';drive.mkdir();library=drive/'Engine Library'
+ drive=(portable if portable else root)/'drive';drive.mkdir();library=drive/'Engine Library'
  subprocess.run([str(generator),str(library),'initial'],check=True)
  music=drive/'Music';music.mkdir()
  for name in ('Signal Original.wav','Signal VIP.wav'):
   with wave.open(str(music/name),'wb') as f:
    f.setnchannels(2);f.setsampwidth(2);f.setframerate(44100);f.writeframes(bytes(132300*4))
  engine=library/'Database2/m.db'
+ expected_ratings=None
+ if portable:
+  store=portable/'.bitedj';store.mkdir()
+  expected_ratings=[(str((music/name).relative_to(portable)),1,'fixture',rating) for name,rating in [('Signal Original.wav',4),('Signal VIP.wav',0)]]
+  with sqlite3.connect(store/'meta.sqlite') as db:
+   db.execute('CREATE TABLE meta_overrides(relpath TEXT PRIMARY KEY NOT NULL,version INTEGER NOT NULL,updated_at TEXT,rating INTEGER NOT NULL)')
+   db.executemany('INSERT INTO meta_overrides VALUES(?,?,?,?)',expected_ratings)
+
  def profile(name):
   path=root/name;path.mkdir();(path/'mixxx.cfg').write_text('[Config]\nVersion 2.5.6\n');return path
  def run(name,settings,**extra):
@@ -47,6 +60,14 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
      'integrity':db.execute('PRAGMA integrity_check').fetchone()[0]}
    state['origins']=[(kind,sid,lid,json.loads(baseline)) for kind,sid,lid,baseline in state['origins']]
   assert state['engineCues']==0 and state['integrity']=='ok'
+  if portable:
+   with sqlite3.connect(store/'meta.sqlite') as db:
+    actual=db.execute('SELECT relpath,version,updated_at,rating FROM meta_overrides ORDER BY relpath').fetchall()
+    assert actual==expected_ratings, ('portable overrides changed',name,actual)
+   if name!='failed-save':
+    assert [t[3] for t in state['tracks']]==[4,0][:len(state['tracks'])], ('portable ratings not applied/preserved',name,state['tracks'])
+   assert all('rating' not in base for kind,sid,lid,base in state['origins'] if kind=='track'), 'deferred source rating was accepted'
+
   results[name]={'exit':done.returncode,'sourceUnchanged':True,'mediaUnchanged':True,'state':state}
   (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
   print('PASS',name,len(state['tracks']),'tracks',len(state['playlists']),'playlists',flush=True)
@@ -68,15 +89,15 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
  assert all(repeat[key]==first[key] for key in first if key!='entries'),'repeat import changed identities, metadata or accepted baselines'
  subprocess.run([str(generator),str(library),'update'],check=True)
  update,text=run('source-update',settings)
- assert update['tracks'][0][1:]==('My local title','Source comment B',5)
+ assert update['tracks'][0][1:]==('My local title','Source comment B',4 if portable else 5)
  assert update['entries']==expected_entries and 'Kept local edits: title' in text
  assert any(k=='track' and sid=='1' and base['title']=='Signal (Original)' and 'deferredTiming' in base for k,sid,lid,base in update['origins'])
  cancelled,text=run('cancel',profile('cancel-profile'),BITEDJ_APPLY_CANCEL='1')
  assert len(cancelled['tracks'])==1 and not cancelled['playlists'] and 'Cancelled' in text
- (music/'Signal VIP.wav').rename(root/'missing-vip.wav')
+ (music/'Signal VIP.wav').rename(drive.parent/'missing-vip.wav')
  missing,text=run('missing',profile('missing-profile'))
  assert len(missing['tracks'])==1 and not missing['playlists'] and 'No entries were omitted' in text
- (root/'missing-vip.wav').rename(music/'Signal VIP.wav')
+ (drive.parent/'missing-vip.wav').rename(music/'Signal VIP.wav')
  failed,text=run('failed-save',profile('failed-profile'),BITEDJ_APPLY_FAIL_SAVE='1')
  assert not failed['origins'] and not failed['playlists'] and 'could not be saved' in text
  collision_profile=profile('collision-profile')
@@ -89,6 +110,7 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
  renamed,text=run('source-rename',collision_profile)
  assert [x[1] for x in renamed['playlists']]==['Prepared set','Renamed set','Renamed set / Versions']
  assert renamed['entries']==collision['entries'] and 'Kept local playlist edits' not in text
+ results['portableOverridesPreserved']=bool(portable)
  results['binarySHA256']=hashlib.sha256((build/'mixxx').read_bytes()).hexdigest()
  (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
 print('PASS full-app Apply acceptance',flush=True)
