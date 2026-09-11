@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Exercise native CueData reset under PC ARM emulation, without application main.
+"""Exercise native CueData reset and blob decoding under PC ARM emulation.
 
 Requires the user's preserved runtime, Zig and user/network namespace support.
-No Pi connection, hardware access, application main or decoder call is made.
+No Pi connection, hardware access, application main or audio decoder call is made.
 """
 import argparse
 import hashlib
@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='engine-cue-reset-') as temporary:
   '--library-path',str(runtime/'usr/lib')+':'+str(runtime/'lib'),
   '--preload',str(shim),str(binary)],capture_output=True,text=True,timeout=20)
  after=hashlib.sha256(binary.read_bytes()).hexdigest()
- result={'scope':'Native CueData constructor, methods and reset with synthetic values; no database load, decoder, Engine main or Pi execution',
+ result={'scope':'Native CueData constructor, reset and synthetic decompressed blob decoding; no SQLite load, audio decoder, Engine main or Pi execution',
   'engineSHA256':actual,'probeSHA256':hashlib.sha256(source.read_bytes()).hexdigest(),
   'runtimeUnchanged':after==actual,'engineSHA256After':after,
   'exit':run.returncode,'stdout':run.stdout,'stderr':run.stderr,

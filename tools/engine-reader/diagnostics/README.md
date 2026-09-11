@@ -56,9 +56,9 @@ The experimental flag modifies one guarded instruction in process memory, restor
 
 All tested WAV/MP3 seeks in the expanded matrix match sequential PCM with the experiment. The fresh-reader controls reproduce the original mono failures before any other read and resolve them with the change. AAC still has separate alignment/seek differences. `passed` in a run JSON means the selected harness executed successfully with unchanged files, not that its output matched the reference. Keep the PCM comparison as a separate gate.
 
-## Native cue reset (synthetic object state)
+## Native cue reset and decompressed blob decoding
 
-`check-cue-reset.py` invokes the actual native `CueData` constructor with eight slots, verifies its vtable, and exercises its getter, setters and reset routine under PC ARM emulation. It accepts the same `--runtime`, `--zig`, `--qemu` and `--result` arguments as the entry probe. It requires successful compilation, rejects other executable hashes, checks that runtime bytes remain unchanged, isolates networking and limits execution to 20 seconds.
+`check-cue-reset.py` invokes the actual native `CueData` constructor with eight slots, verifies its vtable, and exercises its getter, setters, reset routine and blob decoder under PC ARM emulation. It accepts the same `--runtime`, `--zig`, `--qemu` and `--result` arguments as the entry probe. It requires successful compilation, rejects other executable hashes, checks that runtime bytes remain unchanged, isolates networking and limits execution to 20 seconds.
 
 ```sh
 python3 check-cue-reset.py \
@@ -69,4 +69,8 @@ python3 check-cue-reset.py \
 
 The constructor initializes the main value to -1 and flag to zero. Changing the flag alone leaves the main value unchanged. Reset copies the secondary double to the main double and clears the flag. The fixtures exercise a fractional positive value and zero. `native-cue-reset-results.json` records the successful run.
 
-This establishes object-level behavior only. Neither SQLite deserialization nor source-library loading is invoked, so the secondary field is not claimed to be the database default cue. Zero surviving reset does not establish a database sentinel rule. No decoder, Engine main, Pi or music is used; the bounded process exits without object teardown. This does not enable cue import.
+This establishes object-level behavior only. SQLite row loading and full source-library loading are not invoked. The synthetic raw blob stage below establishes field decoding separately. Zero surviving reset does not establish a database sentinel rule. No audio decoder, Engine main, Pi or music is used; the bounded process exits without object teardown. This does not enable cue import.
+
+The same probe also passes three synthetic decompressed quick-cue blobs through the native decoder at 0x1600660, using real QByteArray and CueData constructors. Each blob uses the public reader format: big-endian 64-bit cue count; eight entries with an 8-bit label length, label bytes, double position and four ARGB bytes; then adjusted double, adjustment byte and default double. All eight test labels are empty and positions run from 100.25 to 107.25.
+
+The observed main/default/flag outputs are `(0, 12345.5, false)`, `(45678.25, 0, true)` and `(45678.25, 12345.5, false)`, exactly matching their serialized inputs. First and last quick-cue positions also match. Decoding does not select the default position when the flag is false, and it preserves a serialized main value of zero. That is a decoder-level result; later track loading, auto-cue policy or playback state may still modify the cue. Full database-to-deck loading remains unverified.

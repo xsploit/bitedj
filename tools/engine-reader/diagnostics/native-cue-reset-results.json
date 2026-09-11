@@ -1,11 +1,11 @@
 {
-  "scope": "Native CueData constructor, methods and reset with synthetic values; no database load, decoder, Engine main or Pi execution",
+  "scope": "Native CueData constructor, reset and synthetic decompressed blob decoding; no SQLite load, audio decoder, Engine main or Pi execution",
   "engineSHA256": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
-  "probeSHA256": "3807b8a696eca922de9c4f589e26e95a41a507f6d60d61fc0b5b3cb612e6953d",
+  "probeSHA256": "e10bb076c38b47f60e13608a6913330ad4cced3f85a78fd1673564868a184fbe",
   "runtimeUnchanged": true,
   "engineSHA256After": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
   "exit": 0,
-  "stdout": "ENTRY_PROBE base=0x7f3a48ce0000 type=16ffmpegFileReader read_wrapper=0x7f3a4a2f2420 expected=0x7f3a4a2f2420\nENTRY_PROBE PASS; Engine main and decoder not invoked\nCUE_INIT main=-1 flag=0\nCUE_RESET index=0 secondary=12345.5 before=45678.25 after=12345.5 flag=0\nCUE_RESET index=1 secondary=0 before=-1 after=0 flag=0\nCUE_PROBE PASS; real constructor and native methods; no database load or decoder\n",
+  "stdout": "ENTRY_PROBE base=0x7f3ae92f0000 type=16ffmpegFileReader read_wrapper=0x7f3aea902420 expected=0x7f3aea902420\nENTRY_PROBE PASS; Engine main and decoder not invoked\nCUE_INIT main=-1 flag=0\nCUE_RESET index=0 secondary=12345.5 before=45678.25 after=12345.5 flag=0\nCUE_RESET index=1 secondary=0 before=-1 after=0 flag=0\nCUE_DECODE index=0 main=0 secondary=12345.5 flag=0 first=100.25 last=107.25\nCUE_DECODE index=1 main=45678.25 secondary=0 flag=1 first=100.25 last=107.25\nCUE_DECODE index=2 main=45678.25 secondary=12345.5 flag=0 first=100.25 last=107.25\nCUE_PROBE PASS; native reset and synthetic blob decoding; no full database load\n",
   "stderr": "",
   "passed": true
 }

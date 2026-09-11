@@ -7,6 +7,9 @@
 #include <signal.h>
 static void fault(int sig){dprintf(2,"CUE_PROBE signal=%d\n",sig);_exit(90);}
 static uintptr_t engine_base;
+static void be64(unsigned char** p,uint64_t value){for(int n=7;n>=0;n--)*(*p)++=(unsigned char)(value>>(n*8));}
+static void bedouble(unsigned char** p,double value){uint64_t bits;memcpy(&bits,&value,8);be64(p,bits);}
+
 static int locate(struct dl_phdr_info* info, size_t size, void* opaque) {
     (void)size; (void)opaque;
     const char* name=info->dlpi_name;
@@ -16,9 +19,9 @@ static int locate(struct dl_phdr_info* info, size_t size, void* opaque) {
     }
     return 0;
 }
-/* Exercise the real CueData constructor and methods; never call Engine main.
+/* Exercise real CueData construction, methods and raw blob decoding.
  * Offsets apply only to the executable hash enforced by check-cue-reset.py.
- * No database is loaded, and object teardown is left to process exit. */
+ * No SQLite database is loaded; object teardown is left to process exit. */
 int __libc_start_main(int (*main_fn)(int,char**,char**),int argc,char** argv,
         void (*init)(void),void (*fini)(void),void (*rtld_fini)(void),void* stack) {
     (void)main_fn;(void)argc;(void)argv;(void)init;(void)fini;(void)rtld_fini;(void)stack;
@@ -55,6 +58,26 @@ int __libc_start_main(int (*main_fn)(int,char**,char**),int argc,char** argv,
       dprintf(1,"CUE_RESET index=%d secondary=%.17g before=%.17g after=%.17g flag=%d\n",i,secondary_values[i],main_values[i],get_main(cue),get_flag(cue));
       if(get_main(cue)!=secondary_values[i] || get_flag(cue)!=0)_exit(8);
     }
-    dprintf(1,"CUE_PROBE PASS; real constructor and native methods; no database load or decoder\n");
+    void (*bytes_ctor)(void*,const char*,int64_t)=(void(*)(void*,const char*,int64_t))(engine_base+0x391e18);
+    void (*decode)(void*,void*,int)=(void(*)(void*,void*,int))(engine_base+0x1600660);
+    double (*get_secondary)(void*)=(double(*)(void*))(engine_base+0x15ed410);
+    double (*quick_position)(void*,int)=(double(*)(void*,int))(engine_base+0x15f5080);
+    const double raw_main[]={0,45678.25,45678.25};
+    const double raw_secondary[]={12345.5,0,12345.5};
+    const int raw_flag[]={0,1,0};
+    for(int test=0;test<3;test++){
+      unsigned char blob[129],*p=blob;be64(&p,8);
+      for(int slot=0;slot<8;slot++){
+        *p++=0;bedouble(&p,100.25+slot);*p++=255;*p++=50;*p++=100;*p++=150;
+      }
+      bedouble(&p,raw_main[test]);*p++=(unsigned char)raw_flag[test];bedouble(&p,raw_secondary[test]);
+      if(p-blob!=129)_exit(9);
+      uint64_t bytes[3]={0};bytes_ctor(bytes,(const char*)blob,sizeof(blob));
+      void* decoded=allocate(0x40);ctor(decoded,8);decode(decoded,bytes,8);
+      dprintf(1,"CUE_DECODE index=%d main=%.17g secondary=%.17g flag=%d first=%.17g last=%.17g\n",test,get_main(decoded),get_secondary(decoded),get_flag(decoded),quick_position(decoded,0),quick_position(decoded,7));
+      if(get_main(decoded)!=raw_main[test] || get_secondary(decoded)!=raw_secondary[test] || get_flag(decoded)!=raw_flag[test])_exit(10);
+      if(quick_position(decoded,0)!=100.25 || quick_position(decoded,7)!=107.25)_exit(11);
+    }
+    dprintf(1,"CUE_PROBE PASS; native reset and synthetic blob decoding; no full database load\n");
     _exit(0);
 }
