@@ -55,3 +55,18 @@ Repeat with `--experimental-preroll-nine` and a new output/result prefix to test
 The experimental flag modifies one guarded instruction in process memory, restores executable page permissions, and clears the instruction cache. It affects the common reader, not only MP3. It is **not a deployment adapter or a UI-lag fix**. The default command does not patch Engine; the Python runner clears inherited experiment selectors and explicitly records the selected mode. Both input and executable hashes are rechecked after execution.
 
 All tested WAV/MP3 seeks in the expanded matrix match sequential PCM with the experiment. The fresh-reader controls reproduce the original mono failures before any other read and resolve them with the change. AAC still has separate alignment/seek differences. `passed` in a run JSON means the selected harness executed successfully with unchanged files, not that its output matched the reference. Keep the PCM comparison as a separate gate.
+
+## Native cue reset (synthetic object state)
+
+`check-cue-reset.py` invokes the actual native `CueData` constructor with eight slots, verifies its vtable, and exercises its getter, setters and reset routine under PC ARM emulation. It accepts the same `--runtime`, `--zig`, `--qemu` and `--result` arguments as the entry probe. It requires successful compilation, rejects other executable hashes, checks that runtime bytes remain unchanged, isolates networking and limits execution to 20 seconds.
+
+```sh
+python3 check-cue-reset.py \
+  --runtime /path/to/preserved/runtime64 \
+  --zig /path/to/zig \
+  --result /path/to/cue-reset-result.json
+```
+
+The constructor initializes the main value to -1 and flag to zero. Changing the flag alone leaves the main value unchanged. Reset copies the secondary double to the main double and clears the flag. The fixtures exercise a fractional positive value and zero. `native-cue-reset-results.json` records the successful run.
+
+This establishes object-level behavior only. Neither SQLite deserialization nor source-library loading is invoked, so the secondary field is not claimed to be the database default cue. Zero surviving reset does not establish a database sentinel rule. No decoder, Engine main, Pi or music is used; the bounded process exits without object teardown. This does not enable cue import.
