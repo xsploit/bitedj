@@ -500,8 +500,12 @@ void EnginePrimeExportJob::loadIds(const QSet<CrateId>& crateIds) {
 void EnginePrimeExportJob::loadTrack(const TrackRef& trackRef) {
     DEBUG_ASSERT_QOBJECT_THREAD_AFFINITY(m_pTrackCollectionManager);
 
-    // Load the track.
-    m_pLastLoadedTrack = m_pTrackCollectionManager->getOrAddTrack(trackRef);
+    // Export references identify tracks already present in the library.
+    m_pLastLoadedTrack = m_pTrackCollectionManager->getTrackByRef(trackRef);
+    m_pLastLoadedWaveform.reset();
+    if (!m_pLastLoadedTrack) {
+        return;
+    }
 
     // Load high-resolution waveform from analysis info. When the per-filesystem
     // cache is enabled, waveforms live on the track's own filesystem keyed by
@@ -609,7 +613,12 @@ void EnginePrimeExportJob::run() {
             return;
         }
 
-        DEBUG_ASSERT(m_pLastLoadedTrack != nullptr);
+        if (!m_pLastLoadedTrack) {
+            m_lastErrorMessage = tr("Failed to load track for export: %1")
+                                         .arg(trackRef.getLocation());
+            emit failed(m_lastErrorMessage);
+            return;
+        }
 
         qInfo() << "Exporting track" << m_pLastLoadedTrack->getId().toString()
                 << "at" << m_pLastLoadedTrack->getFileInfo().location() << "...";
