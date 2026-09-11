@@ -239,6 +239,27 @@ void exportMetadata(
     // does not have a hot cue at that location.
     const auto cues = pTrack->getCuePoints();
     snapshot.hot_cues.resize(kMaxHotCues);
+    // Editing a pad can change a loop into a jump cue (or vice versa) while
+    // retaining its source identity. Do not silently omit that edited cue or
+    // reassign it to the other Engine bank, which may already be occupied.
+    for (const CuePointer& pCue : cues) {
+        const auto origin = pCue->getEngineOrigin();
+        if (origin &&
+                ((origin->bank == Cue::EngineOrigin::Bank::HotCue &&
+                         pCue->getType() != CueType::HotCue) ||
+                        (origin->bank == Cue::EngineOrigin::Bank::SavedLoop &&
+                                pCue->getType() != CueType::Loop))) {
+            const auto label = pCue->getLabel().isEmpty()
+                    ? QString("%1 %2")
+                              .arg(origin->bank == Cue::EngineOrigin::Bank::SavedLoop
+                                              ? "Saved loop" : "Hot cue")
+                              .arg(origin->slot)
+                    : pCue->getLabel();
+            throw std::runtime_error(QString("Cue '%1' no longer matches its original Engine bank. "
+                                             "Restore its original cue/loop type before exporting.")
+                                             .arg(label).toStdString());
+        }
+    }
     std::array<bool, kMaxHotCues> exportedHotCues{};
     for (const CuePointer& pCue : cues) {
         // We are only interested in hot cues.

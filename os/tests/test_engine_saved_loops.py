@@ -74,7 +74,9 @@ int main(){
    assert(updated.loops[7]->label=="Source loop");++cases;
    auto unchanged=updated;
    imported->origin->bank=Cue::EngineOrigin::Bank::HotCue;
-   apply(updated,{imported},rate*10);assert(updated==unchanged);++cases;
+   bool loopTypeRejected=false;
+   try {apply(updated,{imported},rate*10);} catch(const std::runtime_error& e) {loopTypeRejected=std::string(e.what()).find("original Engine bank")!=std::string::npos;}
+   assert(loopTypeRejected && updated==unchanged);++cases;
    imported->origin->bank=Cue::EngineOrigin::Bank::SavedLoop;
    for(int slot:{0,9}) {imported->origin->slot=slot;apply(updated,{imported},rate*10);assert(updated==unchanged);++cases;}
    imported->origin->slot=1;
@@ -86,7 +88,10 @@ int main(){
    apply(updated,{hot},rate*10);assert(updated.hot_cues[3]->label=="Source hot");++cases;
    auto banks=updated;
    hot->origin->bank=Cue::EngineOrigin::Bank::SavedLoop;
-   apply(updated,{hot},rate*10);assert(updated==banks);++cases;
+   hot->label.clear();
+   bool hotTypeRejected=false;
+   try {apply(updated,{hot},rate*10);} catch(const std::runtime_error& e) {hotTypeRejected=std::string(e.what()).find("Saved loop 4")!=std::string::npos;}
+   assert(hotTypeRejected && updated==banks);++cases;
    // Destination collisions must reject regardless of input order.
    for(auto type:{CueType::HotCue,CueType::Loop}) {
     auto local=cue(0,0,rate,"Local",type);
@@ -114,7 +119,7 @@ int main(){
 '''
 with tempfile.TemporaryDirectory() as tmp:
  p=Path(tmp);(p/'probe.cpp').write_text(src)
- flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core','Qt6Gui'],text=True))
+ flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core','Qt6Gui','zlib','sqlite3'],text=True))
  lib=args.djinterop_build.resolve()
  fp=fpclassify_object(p)
  cmd=['c++','-std=c++20','-O3','-fPIC','-ffast-math','-Wall','-Wextra','-Werror',str(p/'probe.cpp'),fp,'-I'+str(root/'src'),'-I'+str(args.gsl_include.resolve()),'-I'+str(args.djinterop_source.resolve()/'include'),'-I'+str(lib/'include'),'-L'+str(lib),'-Wl,-rpath,'+str(lib),'-ldjinterop',*flags,'-o',str(p/'probe')]
