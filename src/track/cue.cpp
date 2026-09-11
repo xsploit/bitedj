@@ -50,14 +50,16 @@ Cue::Cue(
         mixxx::audio::FrameDiff_t length,
         int hotCue,
         const QString& label,
-        mixxx::RgbColor color)
+        mixxx::RgbColor color,
+        std::optional<EngineOrigin> engineOrigin)
         : m_bDirty(false), // clear flag after loading from database
           m_dbId(id),
           m_type(type),
           m_startPosition(position),
           m_iHotCue(hotCue),
           m_label(label),
-          m_color(color) {
+          m_color(color),
+          m_engineOrigin(std::move(engineOrigin)) {
     DEBUG_ASSERT(m_dbId.isValid());
     if (length != 0) {
         if (position.isValid()) {
@@ -271,4 +273,20 @@ void Cue::setDirty(bool dirty) {
 mixxx::audio::FramePos Cue::getEndPosition() const {
     const auto lock = lockMutex(&m_mutex);
     return m_endPosition;
+}
+
+std::optional<Cue::EngineOrigin> Cue::getEngineOrigin() const {
+    const auto lock = lockMutex(&m_mutex);
+    return m_engineOrigin;
+}
+
+void Cue::setEngineOrigin(std::optional<EngineOrigin> origin) {
+    auto lock = lockMutex(&m_mutex);
+    if (m_engineOrigin == origin) {
+        return;
+    }
+    m_engineOrigin = std::move(origin);
+    m_bDirty = true;
+    lock.unlock();
+    emit updated();
 }

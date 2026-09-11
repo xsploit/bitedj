@@ -239,6 +239,7 @@ void exportMetadata(
     // does not have a hot cue at that location.
     const auto cues = pTrack->getCuePoints();
     snapshot.hot_cues.resize(kMaxHotCues);
+    std::array<bool, kMaxHotCues> exportedHotCues{};
     for (const CuePointer& pCue : cues) {
         // We are only interested in hot cues.
         if (pCue->getType() != CueType::HotCue) {
@@ -246,6 +247,13 @@ void exportMetadata(
         }
 
         int hotCueIndex = pCue->getHotCue(); // Note: Mixxx uses 0-based.
+        const auto origin = pCue->getEngineOrigin();
+        if (origin) {
+            if (origin->bank != Cue::EngineOrigin::Bank::HotCue) {
+                continue;
+            }
+            hotCueIndex = origin->slot - 1;
+        }
         if (hotCueIndex < 0 || hotCueIndex >= kMaxHotCues) {
             qInfo() << "Skipping hot cue" << hotCueIndex
                     << "as the Engine DJ format only supports at most"
@@ -275,18 +283,34 @@ void exportMetadata(
                 static_cast<uint_least8_t>(color.blue()),
                 255};
 
+        if (exportedHotCues[hotCueIndex]) {
+            throw std::runtime_error(QString("Conflicting hot cues target Engine slot %1. "
+                                             "Resolve the cue conflict before exporting.")
+                                             .arg(hotCueIndex + 1).toStdString());
+        }
         snapshot.hot_cues[hotCueIndex] = hotCue;
+        exportedHotCues[hotCueIndex] = true;
     }
 
     // Export numbered saved loops to Engine's separate loop bank. Keep
     // destination slots for which BiteDJ has no valid saved loop.
     std::array<bool, kMaxSavedLoops> exportedLoops{};
+    std::array<bool, kMaxSavedLoops> exportedSourceLoops{};
     for (const CuePointer& pCue : cues) {
         if (pCue->getType() != CueType::Loop ||
                 pCue->getHotCue() == Cue::kNoHotCue) {
             continue;
         }
-        const int index = pCue->getHotCue();
+        // Imported cues retain their original Engine bank/slot even if a
+        // different local control index is needed to avoid a hot-cue collision.
+        int index = pCue->getHotCue();
+        const auto origin = pCue->getEngineOrigin();
+        if (origin) {
+            if (origin->bank != Cue::EngineOrigin::Bank::SavedLoop) {
+                continue;
+            }
+            index = origin->slot - 1;
+        }
         if (index < 0 || index >= kMaxSavedLoops) {
             qWarning() << "Skipping unsupported Engine saved-loop slot" << index;
             continue;
@@ -305,6 +329,11 @@ void exportMetadata(
             continue;
         }
         if (exportedLoops[index]) {
+            if (origin || exportedSourceLoops[index]) {
+                throw std::runtime_error(QString("Conflicting saved loops target Engine slot %1. "
+                                                 "Resolve the loop conflict before exporting.")
+                                                 .arg(index + 1).toStdString());
+            }
             qWarning() << "Skipping duplicate Engine saved-loop slot" << index
                        << "for track" << pTrack->getId();
             continue;
@@ -323,6 +352,7 @@ void exportMetadata(
                         static_cast<uint_least8_t>(color.green()),
                         static_cast<uint_least8_t>(color.blue()), 255}};
         exportedLoops[index] = true;
+        exportedSourceLoops[index] = origin.has_value();
     }
 
     // Write waveform.
