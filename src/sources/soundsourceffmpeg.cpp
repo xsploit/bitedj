@@ -964,8 +964,14 @@ bool SoundSourceFFmpeg::adjustCurrentPosition(SINT startIndex) {
     avcodec_flush_buffers(m_pavCodecContext);
 
     // Seek to new position
-    const int64_t seekTimestamp =
+    int64_t seekTimestamp =
             convertFrameIndexToStreamTime(*m_pavStream, seekIndex);
+    // MP3 preroll can place the timestamp before the first encoded packet.
+    // Some demuxers reject negative timestamps instead of seeking to the
+    // beginning. Timestamp zero retains the initial packet and decoder delay.
+    if (m_pavStream->codecpar->codec_id == AV_CODEC_ID_MP3 && seekTimestamp < 0) {
+        seekTimestamp = 0;
+    }
     int av_seek_frame_result = av_seek_frame(
             m_pavInputFormatContext,
             m_pavStream->index,
