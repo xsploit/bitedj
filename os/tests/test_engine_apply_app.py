@@ -8,6 +8,7 @@ p.add_argument('--build',type=Path,required=True)
 p.add_argument('--reader-prefix',type=Path,required=True)
 p.add_argument('--fixture-generator',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--media-recheck-only',action='store_true',help='Run only changed-size and outside-root media acceptance cases')
 p.add_argument('--portable-mount',type=Path,help='Empty disposable mount in a private namespace; never use a real USB drive')
 a=p.parse_args()
 build=a.build.resolve(); source=Path(__file__).resolve().parents[2]
@@ -72,6 +73,26 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
   (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
   print('PASS',name,len(state['tracks']),'tracks',len(state['playlists']),'playlists',flush=True)
   return state,text
+ # Exercise coordinator-level media resolution and playlist deferral through
+ # the full UI. All changes are confined to this disposable fixture.
+ if a.media_recheck_only:
+  vip=music/'Signal VIP.wav'
+  original=vip.read_bytes()
+  vip.write_bytes(original+b'changed-size')
+  changed,text=run('changed-size',profile('changed-size-profile'))
+  assert len(changed['tracks'])==1 and not changed['playlists']
+  assert 'Audio size differs' in text and 'No entries were omitted' in text
+  vip.write_bytes(original)
+  outside=root/'outside-selected-drive.wav';outside.write_bytes(original)
+  vip.unlink();vip.symlink_to(outside)
+  escaped,text=run('outside-root',profile('outside-root-profile'))
+  assert len(escaped['tracks'])==1 and not escaped['playlists']
+  assert 'outside the selected folder' in text and 'No entries were omitted' in text
+  assert vip.is_symlink() and outside.read_bytes()==original
+  results['binarySHA256']=hashlib.sha256((build/'mixxx').read_bytes()).hexdigest()
+  (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
+  print('PASS full-app media recheck acceptance',flush=True)
+  raise SystemExit(0)
  settings=profile('profile')
  first,text=run('first',settings,BITEDJ_APPLY_EDIT_LOCAL='1')
  assert len(first['tracks'])==2 and len(first['playlists'])==2 and len(first['entries'])==3

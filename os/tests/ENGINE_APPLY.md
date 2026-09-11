@@ -53,3 +53,5 @@ unshare -Umr --propagation private bash -c '
 The mounts exist only in the private namespace. Do not pass a real USB drive to this fixture generator. A tmpfs test exercises the app's removable-storage code path, not physical USB behavior.
 
 These desktop tests do not establish physical USB removal behavior, Windows runtime behavior, Pi touch interaction, FLX6 mapping or audio performance. The Pi remains off during this work.
+
+Run the same command with `--media-recheck-only` for two additional full-app cases: a synthetic audio file whose byte size differs from the Engine record, and a same-content symlink that resolves outside the selected drive. Each case must import only the unaffected track and defer both playlists without omitting entries. The checks also verify source/media hashes and SQLite integrity. These cases start with changed media before preview; they do not simulate an eject or a change between preview and Apply.
