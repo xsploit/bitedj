@@ -1927,6 +1927,8 @@ if(ENGINEPRIME)
 
   # Include conditional sources only required with Engine Prime export support.
   target_sources(mixxx-lib PRIVATE
+    src/library/engine/enginereaderservice.cpp
+    src/library/engine/enginereaderservice.h
     src/library/engine/engineimportpackage.cpp
     src/library/engine/engineimportmerge.cpp
     src/library/engine/engineimportregistry.cpp

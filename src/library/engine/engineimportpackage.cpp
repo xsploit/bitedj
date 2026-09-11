@@ -5,6 +5,7 @@
 #include <QSet>
 #include <cmath>
 #include <stdexcept>
+
 #include "util/fpclassify.h"
 
 namespace mixxx {
@@ -51,6 +52,24 @@ void validateTrack(const QJsonObject& track) {
     }
     for (const auto* key : {"artist", "album", "genre"}) {
         require(track[key].isNull() || text(track[key]), QString("Invalid track %1").arg(key));
+    }
+    for (const auto* key : {"sourceTitle", "comment", "composer", "publisher"}) {
+        if (track.contains(key)) {
+            require(track[key].isNull() || text(track[key]), QString("Invalid track %1").arg(key));
+        }
+    }
+    for (const auto* key : {"keyId", "bitrateKbps", "ratingPercent", "year", "trackNumber"}) {
+        if (!track.contains(key) || track[key].isNull()) {
+            continue;
+        }
+        const QString field(key);
+        const double minimum = (field == "year" || field == "trackNumber") ? -2147483648.0 : 0.0;
+        const double maximum = field == "keyId" ? 23.0 : field == "ratingPercent" ? 100.0
+                                                                                  : 2147483647.0;
+        require(integer(track[key], minimum, maximum), QString("Invalid track %1").arg(key));
+    }
+    if (track.contains("fileBytes")) {
+        require(sampleCount(track["fileBytes"]), "Invalid file bytes");
     }
     for (const auto* key : {"bpm", "durationMs", "mainCueFrame"}) {
         require(track[key].isNull() || number(track[key]), QString("Invalid track %1").arg(key));

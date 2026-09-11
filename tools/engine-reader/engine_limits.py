@@ -7,6 +7,12 @@ import tempfile
 
 
 def apply_launcher_limits():
+    # QProcess::terminate sends SIGTERM on Linux. Unwind Python scopes so
+    # subprocess.run kills/reaps the direct reader and TemporaryDirectory
+    # removes its snapshot. Default SIGTERM exits without this cleanup.
+    def cancelled(signum, frame):
+        raise SystemExit(128 + signum)
+    signal.signal(signal.SIGTERM, cancelled)
     def limit(which, soft, hard):
         _, inherited = resource.getrlimit(which)
         ceiling = hard if inherited == resource.RLIM_INFINITY else min(hard, inherited)

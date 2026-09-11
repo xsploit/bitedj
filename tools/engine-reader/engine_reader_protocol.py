@@ -53,6 +53,15 @@ def validate_tracks(data, source_uuid):
             require(text(t.get(key)),'Invalid '+key)
         for key in ('artist','album','genre'):
             require(key in t and (t[key] is None or text(t[key])),'Invalid '+key)
+        for key in ('sourceTitle','comment','composer','publisher'):
+            if key in t:
+                require(t[key] is None or text(t[key]),'Invalid '+key)
+        for key,low,high in (('keyId',0,23),('bitrateKbps',0,2147483647),('ratingPercent',0,100),('year',-2147483648,2147483647),('trackNumber',-2147483648,2147483647)):
+            if key in t:
+                require(t[key] is None or (type(t[key]) is int and low<=t[key]<=high),'Invalid '+key)
+        if 'fileBytes' in t:
+            value=t['fileBytes']
+            require(value is None or (isinstance(value,str) and value.isascii() and value.isdecimal() and 0<=int(value)<2**64 and str(int(value))==value),'Invalid fileBytes')
         for key in ('durationMs','bpm','mainCueFrame'):
             require(key in t and (t[key] is None or number(t[key])),'Invalid '+key)
         count=t.get('sampleCount')
