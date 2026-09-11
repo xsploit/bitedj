@@ -4,7 +4,6 @@
 #include <QStringList>
 #include <array>
 #include <cstdint>
-#include <cmath>
 #include <memory>
 #include <stdexcept>
 
@@ -300,8 +299,7 @@ void exportMetadata(
         }
         const double start = positions.startPosition.value();
         const double end = positions.endPosition.value();
-        if (!std::isfinite(start) || !std::isfinite(end) ||
-                start < 0 || end <= start || end > frameCount) {
+        if (start < 0 || end <= start || end > frameCount) {
             qWarning() << "Skipping invalid Engine saved loop" << index
                        << "for track" << pTrack->getId();
             continue;

@@ -51,7 +51,7 @@ int main(){
    djinterop::track_snapshot initial;initial.relative_path="../fixture.wav";initial.title="Loop fixture";
    initial.sample_rate=rate;initial.sample_count=rate*10;initial.duration=std::chrono::milliseconds(10000);
    initial.loops.resize(8);initial.loops[3]=djinterop::loop{"Keep",100,200,{1,2,3,255}};
-   initial.hot_cues.resize(8);initial.hot_cues[0]=djinterop::hot_cue{"Keep cue",0,{1,2,3,255}};
+   initial.hot_cues.push_back(djinterop::hot_cue{"Keep cue",0,{1,2,3,255}});initial.hot_cues.resize(8);
    auto updated=initial;
    apply(updated,{cue(0,0,rate*2,"Intro"),cue(7,rate*8,rate*10),cue(0,0,rate,"Duplicate")},rate*10);
    assert(updated.loops[0]->label=="Intro" && updated.loops[0]->end_sample_offset==rate*2);
@@ -76,5 +76,5 @@ with tempfile.TemporaryDirectory() as tmp:
  flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core','Qt6Gui'],text=True))
  lib=args.djinterop_build.resolve()
  fp=fpclassify_object(p)
- cmd=['c++','-std=c++20','-Wall','-Wextra','-Werror',str(p/'probe.cpp'),fp,'-I'+str(root/'src'),'-I'+str(args.gsl_include.resolve()),'-I'+str(args.djinterop_source.resolve()/'include'),'-I'+str(lib/'include'),'-L'+str(lib),'-Wl,-rpath,'+str(lib),'-ldjinterop',*flags,'-o',str(p/'probe')]
+ cmd=['c++','-std=c++20','-O3','-ffast-math','-Wall','-Wextra','-Werror',str(p/'probe.cpp'),fp,'-I'+str(root/'src'),'-I'+str(args.gsl_include.resolve()),'-I'+str(args.djinterop_source.resolve()/'include'),'-I'+str(lib/'include'),'-L'+str(lib),'-Wl,-rpath,'+str(lib),'-ldjinterop',*flags,'-o',str(p/'probe')]
  subprocess.run(cmd,check=True);subprocess.run([str(p/'probe')],check=True)
