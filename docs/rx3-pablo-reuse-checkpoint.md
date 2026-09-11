@@ -152,3 +152,23 @@ do not infer correct internal timing merely from opening a different-rate device
 Both previously failed function exports were recovered using different decompiler
 settings. There are now 17,378 non-external pseudocode exports, but semantic and
 runtime validation remain limited. No proprietary pseudocode is included here.
+
+### Detector frequency paths verified
+
+Executing the stock detector constructor in isolated ARM emulation recovered its
+actual filter configuration. The two stages form three frequency paths plus an
+identity lane. At the stock 44.1 kHz assumption, the cascade selects a narrow bass
+band around 150 Hz, a broad middle band and a high-frequency band. The inspected
+BPM routine sends the three filtered lanes to peak/interval checking.
+
+The original ARM filter leaf, executed twice with the recovered configuration,
+matched calculated sine gains in all 28 tested frequency/lane combinations;
+maximum absolute gain error was about 6.55e-6. This verifies the frequency front
+end, not complete beat detection or better musical results. The constructor test
+stubs allocation/memset and does not boot the firmware or validate live hardware.
+
+BiteDJ research candidate: compare independently implemented multiband onset
+features against its existing analyzers on controlled clicks and a labeled music
+corpus. Preserve rate conversion, half/double-tempo handling and confidence in the
+evaluation. No recovered coefficient table, firmware or proprietary pseudocode is
+included in this repository. Full peak/interval semantics remain under analysis.
