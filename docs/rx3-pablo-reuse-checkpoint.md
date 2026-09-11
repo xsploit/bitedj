@@ -246,3 +246,25 @@ listed dependency file matched the profile's hash. This is a loader-only check,
 not player startup or hardware validation. The update script's library-copy phase
 is separate from normal startup. Installed pkg-config version declarations provide
 source-matching leads but are not yet proven binary build identities.
+
+### Detector edge cases and stereo comparison
+
+Fourteen additional synthetic audio scenarios executed the stock RX3 detector in
+bounded ARM emulation. On the tested pulses, 60/65 BPM doubled, 200 BPM halved,
+and 181/182/184/187 BPM did not detect within 30 seconds. This is fixture-specific
+behavior, not a universal supported-tempo range or real-music accuracy score.
+A 90-to-128 BPM transition took about 8.45 seconds to acquire the new estimate.
+After a pulse train stopped, the historical BPM flag stayed set while current
+peak availability cleared. Nine actual ARM getter cases independently verified
+the peak-availability gate and the recent-history adjustment boundary.
+
+An independently written C++ probe compiled the actual BiteDJ
+DownmixAndOverlapHelper implementation. Equal/opposite stereo channels cancelled
+completely in its mono output. This helper is used by Queen Mary analysis;
+this was not a full Queen Mary BPM test. BiteDJ's separate bass-energy path already
+squares independently filtered channels and avoids this cancellation mechanism.
+No analyzer change is justified by these synthetic fixtures alone, particularly
+because the downmix helper also serves key analysis. Next evaluation should include
+real music, stereo phase variants, tempo changes and half/double-tempo ambiguity,
+and distinguish retained tempo from current beat timing. Raw firmware and
+proprietary pseudocode remain outside this repository.
