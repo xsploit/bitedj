@@ -33,6 +33,17 @@ class ReaderProtocol(unittest.TestCase):
         d=self.sample();d['tracks'].append(copy.deepcopy(d['tracks'][0]))
         with self.assertRaises(ValueError):validate_tracks(d,d['sourceUuid'])
         with self.assertRaises(ValueError):validate_tracks(self.sample(),'wrong')
+    def test_main_cue_state(self):
+        d=self.sample()
+        for state in ({'defaultFrame':12345.5,'adjustedFrame':0,'isAdjusted':False},
+                      {'defaultFrame':0,'adjustedFrame':45678.25,'isAdjusted':True}):
+            d['tracks'][0]['mainCueState']=state
+            self.assertEqual(validate_tracks(d,d['sourceUuid']),{'1'})
+        for state in (None,{}, {'defaultFrame':0,'adjustedFrame':0,'isAdjusted':1},
+                      {'defaultFrame':True,'adjustedFrame':0,'isAdjusted':False},
+                      {'defaultFrame':0,'adjustedFrame':float('inf'),'isAdjusted':False}):
+            d['tracks'][0]['mainCueState']=state
+            with self.subTest(state=state),self.assertRaises(ValueError):validate_tracks(d,d['sourceUuid'])
     def test_process_failures(self):
         cases=[("print('{\"a\":1,\"a\":2}')",ValueError,60,1024),
                ("print('NaN')",ValueError,60,1024),

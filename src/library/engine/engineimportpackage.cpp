@@ -74,6 +74,12 @@ void validateTrack(const QJsonObject& track) {
     for (const auto* key : {"bpm", "durationMs", "mainCueFrame"}) {
         require(track[key].isNull() || number(track[key]), QString("Invalid track %1").arg(key));
     }
+    if (track.contains("mainCueState")) {
+        const auto state = track["mainCueState"].toObject();
+        require(track["mainCueState"].isObject() && number(state["defaultFrame"]) &&
+                        number(state["adjustedFrame"]) && state["isAdjusted"].isBool(),
+                "Invalid main cue state");
+    }
     require(sampleCount(track["sampleCount"]), "Invalid sample count");
     require(number(track["sampleRate"]) && track["sampleRate"].toDouble() >= 0,
             "Invalid sample rate");

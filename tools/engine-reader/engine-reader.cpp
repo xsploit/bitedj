@@ -1,4 +1,5 @@
 #include <djinterop/djinterop.hpp>
+#include <djinterop/engine/v3/engine_library.hpp>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -12,9 +13,12 @@ int main(int argc, char** argv) {
     if (argc != 2) return 2;
     try {
         auto db = djinterop::engine::load_database(argv[1]);
+        auto rawLibrary = djinterop::engine::v3::engine_library::load(argv[1]);
+        auto performanceData = rawLibrary.performance_data();
         QJsonArray tracks;
         for (const auto& t : db.tracks()) {
             const auto s = t.snapshot();
+            const auto rawCues = performanceData.get_quick_cues(t.id());
             QJsonArray cues, loops, collisions, grid;
             for (size_t i=0; i<s.hot_cues.size(); ++i) {
                 if (!s.hot_cues[i]) continue;
@@ -49,6 +53,11 @@ int main(int argc, char** argv) {
                     {"bpm", s.bpm ? QJsonValue(*s.bpm) : QJsonValue()},
                     {"durationMs", s.duration ? QJsonValue(double(s.duration->count())) : QJsonValue()},
                     {"mainCueFrame", s.main_cue ? QJsonValue(*s.main_cue) : QJsonValue()},
+                    // Preserve the source state without guessing which value
+                    // native playback selects or translating decoder origins.
+                    {"mainCueState", QJsonObject{{"defaultFrame", rawCues.default_main_cue},
+                                             {"adjustedFrame", rawCues.adjusted_main_cue},
+                                             {"isAdjusted", rawCues.is_main_cue_adjusted}}},
                     {"relativePath", QString::fromStdString(s.relative_path.value_or(""))},
                     {"sampleCount", s.sample_count ? QJsonValue(QString::number(*s.sample_count)) : QJsonValue()},
                     {"sampleRate", s.sample_rate.value_or(0)}, {"hotCues", cues}, {"loops", loops},

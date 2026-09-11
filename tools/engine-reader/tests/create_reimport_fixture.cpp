@@ -1,4 +1,5 @@
 #include <djinterop/djinterop.hpp>
+#include <djinterop/engine/v3/engine_library.hpp>
 #include <iostream>
 int main(int argc, char** argv) {
     if (argc != 3)
@@ -40,6 +41,19 @@ int main(int argc, char** argv) {
                 list.add_track_back(track);
             }
             list.create_sub_playlist("Versions").add_track_back(*db.track_by_id(2));
+        } else if (action == "maincue-state") {
+            auto library = engine::v3::engine_library::load(argv[1]);
+            auto data = library.performance_data();
+            auto cue = data.get_quick_cues(1);
+            cue.default_main_cue = 12345.5;
+            cue.adjusted_main_cue = 0;
+            cue.is_main_cue_adjusted = false;
+            data.set_quick_cues(1, cue);
+            cue = data.get_quick_cues(2);
+            cue.default_main_cue = 0;
+            cue.adjusted_main_cue = 45678.25;
+            cue.is_main_cue_adjusted = true;
+            data.set_quick_cues(2, cue);
         } else if (action == "update") {
             auto db = engine::load_database(argv[1]);
             auto track = *db.track_by_id(1);

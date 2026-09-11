@@ -64,6 +64,11 @@ def validate_tracks(data, source_uuid):
             require(value is None or (isinstance(value,str) and value.isascii() and value.isdecimal() and 0<=int(value)<2**64 and str(int(value))==value),'Invalid fileBytes')
         for key in ('durationMs','bpm','mainCueFrame'):
             require(key in t and (t[key] is None or number(t[key])),'Invalid '+key)
+        if 'mainCueState' in t:
+            state=t['mainCueState']
+            require(isinstance(state,dict) and number(state.get('defaultFrame')) and
+                    number(state.get('adjustedFrame')) and type(state.get('isAdjusted')) is bool,
+                    'Invalid main cue state')
         count=t.get('sampleCount')
         require('sampleCount' in t and (count is None or (isinstance(count,str) and count.isascii() and count.isdecimal() and 0<=int(count)<2**64 and str(int(count))==count)), 'Invalid sample count')
         require(number(t.get('sampleRate')) and t['sampleRate']>=0,'Invalid sample rate')

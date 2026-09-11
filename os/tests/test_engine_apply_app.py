@@ -8,9 +8,11 @@ p.add_argument('--build',type=Path,required=True)
 p.add_argument('--reader-prefix',type=Path,required=True)
 p.add_argument('--fixture-generator',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--main-cue-state-only',action='store_true',help='Verify lossless main-cue source-state provenance and repeat import')
 p.add_argument('--media-recheck-only',action='store_true',help='Run only changed-size and outside-root media acceptance cases')
 p.add_argument('--portable-mount',type=Path,help='Empty disposable mount in a private namespace; never use a real USB drive')
 a=p.parse_args()
+if a.main_cue_state_only and a.media_recheck_only:p.error("select only one focused test mode")
 build=a.build.resolve(); source=Path(__file__).resolve().parents[2]
 helper=a.reader_prefix.resolve()/'libexec/bitedj-engine/engine-import.py'
 generator=a.fixture_generator.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
@@ -73,6 +75,22 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
   (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
   print('PASS',name,len(state['tracks']),'tracks',len(state['playlists']),'playlists',flush=True)
   return state,text
+ if a.main_cue_state_only:
+  subprocess.run([str(generator),str(library),'maincue-state'],check=True)
+  settings=profile('maincue-profile')
+  first,text=run('maincue-state',settings)
+  assert len(first['tracks'])==2 and len(first['playlists'])==2
+  timing={sid:base['deferredTiming'] for kind,sid,lid,base in first['origins'] if kind=='track'}
+  assert timing['1']['mainCueFrame'] is None
+  assert timing['1']['mainCueState']=={'defaultFrame':12345.5,'adjustedFrame':0,'isAdjusted':False}
+  assert timing['2']['mainCueFrame']==45678.25
+  assert timing['2']['mainCueState']=={'defaultFrame':0,'adjustedFrame':45678.25,'isAdjusted':True}
+  repeat,text=run('maincue-repeat',settings)
+  assert repeat==first,'repeat import changed main-cue state or local content'
+  results['binarySHA256']=hashlib.sha256((build/'mixxx').read_bytes()).hexdigest()
+  (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
+  print('PASS full-app main-cue provenance acceptance',flush=True)
+  raise SystemExit(0)
  # Exercise coordinator-level media resolution and playlist deferral through
  # the full UI. All changes are confined to this disposable fixture.
  if a.media_recheck_only:

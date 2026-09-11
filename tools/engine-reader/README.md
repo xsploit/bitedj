@@ -71,3 +71,9 @@ SIGTERM demonstrably left the reader alive. SIGKILL cannot run cleanup; an app
 should request terminate first and escalate only after a bounded grace period.
 Only accept output after a successful launcher exit and complete validation:
 cancellation during final output emission could leave an incomplete document.
+
+## Preserved main-cue state
+
+Tracks additionally include optional `mainCueState` with finite numeric `defaultFrame` and `adjustedFrame`, and boolean `isAdjusted`. These are the raw low-level cue fields, including zero values. The existing `mainCueFrame` remains the high-level libdjinterop snapshot value for compatibility; it can be null even when a nonzero default cue is stored. Python and C++ validators accept older packages without `mainCueState` and reject malformed state when present.
+
+BiteDJ retains this object in the track's deferred timing provenance. It does not select a playable cue from these fields or apply a decoder-origin correction. Native selection semantics and database-to-audio alignment remain separate verification gates.

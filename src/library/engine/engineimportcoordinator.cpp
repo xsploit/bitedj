@@ -172,7 +172,7 @@ void EngineImportCoordinator::importTrack(const QJsonObject& source) {
     if (!exists.exec() || !exists.next()) { issue(title, tr("The local track was removed during import.")); return; }
     exists.finish();
     QJsonObject timing;
-    for (const auto* field : {"sampleRate", "sampleCount", "bpm", "mainCueFrame", "hotCues", "loops", "beatgrid", "relativePath", "fileBytes", "ratingPercent"})
+    for (const auto* field : {"sampleRate", "sampleCount", "bpm", "mainCueFrame", "mainCueState", "hotCues", "loops", "beatgrid", "relativePath", "fileBytes", "ratingPercent"})
         timing.insert(field, source[field]);
     plan.baseline.insert("deferredTiming", timing);
     if (!registry.save(key, {track->getId().toVariant().toLongLong(), plan.baseline}, &error) || !tx.commit()) {

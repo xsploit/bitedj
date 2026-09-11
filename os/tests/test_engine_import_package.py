@@ -35,6 +35,10 @@ mutations=[
  lambda x:x['playlists'][0]['tracks'][0].update(resolution='unresolved'),lambda x:x['playlists'][0].update(title='bad\x00name')]
 for field, invalid in [('keyId',24),('keyId',True),('bitrateKbps',-1),('ratingPercent',101),('year',2**31),('trackNumber',1.5),('fileBytes','01'),('fileBytes',str(2**64)),('fileBytes',42),('sourceTitle',False),('comment','bad\x00text'),('composer',False),('publisher','x'*65537)]:
  mutations.append(lambda x,k=field,v=invalid:x['tracks'][0].update({k:v}))
+for invalid in (None,{}, {'defaultFrame':0,'adjustedFrame':0,'isAdjusted':1},
+                {'defaultFrame':True,'adjustedFrame':0,'isAdjusted':False},
+                {'defaultFrame':0,'adjustedFrame':'123','isAdjusted':False}):
+ mutations.append(lambda x,v=invalid:x['tracks'][0].update(mainCueState=v))
 with tempfile.TemporaryDirectory() as temp:
  d=Path(temp);(d/'main.cpp').write_text(code);exe=d/'test'
  flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core'],text=True))
@@ -43,10 +47,11 @@ with tempfile.TemporaryDirectory() as temp:
   result=subprocess.run([str(exe)],input=json.dumps(value),text=True,capture_output=True,timeout=10)
   assert result.returncode==(0 if valid else 1),(result.returncode,result.stderr)
  check(base,True)
+ extended=copy.deepcopy(base);extended['tracks'][0]['mainCueState']={'defaultFrame':12345.5,'adjustedFrame':0,'isAdjusted':False};check(extended,True)
  for key_id in range(24):
   extended=copy.deepcopy(base);extended['tracks'][0].update(sourceTitle=None,keyId=key_id,comment='',composer=None,publisher='Publisher',bitrateKbps=1536,ratingPercent=60,year=2026,trackNumber=1,fileBytes='9007199254740993');check(extended,True)
  empty=copy.deepcopy(base);empty.update(tracks=[],playlists=[]);check(empty,True)
  for mutate in mutations:
   value=copy.deepcopy(base);mutate(value);check(value,False)
  if args.fixture:check(json.loads(args.fixture.read_text()),True)
- print(f'PASS: {26+len(mutations)+bool(args.fixture)} parent validation cases; same-slot banks, fractional/negative grid, duplicates and unresolved refs preserved')
+ print(f'PASS: {27+len(mutations)+bool(args.fixture)} parent validation cases; same-slot banks, fractional/negative grid, duplicates and unresolved refs preserved')
