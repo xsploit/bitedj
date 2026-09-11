@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         db.setDatabaseName(temp.filePath("library.sqlite"));
         check(db.open(), "database open");
         SchemaManager schema(db);
-        check(schema.upgradeToSchemaVersion(41, argv[1]) == SchemaManager::Result::UpgradeSucceeded, "schema41");
+        check(schema.upgradeToSchemaVersion(42, argv[1]) == SchemaManager::Result::UpgradeSucceeded, "schema42");
         QSqlQuery q(db);
         check(q.exec("INSERT INTO library(id,title) VALUES(1,'Synthetic cue test')"), "local track row");
         CueDAO dao;
