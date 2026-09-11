@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <algorithm>
+#include <cstring>
 #include <vector>
 
 #include "sources/soundsourceproxy.h"
@@ -39,6 +40,44 @@ int main(int argc, char** argv) {
                 mixxx::IndexRange::forward(first, count),
                 mixxx::SampleBuffer::WritableSlice(buffer.data(), buffer.size())));
         const auto readCount = read.frameLength();
+        QFile pcm(QString::fromLocal8Bit(argv[1]) + QStringLiteral(".%1.f32").arg(i - 2));
+        if (!pcm.open(QIODevice::WriteOnly)) {
+            audio->close();
+            return 7;
+        }
+        std::vector<CSAMPLE> block(1024 * channels);
+        for (SINT pos = first; pos < end;) {
+            const auto frames = std::min<SINT>(1024, end - pos);
+            const auto decoded = audio->readSampleFrames(mixxx::WritableSampleFrames(
+                    mixxx::IndexRange::forward(pos, frames),
+                    mixxx::SampleBuffer::WritableSlice(block.data(), block.size())));
+            if (decoded.frameLength() != frames ||
+                    pcm.write(reinterpret_cast<const char*>(decoded.readableData()),
+                            frames * channels * sizeof(CSAMPLE)) !=
+                            frames * channels * sizeof(CSAMPLE)) {
+                audio->close();
+                return 8;
+            }
+            pos += frames;
+        }
+        pcm.close();
+        const auto tailBytes = count * channels * sizeof(CSAMPLE);
+        if (!pcm.open(QIODevice::ReadOnly) || !pcm.seek(pcm.size() - tailBytes)) {
+            audio->close();
+            return 9;
+        }
+        const auto tail = pcm.read(tailBytes);
+        pcm.close();
+        // Force a nonsequential seek away from the end before checking it.
+        audio->readSampleFrames(mixxx::WritableSampleFrames(
+                mixxx::IndexRange::forward(first, count),
+                mixxx::SampleBuffer::WritableSlice(buffer.data(), buffer.size())));
+        const auto endRead = audio->readSampleFrames(mixxx::WritableSampleFrames(
+                mixxx::IndexRange::forward(end - count, count),
+                mixxx::SampleBuffer::WritableSlice(buffer.data(), buffer.size())));
+        const bool tailMatches = endRead.frameLength() == count &&
+                tail.size() == qint64(tailBytes) &&
+                std::memcmp(tail.constData(), endRead.readableData(), tailBytes) == 0;
         tracks.append(QJsonObject{
                 {"file", path},
                 {"provider", proxy.getProvider()->getDisplayName()},
@@ -47,7 +86,8 @@ int main(int argc, char** argv) {
                 {"firstFrame", QString::number(first)},
                 {"endFrame", QString::number(end)},
                 {"frameLength", QString::number(audio->frameLength())},
-                {"firstReadFrames", int(readCount)}});
+                {"firstReadFrames", int(readCount)},
+                {"tailSeekMatchesSequential", tailMatches}});
         audio->close();
         if (readCount != count) {
             return 5;
