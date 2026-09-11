@@ -21,7 +21,11 @@ p.add_argument('--qemu',type=Path,default=Path('/usr/bin/qemu-aarch64-static'))
 p.add_argument('--result',type=Path,required=True)
 p.add_argument('--input',type=Path,required=True)
 p.add_argument('--pcm-output',type=Path,required=True)
+p.add_argument('--fresh-seek',type=int,help='Read 256 interleaved samples at this nonnegative position on a fresh reader, without a sequential pass')
+p.add_argument('--experimental-preroll-nine',action='store_true',help='Research only: change common-reader preroll from three codec frames to nine in process memory')
 a=p.parse_args()
+if a.fresh_seek is not None and not 0 <= a.fresh_seek <= (1 << 63)-257:
+ p.error('--fresh-seek must fit a nonnegative signed 64-bit sample position with room for 256 samples')
 runtime=a.runtime.resolve(); binary=runtime/'usr/Engine/Engine'
 actual=hashlib.sha256(binary.read_bytes()).hexdigest()
 input_before=hashlib.sha256(a.input.read_bytes()).hexdigest()
@@ -33,6 +37,11 @@ with tempfile.TemporaryDirectory(prefix='engine-decoder-entry-') as temporary:
  subprocess.run([str(a.zig.resolve()),'cc','-target','aarch64-linux-gnu.2.35',
   '-shared','-fPIC','-O2','-Wall','-Wextra','-Werror',str(source),'-ldl','-o',str(shim)],check=True,timeout=120)
  env=os.environ.copy();env['ENGINE_READER_INPUT']=str(a.input.resolve())
+ # Inherited environment must not silently select an experimental run.
+ env.pop('ENGINE_READER_PREROLL_NINE',None)
+ env.pop('ENGINE_READER_FRESH_SEEK',None)
+ if a.experimental_preroll_nine:env['ENGINE_READER_PREROLL_NINE']='1'
+ if a.fresh_seek is not None:env['ENGINE_READER_FRESH_SEEK']=str(a.fresh_seek)
  if a.pcm_output:env['ENGINE_READER_OUTPUT']=str(a.pcm_output.resolve())
  run=subprocess.run(['unshare','-Urn',str(a.qemu.resolve()),str(runtime/'lib/ld-linux-aarch64.so.1'),
   '--library-path',str(runtime/'usr/lib')+':'+str(runtime/'lib'),
@@ -40,8 +49,11 @@ with tempfile.TemporaryDirectory(prefix='engine-decoder-entry-') as temporary:
  result={'scope':'Native Engine file factory, decoder, sequential PCM and seeks under PC emulation; no application main or Pi',
   'engineSHA256':actual,'inputSHA256':input_before,'inputUnchanged':input_before==hashlib.sha256(a.input.read_bytes()).hexdigest(),'probeSHA256':hashlib.sha256(source.read_bytes()).hexdigest(),
   'exit':run.returncode,'stdout':run.stdout,'stderr':run.stderr,
+  'experimentalPrerollNine':a.experimental_preroll_nine,'freshSeekInterleavedSample':a.fresh_seek,
+  'engineUnchanged':actual==hashlib.sha256(binary.read_bytes()).hexdigest(),
   'passed':run.returncode==0 and 'PCM_PROBE PASS' in run.stdout}
- result['passed']=result['passed'] and result['inputUnchanged']
+ result['passed']=result['passed'] and result['inputUnchanged'] and result['engineUnchanged']
+ result['passed']=result['passed'] and (('EXPERIMENT preroll=9' in run.stdout)==a.experimental_preroll_nine)
  a.result.write_text(json.dumps(result,indent=2)+'\n')
  print(run.stdout[-2000:],end='');print(run.stderr[-3500:],end='')
  raise SystemExit(0 if result['passed'] else 1)
