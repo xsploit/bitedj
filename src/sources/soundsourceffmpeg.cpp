@@ -243,7 +243,19 @@ SINT SoundSourceFFmpeg::getStreamSeekPrerollFrameCount(const AVStream& avStream)
 }
 
 // Static
-IndexRange SoundSourceFFmpeg::getStreamFrameIndexRange(const AVStream& avStream) {
+IndexRange SoundSourceFFmpeg::getStreamFrameIndexRange(
+        const AVFormatContext& avFormat, const AVStream& avStream) {
+    // FFmpeg 8's MP3 demuxer reports a duration with known encoder padding
+    // already removed (FFmpeg commit 5a526fdad01054d611be715099432bc7ac94a14b).
+    // It is a length, not an absolute end timestamp. Subtracting start_time
+    // again clips audible audio from the end of gapless MP3s. Keep the existing
+    // convention for older runtimes and other demuxers/codecs.
+    if (avformat_version() >= AV_VERSION_INT(62, 0, 0) &&
+            avStream.codecpar->codec_id == AV_CODEC_ID_MP3 &&
+            avFormat.iformat && qstrcmp(avFormat.iformat->name, "mp3") == 0) {
+        return IndexRange::forward(0, av_rescale_q(avStream.duration,
+                avStream.time_base, av_make_q(1, avStream.codecpar->sample_rate)));
+    }
     const auto frameIndexRange = IndexRange::between(
             convertStreamTimeToFrameIndex(avStream, getStreamStartTime(avStream)),
             convertStreamTimeToFrameIndex(avStream, getStreamEndTime(avStream)));
@@ -689,15 +701,15 @@ SoundSource::OpenResult SoundSourceFFmpeg::tryOpen(
         return OpenResult::Failed;
     }
 
-    if (m_pavStream->duration == AV_NOPTS_VALUE) {
+    if (m_pavStream->duration < 0) {
         // Streams with unknown or unlimited duration are
         // not (yet) supported.
         kLogger.warning()
-                << "Unknown or unlimited stream duration";
+                << "Unknown, invalid, or unlimited stream duration";
         return OpenResult::Failed;
     }
     const auto streamFrameIndexRange =
-            getStreamFrameIndexRange(*m_pavStream);
+            getStreamFrameIndexRange(*m_pavInputFormatContext, *m_pavStream);
     VERIFY_OR_DEBUG_ASSERT(streamFrameIndexRange.start() <= streamFrameIndexRange.end()) {
         kLogger.warning()
                 << "Stream with unsupported or invalid frame index range"
