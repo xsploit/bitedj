@@ -41,6 +41,22 @@ The native file factory and reader now execute under PC ARM emulation without ap
 | MP3 VBR |132300|132300|0.000000536|
 | AAC/M4A |132096|132300|0.425|
 
-Native WAV/MP3 seeks, including the last frame and beyond EOF, match sequential PCM exactly. For the AAC comparison's first8000 frames, shifting the BiteDJ reference forward1024 frames reduces RMS difference from about0.0933 to0.00000870. Native AAC reports origin=-1024; its tail count also differs. This argues against assuming unadjusted AAC alignment, not for a universal offset rule.
+For those four fixtures, native WAV/MP3 seeks, including the last frame and beyond EOF, match sequential PCM exactly. For the AAC comparison's first8000 frames, shifting the BiteDJ reference forward1024 frames reduces RMS difference from about0.0933 to0.00000870. Native AAC reports origin=-1024; its tail count also differs. This argues against assuming unadjusted AAC alignment, not for a universal offset rule.
 
 See `tools/engine-reader/diagnostics/` for the harness, fixture details and hashed results. Passing runs use the actual native allocation/file-factory and lock-state setup, without assertion bypasses or fake file providers. Broader codec/rate/channel coverage and source database cue-coordinate confirmation remain before enabling timing import.
+
+## Expanded rate/channel checks and seek-preroll experiment
+
+Fifteen additional synthetic three-second fixtures cover mono 44100 Hz, mono 48000 Hz and stereo 48000 Hz, each as WAV, CBR MP3, VBR MP3, MP3 without a Xing header, and AAC/M4A. See `tools/engine-reader/diagnostics/native-reader-expanded-results.json` for input hashes and individual comparisons.
+
+Sequential WAV and MP3 PCM remains closely aligned with BiteDJ. The mono 44100-Hz MP3 without a Xing header has 133632 native frames versus 133630 advertised by BiteDJ, so exact duration is not established for that case. AAC retains the observed 1024-frame initial alignment difference and unequal frame counts; this remains fixture evidence, not a universal correction.
+
+Native mono VBR MP3 seeks expose a separate correctness issue: at both tested rates, reads at interleaved sample positions 88200 and 8190 return 256 zero samples although sequential PCM there is nonzero. BiteDJ's existing tail-seek check passes for these files; that check does not cover every native probe position.
+
+An isolated process-local experiment increases the native common reader's preroll from three codec frames to nine. The instruction at image offset 0x1611c50 is guarded as 0x12800043 and replaced in memory with 0x12800103. The preserved executable SHA256 remains unchanged. This is not deployed or included in the default probe.
+
+With that change, every tested WAV/MP3 seek in the fifteen-fixture matrix matches its sequential PCM exactly, including both previously failing mono VBR files. WAV/MP3 sequential output is byte-identical before and after. This establishes that increasing preroll removes these observed failures; bit-reservoir recovery is a plausible mechanism, not separately proven. BiteDJ already has an explicit MP3 preroll policy; its channel-dependent sample units should not be conflated with this native codec-frame multiplier.
+
+AAC sequential frame counts are unchanged by the experiment, with numerical differences at most 2.98e-8. AAC seek differences remain. The change currently affects the common decoder path and needs MP3-specific scoping, broader seek-order and file coverage, and live playback cost validation before becoming an adapter candidate. It does not address Engine's observed UI loading lag or establish source database cue coordinates.
+
+A follow-up control opens a fresh native reader for each position (8190 and 88200) without first reading sequentially or beyond EOF. Both mono VBR files still return silence with the original instruction, and exact sequential-reference PCM with the nine-frame experiment. The stereo VBR control passes both ways. This rules out the original probe's preceding out-of-range seek as a necessary cause of these failures. The surrounding native instructions multiply the immediate by the decoder frame-size field before adding the requested position; nearest surviving symbol names are unrelated stripped-symbol artifacts.

@@ -1,0 +1,2080 @@
+{
+  "scope": "Synthetic PC ARM-emulation comparison; no application main, Pi test, performance measurement or deployment. Common-path process-local preroll experiment, not MP3-scoped production code.",
+  "baseline": {
+    "scope": "Native Engine wrapper under PC ARM emulation vs completed BiteDJ providers; synthetic 3-second inputs, no Pi performance claim",
+    "engineSHA256": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
+    "nativeProbeSHA256": "e4c1db933fe7e4a9f39473e3320b8c1e443a73851a735d985a5656b18af7d550",
+    "bitedjBinarySHA256": "976ae771510b42e1f9569fd49dda865b21f66791b68222d1a665179932dbb9f4",
+    "tracks": [
+      {
+        "file": "44100-1ch.wav",
+        "inputSHA256": "3929da768330250f9b47768eff3e4940b2eebe87f84b284507ebac182982b7e7",
+        "sampleRate": 44100,
+        "channels": 1,
+        "nativeFrames": 132300,
+        "bitedjFrames": 132300,
+        "bitedjProvider": "libsndfile",
+        "maxSameOffsetPcmDifference": 0.0,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132298,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132428,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "44100-1ch.cbr.mp3",
+        "inputSHA256": "4e8a20e1639539af9ce9d78807b5454541a78f3369d7fab513c0096f3aab8809",
+        "sampleRate": 44100,
+        "channels": 1,
+        "nativeFrames": 132300,
+        "bitedjFrames": 132300,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.129243850708008e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132298,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132428,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "44100-1ch.vbr.mp3",
+        "inputSHA256": "d0c373caa915171744906614c24dcc75cf9fd5280b836a6fa700c9aafe0b94d1",
+        "sampleRate": 44100,
+        "channels": 1,
+        "nativeFrames": 132300,
+        "bitedjFrames": 132300,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.725290298461914e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.21843303740024567
+          },
+          {
+            "samplePosition": 132298,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.07213118073741498
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132428,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.22704288363456726
+          }
+        ]
+      },
+      {
+        "file": "44100-1ch.no-xing.mp3",
+        "inputSHA256": "92090f667834632a18307cb5010ccb84755400917a0557f52c00f82e82881915",
+        "sampleRate": 44100,
+        "channels": 1,
+        "nativeFrames": 133632,
+        "bitedjFrames": 133630,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.129243850708008e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 133630,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 133760,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "44100-1ch.m4a",
+        "inputSHA256": "e8b8830c0e5a920f527f5234b6494ae021886290dedac13c82583a2e2b296701",
+        "sampleRate": 44100,
+        "channels": 1,
+        "nativeFrames": 132096,
+        "bitedjFrames": 132300,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 0.2184617224544354,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 8.48621129989624e-06
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132094,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 132224,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ],
+        "offsetRMS": {
+          "0": 0.0635057342998536,
+          "1024": 1.2428040817225035e-06,
+          "2112": 0.1889443818384355
+        }
+      },
+      {
+        "file": "48000-2ch.wav",
+        "inputSHA256": "05aebdc7a759b87da4a577061ecfd1fb678933a8cb1380e4db6998eeb3877c7b",
+        "sampleRate": 48000,
+        "channels": 2,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "libsndfile",
+        "maxSameOffsetPcmDifference": 0.0,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 287998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 288128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-2ch.cbr.mp3",
+        "inputSHA256": "75252b6dae21e5ebd1c47fbc2d84fe14df3b33a3b64e1035a7dd3e5813fe8a0d",
+        "sampleRate": 48000,
+        "channels": 2,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 6.258487701416016e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 287998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 288128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-2ch.vbr.mp3",
+        "inputSHA256": "b23712acdd281178e17812b0115804dccb835996222154450591176fa8d4c094",
+        "sampleRate": 48000,
+        "channels": 2,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 8.344650268554688e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 287998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 288128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-2ch.no-xing.mp3",
+        "inputSHA256": "b2284c7a08ec084c6df4c1634796b14c04330a1e2fd872d276f0cddcd6b1455e",
+        "sampleRate": 48000,
+        "channels": 2,
+        "nativeFrames": 145152,
+        "bitedjFrames": 145152,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 6.258487701416016e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 290302,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 290432,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-2ch.m4a",
+        "inputSHA256": "7f43372c2ebab0235877262ea93f0ddc576190ddae35b37176b4019ae3651d38",
+        "sampleRate": 48000,
+        "channels": 2,
+        "nativeFrames": 143360,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 0.6925077736377716,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 7.008016109466553e-05
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 4.0143728256225586e-05
+          },
+          {
+            "samplePosition": 286718,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0013760698930127546
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 286848,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 4.398822784423828e-05
+          }
+        ],
+        "offsetRMS": {
+          "0": 0.28238312231442486,
+          "1024": 1.3135293506341365e-05,
+          "2112": 0.13103303800759708
+        }
+      },
+      {
+        "file": "48000-1ch.wav",
+        "inputSHA256": "70d2fb473250d80414b3098e58d25dad2abbbd5660839c8e0b1128828db3d724",
+        "sampleRate": 48000,
+        "channels": 1,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "libsndfile",
+        "maxSameOffsetPcmDifference": 0.0,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 143998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 144128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-1ch.cbr.mp3",
+        "inputSHA256": "708fef817e0ee312e3922884616bdd8a5ae6845e542aa058520e2a02b8d2dcdc",
+        "sampleRate": 48000,
+        "channels": 1,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.725290298461914e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 143998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 144128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-1ch.vbr.mp3",
+        "inputSHA256": "8ecef75641cb69dfaab336e64eeaf061eb846375cc39d0f040d27c88933c9652",
+        "sampleRate": 48000,
+        "channels": 1,
+        "nativeFrames": 144000,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.5762786865234375e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.21842104196548462
+          },
+          {
+            "samplePosition": 143998,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.09781735762953758
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 144128,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.22242768108844757
+          }
+        ]
+      },
+      {
+        "file": "48000-1ch.no-xing.mp3",
+        "inputSHA256": "7f288222e42e855b67e6a8c42076ca9ac0f55da09125df1246b29e879c88b803",
+        "sampleRate": 48000,
+        "channels": 1,
+        "nativeFrames": 145152,
+        "bitedjFrames": 145152,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 3.725290298461914e-07,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 145150,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 145280,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ]
+      },
+      {
+        "file": "48000-1ch.m4a",
+        "inputSHA256": "ec08cf7796086ee276083ebe8b6eb8e6252b3cc535d5f1cb0f8f313375e7920b",
+        "sampleRate": 48000,
+        "channels": 1,
+        "nativeFrames": 143360,
+        "bitedjFrames": 144000,
+        "bitedjProvider": "FFmpeg n9.0.1",
+        "maxSameOffsetPcmDifference": 0.4002562165260315,
+        "seeks": [
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 2,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 128,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 1.3589859008789062e-05
+          },
+          {
+            "samplePosition": 2304,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 88200,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 143358,
+            "returnedSamples": 2,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 0,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          },
+          {
+            "samplePosition": 143488,
+            "returnedSamples": 0,
+            "sameLength": true,
+            "maxSequentialDifference": 0
+          },
+          {
+            "samplePosition": 8190,
+            "returnedSamples": 256,
+            "sameLength": true,
+            "maxSequentialDifference": 0.0
+          }
+        ],
+        "offsetRMS": {
+          "0": 0.19878241457498894,
+          "1024": 1.784060464598937e-06,
+          "2112": 0.09254838770517486
+        }
+      }
+    ],
+    "databaseCueAlignmentVerified": false
+  },
+  "experimentalPrerollCodecFrames": 9,
+  "originalPrerollCodecFrames": 3,
+  "experimentalProbeSHA256": "f734a9c7e4874699a0370c80281c5edff0623e918399e45b5a1383ab356e6779",
+  "experimentalResults": [
+    {
+      "fixture": "44100-1ch.wav",
+      "inputSHA256": "3929da768330250f9b47768eff3e4940b2eebe87f84b284507ebac182982b7e7",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132298,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132428,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 132300,
+      "sequentialSamplesAfter": 132300,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "44100-1ch.cbr.mp3",
+      "inputSHA256": "4e8a20e1639539af9ce9d78807b5454541a78f3369d7fab513c0096f3aab8809",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132298,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132428,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 132300,
+      "sequentialSamplesAfter": 132300,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "44100-1ch.vbr.mp3",
+      "inputSHA256": "d0c373caa915171744906614c24dcc75cf9fd5280b836a6fa700c9aafe0b94d1",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132298,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132428,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 132300,
+      "sequentialSamplesAfter": 132300,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "44100-1ch.no-xing.mp3",
+      "inputSHA256": "92090f667834632a18307cb5010ccb84755400917a0557f52c00f82e82881915",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 133630,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 133760,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 133632,
+      "sequentialSamplesAfter": 133632,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "44100-1ch.m4a",
+      "inputSHA256": "e8b8830c0e5a920f527f5234b6494ae021886290dedac13c82583a2e2b296701",
+      "sequentialUnchanged": false,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 8.48621129989624e-06
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132094,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 132224,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 132096,
+      "sequentialSamplesAfter": 132096,
+      "sequentialMaxAbsDifference": 7.450580596923828e-09
+    },
+    {
+      "fixture": "48000-2ch.wav",
+      "inputSHA256": "05aebdc7a759b87da4a577061ecfd1fb678933a8cb1380e4db6998eeb3877c7b",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 287998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 288128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 288000,
+      "sequentialSamplesAfter": 288000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-2ch.cbr.mp3",
+      "inputSHA256": "75252b6dae21e5ebd1c47fbc2d84fe14df3b33a3b64e1035a7dd3e5813fe8a0d",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 287998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 288128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 288000,
+      "sequentialSamplesAfter": 288000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-2ch.vbr.mp3",
+      "inputSHA256": "b23712acdd281178e17812b0115804dccb835996222154450591176fa8d4c094",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 287998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 288128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 288000,
+      "sequentialSamplesAfter": 288000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-2ch.no-xing.mp3",
+      "inputSHA256": "b2284c7a08ec084c6df4c1634796b14c04330a1e2fd872d276f0cddcd6b1455e",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 290302,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 290432,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 290304,
+      "sequentialSamplesAfter": 290304,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-2ch.m4a",
+      "inputSHA256": "7f43372c2ebab0235877262ea93f0ddc576190ddae35b37176b4019ae3651d38",
+      "sequentialUnchanged": false,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 7.008016109466553e-05
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 3.3035874366760254e-05
+        },
+        {
+          "position": 286718,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0007823126506991684
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 286848,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 3.209710121154785e-05
+        }
+      ],
+      "sequentialSamplesBefore": 286720,
+      "sequentialSamplesAfter": 286720,
+      "sequentialMaxAbsDifference": 2.9802322387695312e-08
+    },
+    {
+      "fixture": "48000-1ch.wav",
+      "inputSHA256": "70d2fb473250d80414b3098e58d25dad2abbbd5660839c8e0b1128828db3d724",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 143998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 144128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 144000,
+      "sequentialSamplesAfter": 144000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-1ch.cbr.mp3",
+      "inputSHA256": "708fef817e0ee312e3922884616bdd8a5ae6845e542aa058520e2a02b8d2dcdc",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 143998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 144128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 144000,
+      "sequentialSamplesAfter": 144000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-1ch.vbr.mp3",
+      "inputSHA256": "8ecef75641cb69dfaab336e64eeaf061eb846375cc39d0f040d27c88933c9652",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 143998,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 144128,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 144000,
+      "sequentialSamplesAfter": 144000,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-1ch.no-xing.mp3",
+      "inputSHA256": "7f288222e42e855b67e6a8c42076ca9ac0f55da09125df1246b29e879c88b803",
+      "sequentialUnchanged": true,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 145150,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 145280,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 145152,
+      "sequentialSamplesAfter": 145152,
+      "sequentialMaxAbsDifference": 0.0
+    },
+    {
+      "fixture": "48000-1ch.m4a",
+      "inputSHA256": "ec08cf7796086ee276083ebe8b6eb8e6252b3cc535d5f1cb0f8f313375e7920b",
+      "sequentialUnchanged": false,
+      "seeks": [
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 2,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 128,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 1.3589859008789062e-05
+        },
+        {
+          "position": 2304,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 88200,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 143358,
+          "samples": 2,
+          "expectedSamples": 2,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 0,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        },
+        {
+          "position": 143488,
+          "samples": 0,
+          "expectedSamples": 0,
+          "maxAbsDifference": 0
+        },
+        {
+          "position": 8190,
+          "samples": 256,
+          "expectedSamples": 256,
+          "maxAbsDifference": 0.0
+        }
+      ],
+      "sequentialSamplesBefore": 143360,
+      "sequentialSamplesAfter": 143360,
+      "sequentialMaxAbsDifference": 7.450580596923828e-09
+    }
+  ],
+  "freshReaderControl": [
+    {
+      "mode": "baseline",
+      "fixture": "44100-1ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.22704288363456726,
+      "peak": 0.0
+    },
+    {
+      "mode": "baseline",
+      "fixture": "44100-1ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.21843303740024567,
+      "peak": 0.0
+    },
+    {
+      "mode": "baseline",
+      "fixture": "48000-1ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.22242768108844757,
+      "peak": 0.0
+    },
+    {
+      "mode": "baseline",
+      "fixture": "48000-1ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.21842104196548462,
+      "peak": 0.0
+    },
+    {
+      "mode": "baseline",
+      "fixture": "48000-2ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.27465713024139404
+    },
+    {
+      "mode": "baseline",
+      "fixture": "48000-2ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.27451714873313904
+    },
+    {
+      "mode": "nine",
+      "fixture": "44100-1ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.22704288363456726
+    },
+    {
+      "mode": "nine",
+      "fixture": "44100-1ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.21843303740024567
+    },
+    {
+      "mode": "nine",
+      "fixture": "48000-1ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.22242768108844757
+    },
+    {
+      "mode": "nine",
+      "fixture": "48000-1ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.21842104196548462
+    },
+    {
+      "mode": "nine",
+      "fixture": "48000-2ch.vbr.mp3",
+      "position": 8190,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.27465713024139404
+    },
+    {
+      "mode": "nine",
+      "fixture": "48000-2ch.vbr.mp3",
+      "position": 88200,
+      "samples": 256,
+      "maxAbsDifference": 0.0,
+      "peak": 0.27451714873313904
+    }
+  ]
+}
