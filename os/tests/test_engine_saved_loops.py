@@ -114,7 +114,7 @@ int main(){
 '''
 with tempfile.TemporaryDirectory() as tmp:
  p=Path(tmp);(p/'probe.cpp').write_text(src)
- flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core','Qt6Gui'],text=True))
+ flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','Qt6Core','Qt6Gui','zlib','sqlite3'],text=True))
  lib=args.djinterop_build.resolve()
  fp=fpclassify_object(p)
  cmd=['c++','-std=c++20','-O3','-fPIC','-ffast-math','-Wall','-Wextra','-Werror',str(p/'probe.cpp'),fp,'-I'+str(root/'src'),'-I'+str(args.gsl_include.resolve()),'-I'+str(args.djinterop_source.resolve()/'include'),'-I'+str(lib/'include'),'-L'+str(lib),'-Wl,-rpath,'+str(lib),'-ldjinterop',*flags,'-o',str(p/'probe')]
