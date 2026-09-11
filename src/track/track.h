@@ -400,6 +400,14 @@ class Track : public QObject {
             mixxx::TrackRecord newRecord,
             mixxx::BeatsPointer pOptionalBeats = nullptr);
 
+    enum class RecordReplaceResult { Updated, Unchanged, Stale };
+    // Check and replace under the same Track mutex. A stale snapshot leaves
+    // the record, beats, dirty state and signals untouched. This guards only
+    // TrackRecord, not separately mutable cues/beats or a database transaction.
+    RecordReplaceResult replaceRecordIfUnchanged(
+            const mixxx::TrackRecord& expectedRecord,
+            mixxx::TrackRecord newRecord);
+
     // Mark the track dirty if it isn't already.
     void markDirty();
     // Mark the track clean if it isn't already.
@@ -464,6 +472,10 @@ class Track : public QObject {
     void slotCueUpdated();
 
   private:
+    RecordReplaceResult replaceRecordInternal(
+            mixxx::TrackRecord newRecord,
+            mixxx::BeatsPointer pOptionalBeats,
+            const mixxx::TrackRecord* pExpectedRecord);
     /// Set a unique identifier for the track.
     /// Only used by GlobalTrackCacheResolver when the track is saved to db for the first time
     void initId(TrackId id);
