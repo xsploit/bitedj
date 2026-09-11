@@ -506,13 +506,13 @@ public:
         std::string _unnamed9() const { return m__unnamed9; }
 
         /**
-         * The numerator of the loop length in beats. 
+         * The numerator of the loop length in beats.
          * Zero if the loop is not quantized.
          */
         uint16_t loop_numerator() const { return m_loop_numerator; }
 
         /**
-         * The denominator of the loop length in beats. 
+         * The denominator of the loop length in beats.
          * Zero if the loop is not quantized.
          */
         uint16_t loop_denominator() const { return m_loop_denominator; }
