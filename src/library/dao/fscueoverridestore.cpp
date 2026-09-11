@@ -59,6 +59,7 @@ struct StoredCue {
     int type = static_cast<int>(mixxx::CueType::HotCue);
     double startSeconds = 0.0;
     double endSeconds = -1.0;
+    bool hasEnd = false;
     QString label;
     mixxx::RgbColor::code_t color = 0;
     std::optional<Cue::EngineOrigin> origin;
@@ -125,6 +126,7 @@ QByteArray FsCueOverrideStore::serializeCues(const Track& track) {
         const mixxx::audio::FramePos endPosition = pCue->getEndPosition();
         if (endPosition.isValid()) {
             storedCue.endSeconds = endPosition.value() / sampleRate;
+            storedCue.hasEnd = true;
         }
         storedCue.label = pCue->getLabel();
         storedCue.color = pCue->getColor();
@@ -144,7 +146,7 @@ QByteArray FsCueOverrideStore::serializeCues(const Track& track) {
         object.insert(kSlotKey, storedCue.slot);
         object.insert(kTypeKey, storedCue.type);
         object.insert(kPositionKey, storedCue.startSeconds);
-        if (storedCue.endSeconds >= 0.0) {
+        if (storedCue.hasEnd) {
             object.insert(kEndPositionKey, storedCue.endSeconds);
         }
         if (!storedCue.label.isEmpty()) {
@@ -203,6 +205,9 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
                 static_cast<int>(mixxx::CueType::HotCue));
         storedCue.startSeconds = object.value(kPositionKey).toDouble(-1.0);
         storedCue.endSeconds = object.value(kEndPositionKey).toDouble(-1.0);
+        // Version2 uses field presence; a finite negative end is a valid position.
+        // Legacy arrays retain their historical negative-end sentinel.
+        storedCue.hasEnd = extended ? object.contains(kEndPositionKey) : storedCue.endSeconds >= 0.0;
         storedCue.label = object.value(kLabelKey).toString();
         storedCue.color = static_cast<mixxx::RgbColor::code_t>(
                 object.value(kColorKey).toInt(0));
@@ -229,7 +234,7 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
             }
             if (!object[kSlotKey].isDouble() || object[kSlotKey].toDouble() != storedCue.slot ||
                     !object[kTypeKey].isDouble() || object[kTypeKey].toDouble() != storedCue.type ||
-                    !object[kPositionKey].isDouble() || !util_isfinite(storedCue.startSeconds) || storedCue.startSeconds < 0 ||
+                    !object[kPositionKey].isDouble() || !util_isfinite(storedCue.startSeconds) ||
                     (object.contains(kEndPositionKey) && (!object[kEndPositionKey].isDouble() || !util_isfinite(storedCue.endSeconds) || storedCue.endSeconds <= storedCue.startSeconds)) ||
                     !object[kColorKey].isDouble() || object[kColorKey].toDouble() != storedCue.color || storedCue.color > 0xffffff ||
                     (object.contains(kLabelKey) && !object[kLabelKey].isString())) {
@@ -248,7 +253,7 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
                 return;
             }
         }
-        if (storedCue.startSeconds < 0.0) {
+        if (!extended && storedCue.startSeconds < 0.0) {
             continue;
         }
         if (storedCue.type == static_cast<int>(mixxx::CueType::MainCue)) {
@@ -270,16 +275,15 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
         }
     }
     const auto framePosOf = [sampleRate](double seconds) {
-        return seconds < 0.0 ? mixxx::audio::kInvalidFramePos
-                             : mixxx::audio::FramePos(seconds * sampleRate);
+        return mixxx::audio::FramePos(seconds * sampleRate);
     };
     // A pad holds a plain cue or a saved loop, and which one it is follows the
     // range rather than the stored type — the same rule the rekordbox import
     // uses, and the one that keeps a hand-edited or future-version payload
     // from putting an unusable cue type on a deck.
     const auto typeOf = [](const StoredCue& storedCue) {
-        return storedCue.endSeconds >= 0.0 ? mixxx::CueType::Loop
-                                           : mixxx::CueType::HotCue;
+        return storedCue.hasEnd ? mixxx::CueType::Loop
+                                 : mixxx::CueType::HotCue;
     };
 
     // Update the slots that survive in place and drop the ones the override
@@ -302,7 +306,7 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
             continue;
         }
         pCue->setStartAndEndPosition(
-                framePosOf(it->startSeconds), framePosOf(it->endSeconds));
+                framePosOf(it->startSeconds), (it->hasEnd ? framePosOf(it->endSeconds) : mixxx::audio::kInvalidFramePos));
         pCue->setType(typeOf(*it));
         pCue->setLabel(it->label);
         pCue->setColor(mixxx::RgbColor(it->color));
@@ -319,7 +323,7 @@ void FsCueOverrideStore::applyPayload(Track* pTrack, const QByteArray& payload) 
                 typeOf(*it),
                 it->slot,
                 framePosOf(it->startSeconds),
-                framePosOf(it->endSeconds),
+                (it->hasEnd ? framePosOf(it->endSeconds) : mixxx::audio::kInvalidFramePos),
                 mixxx::RgbColor(it->color));
         pCue->setLabel(it->label);
         if (extended)

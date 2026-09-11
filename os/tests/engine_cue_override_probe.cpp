@@ -85,6 +85,25 @@ int main(int argc, char** argv) {
         check(find(ordinaryLoaded, 3) && find(ordinaryLoaded, 17) && ordinaryLoaded->getMainCuePosition().value() == 1234.5 &&
                         ordinaryLoaded->findCueByType(CueType::Intro) == intro && intro->getPosition().value() == 10,
                 "ordinary pad/memory/main/intro regression");
+        // Valid pre-zero positions must not poison the entire portable snapshot.
+        auto preZero = makeTrack();
+        cue(preZero, 0, false, false);
+        preZero->createAndAddCue(CueType::HotCue, 1, audio::FramePos(-22050.5), audio::kInvalidFramePos);
+        preZero->createAndAddCue(CueType::Loop, 2, audio::FramePos(-88200.25), audio::FramePos(-44100.5));
+        preZero->createAndAddCue(CueType::Loop, 3, audio::FramePos(-100.25), audio::FramePos(100.5));
+        preZero->createAndAddCue(CueType::Loop, 4, audio::FramePos(-88200), audio::FramePos(-44100));
+        preZero->setMainCuePosition(audio::FramePos(-1234.5));
+        const auto preZeroPayload = FsCueOverrideStore::serializeCues(*preZero);
+        auto preZeroLoaded = makeTrack();
+        FsCueOverrideStore::applyPayload(preZeroLoaded.get(), preZeroPayload);
+        check(find(preZeroLoaded, 0) && find(preZeroLoaded, 1), "negative start rejected complete snapshot");
+        check(find(preZeroLoaded, 1)->getPosition().value() == -22050.5 && !find(preZeroLoaded, 1)->getEndPosition().isValid(), "negative hot cue position or unset end lost");
+        check(find(preZeroLoaded, 2) && find(preZeroLoaded, 2)->getType() == CueType::Loop &&
+                        std::abs(find(preZeroLoaded, 2)->getEndPosition().value() + 44100.5) < 1e-8,
+                "loop ending before zero lost");
+        check(find(preZeroLoaded, 3) && preZeroLoaded->getMainCuePosition().value() == -1234.5, "cross-zero loop or negative main cue lost");
+        check(find(preZeroLoaded, 4) && find(preZeroLoaded, 4)->getEndPosition().value() == -44100, "negative one-second end confused with missing end");
+        check(FsCueOverrideStore::serializeCues(*preZeroLoaded) == preZeroPayload, "pre-zero snapshot roundtrip unstable");
         auto oldFormat = makeTrack();
         auto oldHot = cue(oldFormat, 0, false);
         FsCueOverrideStore::applyPayload(oldFormat.get(), R"([{"slot":0,"type":1,"pos":1,"color":123}])");
@@ -143,6 +162,13 @@ int main(int argc, char** argv) {
             FsCueOverrideStore::applyOverrides(imported.get());
             check(importedLoop->getLabel() == "Portable edit", "override did not apply in place");
             check(FsCueOverrideStore::restoreImportedCues(imported.get()) && find(imported, 26) == importedLoop && importedLoop->getLabel() == "Imported source label" && importedLoop->getEngineOrigin() == loop->getEngineOrigin(), "clear restoration lost source identity");
+            auto negativeStore = makeTrack(location);
+            FsCueOverrideStore::applyOverrides(negativeStore.get());
+            FsCueOverrideStore::applyPayload(negativeStore.get(), preZeroPayload);
+            FsCueOverrideStore::flushIfChanged(*negativeStore);
+            auto negativeReload = makeTrack(location);
+            FsCueOverrideStore::applyOverrides(negativeReload.get());
+            check(FsCueOverrideStore::serializeCues(*negativeReload) == preZeroPayload, "negative cues lost through filesystem SQLite save/reload");
             check(q.exec("PRAGMA integrity_check") && q.next() && q.value(0) == "ok", "portable DB integrity");
             std::cout << "PASS isolated removable-filesystem store: version1 read/no-op save, version2 write/fresh reload, imported-cue restoration and integrity\n";
         }
