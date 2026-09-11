@@ -31,8 +31,10 @@ int main(int argc, char** argv) {
         std::atomic<int> titleSignals{0};
         QObject::connect(track.get(), &Track::titleChanged, [&](const QString&) { ++titleSignals; });
         const auto expected = track->getRecord();
+        // Engine timing is deferred. A different source BPM must not leak
+        // through ordinary metadata publication into the existing beat grid.
         const auto plan = mixxx::planEngineMetadataImport(expected, {},
-                QJsonObject{{"sourceTitle", "Imported"}}, true);
+                QJsonObject{{"sourceTitle", "Imported"}, {"bpm", 96.0}}, true);
         check(track->replaceRecordIfUnchanged(expected, plan.record) == Result::Updated,
                 "accepted publication");
         check(track->getTitle() == "Imported" && track->isDirty() && titleSignals == 1,

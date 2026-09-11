@@ -21,20 +21,26 @@ python3 os/tests/test_engine_cue_origin.py /path/to/build \
 The completed-archive probe uses actual Track objects and the Engine metadata
 planner. It covers accepted publication, clean no-op, stale rejection after an
 edit on another thread, signal/dirty-state behavior, preservation of a real beat
-grid and source loop, cue-only edits, 64 pairs of competing publications, and the
+grid and source loop even with a conflicting incoming Engine BPM, cue-only edits, 64 pairs of competing publications, and the
 legacy setter. No profile, media file, deck, or Pi is opened.
 
-## Apply integration still required
+## Integration limits
 
 This primitive does not make database commit and live publication atomic. In
 particular, a stale Track may already be **clean** because its newer edit was
 saved before publication. The test covers clean-stale rejection; a coordinator
 must not assume that every stale result is dirty or queued to save again.
 
-The coordinator needs a database precondition/reconciliation policy as well as
-this live-record check. It must surface failed persistence, keep local edits,
-and define cancellation after a commit. Blindly committing SQL and relying on a
-later incidental dirty save is insufficient. Cue timing, source-file matching,
-new-track cache publication, external collections, and the overall Apply UI
-remain separate work. No Engine cue alignment or real-time audio safety is
-established by these Track-only tests.
+The metadata/playlist coordinator now uses this live-record check before the
+ordinary save path and records provenance separately after saving. Its actual
+application tests and partial-failure/cancellation behavior are documented in
+`ENGINE_APPLY.md`. `TrackCollectionManager::saveTrack` skips clean tracks before
+calling the DAO, so an unchanged reimport does not violate the DAO's dirty-track
+precondition. The metadata planner starts from the current record and does not
+adopt incoming Engine BPM; the conflicting-BPM publication test verifies that
+the existing beat object and bytes remain unchanged.
+
+This is not atomic publication of separately mutable cues/beat contents with
+SQL. Safe live cue publication, source timing alignment, external-collection
+behavior and real-time audio safety remain separate requirements. Blindly
+committing SQL and relying on a later incidental dirty save is insufficient.
