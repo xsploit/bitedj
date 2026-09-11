@@ -202,3 +202,24 @@ the original loss. Predicate simplification disabled does not fix it. The exact
 backend cause remains open, so no corrected source export is claimed. A narrow
 player-wide scan finds this exact six-instruction pattern only in checkBeat; that
 is not a correctness audit of the other functions.
+
+### Playlist ordering fix implemented
+
+The PDB importer stored exported sort keys in QMaps but then visited guessed
+consecutive indexes with operator[], inserting missing rows while using the
+changing map size as its loop bound. Sparse keys caused unnecessary work and map
+mutation; a zero-position track entry could keep extending the loop.
+
+Playlist construction now iterates actual keys in sorted order, treats all input
+maps as const, and preserves unsigned positions in SQLite through qint64. The
+standalone tools/test_rekordbox_playlist_import.py compiles the two production
+functions against Qt/SQLite. The original importer fails its sparse-key fixture;
+the fix passes sparse/nested/empty playlists, reimport, missing references,
+device-scoped track identity, zero/large positions and input-map preservation.
+TreeItem is a test double; this does not replace a full application/PDB import test.
+
+The separate RX3 mapping confirms rowset-based playlist and membership traversal,
+content lookup, cancellation checks and explicit sorting in selected modes.
+Internal table names include djdbPlaylist, djdbSongPlaylist and djdbContent.
+These static findings do not establish direct exported-format equivalence or
+complete OneLibrary support. No proprietary code was used for the BiteDJ fix.

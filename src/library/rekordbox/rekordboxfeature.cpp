@@ -544,10 +544,10 @@ void buildPlaylistTree(
         QSqlDatabase& database,
         TreeItem* parent,
         uint32_t parentID,
-        QMap<uint32_t, QString>& playlistNameMap,
-        QMap<uint32_t, bool>& playlistIsFolderMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, QString>& playlistNameMap,
+        const QMap<uint32_t, bool>& playlistIsFolderMap,
+        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
         const QString& device);
 
@@ -814,20 +814,25 @@ void buildPlaylistTree(
         QSqlDatabase& database,
         TreeItem* parent,
         uint32_t parentID,
-        QMap<uint32_t, QString>& playlistNameMap,
-        QMap<uint32_t, bool>& playlistIsFolderMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, QString>& playlistNameMap,
+        const QMap<uint32_t, bool>& playlistIsFolderMap,
+        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
         const QString& device) {
-    for (uint32_t childIndex = 0;
-            childIndex < (uint32_t)playlistTreeMap[parentID].size();
-            childIndex++) {
-        uint32_t childID = playlistTreeMap[parentID][childIndex];
+    // Exported sort keys may have gaps. Iterate existing rows in key order;
+    // indexing by a guessed sequence inserts missing rows into the map.
+    const auto childrenIt = playlistTreeMap.constFind(parentID);
+    if (childrenIt == playlistTreeMap.constEnd()) {
+        return;
+    }
+    const auto& children = childrenIt.value();
+    for (auto childIt = children.constBegin(); childIt != children.constEnd(); ++childIt) {
+        const uint32_t childID = childIt.value();
         if (childID == 0) {
             continue;
         }
-        QString playlistItemName = playlistNameMap[childID];
+        QString playlistItemName = playlistNameMap.value(childID);
 
         QString currentPath = playlistPath + kPLaylistPathDelimiter + playlistItemName;
 
@@ -886,12 +891,12 @@ void buildPlaylistTree(
                 " (playlist_id, track_id, position) "
                 "VALUES (:playlist_id, :track_id, :position)");
 
-        if (playlistID != kInvalidPlaylistId && playlistTrackMap.contains(childID)) {
-            // Add playlist tracks for children
-            for (uint32_t trackIndex = 1; trackIndex <=
-                    static_cast<uint32_t>(playlistTrackMap[childID].size());
-                    trackIndex++) {
-                uint32_t rbTrackID = playlistTrackMap[childID][trackIndex];
+        const auto tracksIt = playlistTrackMap.constFind(childID);
+        if (playlistID != kInvalidPlaylistId && tracksIt != playlistTrackMap.constEnd()) {
+            const auto& tracks = tracksIt.value();
+            for (auto trackIt = tracks.constBegin(); trackIt != tracks.constEnd(); ++trackIt) {
+                const uint32_t trackIndex = trackIt.key();
+                const uint32_t rbTrackID = trackIt.value();
 
                 const int trackID = findTrackId(
                         database, static_cast<int>(rbTrackID), device);
@@ -905,7 +910,7 @@ void buildPlaylistTree(
 
                 queryInsertIntoPlaylistTracks.bindValue(":playlist_id", playlistID);
                 queryInsertIntoPlaylistTracks.bindValue(":track_id", trackID);
-                queryInsertIntoPlaylistTracks.bindValue(":position", static_cast<int>(trackIndex));
+                queryInsertIntoPlaylistTracks.bindValue(":position", static_cast<qint64>(trackIndex));
 
                 if (!queryInsertIntoPlaylistTracks.exec()) {
                     LOG_FAILED_QUERY(queryInsertIntoPlaylistTracks)
@@ -916,7 +921,7 @@ void buildPlaylistTree(
             }
         }
 
-        if (playlistIsFolderMap[childID]) {
+        if (playlistIsFolderMap.value(childID)) {
             // If this child is a folder (playlists are only leaf nodes), build playlist tree for it
             buildPlaylistTree(database,
                     child,
