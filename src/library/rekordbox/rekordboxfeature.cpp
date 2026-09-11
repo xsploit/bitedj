@@ -996,6 +996,19 @@ void clearDeviceTables(QSqlDatabase& database, TreeItem* child) {
     transaction.commit();
 }
 
+mixxx::RgbColor::optional_t extendedHotCueColor(
+        const rekordbox_anlz_t::cue_extended_entry_t& entry) {
+    // The parser only initializes RGB fields when the complete optional tail
+    // is present. Check lengths before accessing any optional scalar field.
+    if (entry.len_entry() < 48 ||
+            entry.len_comment() > entry.len_entry() - 48) {
+        return mixxx::RgbColor::nullopt();
+    }
+    return mixxx::RgbColor(qRgb(entry.color_red(),
+            entry.color_green(),
+            entry.color_blue()));
+}
+
 void setHotCue(TrackPointer track,
         mixxx::audio::FramePos startPosition,
         mixxx::audio::FramePos endPosition,
@@ -1422,13 +1435,7 @@ void readAnalyze(TrackPointer track,
                             endPosition,
                             hotCueIndex,
                             fromUtf16BeString(cueExtendedEntry->comment()),
-                            mixxx::RgbColor(qRgb(
-                                    static_cast<int>(
-                                            cueExtendedEntry->color_red()),
-                                    static_cast<int>(
-                                            cueExtendedEntry->color_green()),
-                                    static_cast<int>(cueExtendedEntry
-                                                    ->color_blue()))),
+                            extendedHotCueColor(*cueExtendedEntry),
                             &importedHotcueIndices);
                 } break;
                 }

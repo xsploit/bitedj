@@ -367,3 +367,17 @@ cue-entry writes can be logged while the outer writer returns success. That is a
 behavior to avoid in independent implementations, not a feature to copy. No device
 filesystem was exercised. The local reports retain stubbing assumptions and source
 hashes; vendor binaries and pseudocode remain outside this repository.
+
+### Configured importer check and optional-color fix
+
+The earlier extended parser probe enabled Kaitai ICONV conversion; the actual
+application configures NONE and decodes comment bytes in fromUtf16BeString.
+A corrected configured-parser/helper check preserves the RX3 fixture's empty,
+ASCII and Unicode labels. The earlier UTF-8 result applies only to its test build.
+
+The importer did read optional RGB scalars even when the parser had not populated
+them. A length guard now supplies no color for absent/partial tails, preserving
+the existing/default cue color through setHotCue. Complete RGB tails retain their
+exact value. tools/test_rekordbox_optional_color.py compiles the actual helper and
+configured parser; ten empty/Unicode-comment and 0–4-color-byte fixtures pass.
+No full Track persistence test or app build was performed in this pass.
