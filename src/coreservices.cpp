@@ -225,6 +225,10 @@ CoreServices::~CoreServices() {
         finalize();
     }
 
+    // Release theme controls before settings teardown and the control-leak
+    // check. Member destruction happens only after this destructor body.
+    m_pHighContrast.reset();
+
     // Tear down remaining stuff that was initialized in the constructor.
     CLEAR_AND_CHECK_DELETED(m_pKeyboardEventFilter);
     CLEAR_AND_CHECK_DELETED(m_pKbdConfig);
