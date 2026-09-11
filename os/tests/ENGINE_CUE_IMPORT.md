@@ -38,7 +38,7 @@ Before exposing cue import, capture consistent cue/beat state, reject or retry c
 
 `TrackDAO::updateTrack` now uses `CueDAO::prepareTrackCueSave` inside its transaction, checks every cue write/delete, and calls `finishTrackCueSave` only after successful commit. Failed staging or commit leaves the original Cue IDs and dirty flags untouched. Successful commit attaches saved IDs to the original QObjects; it never replaces their identity. A cue edited during the SQL phase keeps its newer values and stays dirty, while a newly committed row ID is retained so retry updates that row. If a captured cue or the cue list changed, updateTrack returns false so the caller does not mark that Track clean or accept import provenance. This is not a general atomic snapshot of metadata, beats and every cue, and does not eliminate the separate live-import handoff requirements above.
 
-The legacy new-track insertion path still uses `saveTrackCues`; this change targets existing-track updates. File analysis cache side effects are also outside the SQL rollback guarantee.
+New-track insertion has separate batch coverage described below. File analysis cache side effects remain outside the SQL rollback guarantee.
 
 Run the commit-boundary regression against a completed application build:
 
@@ -49,3 +49,26 @@ python os/tests/test_engine_cue_origin.py BUILD --ninja NINJA \
 ```
 
 It uses synthetic schema42 data and the native SQLite commit hook to reject an outer commit. It covers partial cue write failure, delete failure, rollback preserving original IDs/dirty state, edits between preparation and commit, retry without duplicate IDs, and staging cues whose bounds were cleared. The full rebuilt app also passed the existing ordinary metadata/BPM save/restart check with eight unchanged cue rows, plus an injected cue-update failure leaving metadata, beat data and cue rows unchanged with SQLite integrity intact.
+
+
+## New-track batches and scanner publication
+
+New-track insertion stages cues without accepting their IDs or clean state until the outer transaction commits. A failed insert/cue write rejects the batch. Failed commit or explicit rollback invalidates provisional Track IDs, removes their registered cache IDs, restores the previous added date when unchanged, and leaves Track/Cue state dirty for retry. Successful commit accepts unchanged snapshots; intervening edits remain dirty. Callers receive failure instead of a nonexistent persisted ID.
+
+The scanner announces newly inserted tracks only after successful commit. Canceling a scan retains the existing policy of committing accepted work; database failures roll back the insertion batch and skip successful-scan cleanup. Temporary Track IDs remain visible through the existing batch/cache API before commit; this is not a redesign of all provisional cache visibility or concurrent edits.
+
+Run the DAO/cache and real scanner finish-handler tests against a completed build:
+
+```sh
+python3 os/tests/test_engine_cue_origin.py /absolute/build --ninja ninja \
+  --probe-source os/tests/track_batch_commit_probe.cpp \
+  --probe-arg /absolute/repo/res/schema.xml
+QT_QPA_PLATFORM=offscreen python3 os/tests/test_engine_cue_origin.py /absolute/build --ninja ninja \
+  --probe-source os/tests/scanner_commit_publication_probe.cpp \
+  --probe-arg /absolute/repo/res/schema.xml
+python3 os/tests/test_scanner_app.py --build /absolute/build --output /tmp/bitedj-scan-results
+```
+
+The first probe covers rejected commit, registered cache rollback/retry, second-track cue failure, explicit rollback and commit-only publication output. The second invokes the actual scanner finish slot with synthetic staged data; it does not start discovery workers. The application test uses the Rescan Library menu, nested synthetic WAV files and temporary profiles to check recursive discovery, repeated scanning without duplicates, injected insertion failure, unchanged media hashes and SQLite integrity after orderly exit. It does not use a real music collection or hardware.
+
+Pending batches hold strong Track references through commit, so peak memory scales with new tracks in a scan. A private x86_64 synthetic experiment with 5,000 tracks and one cue each increased process RSS by about 19.5 MiB before commit. It contained no decoded audio or waveforms, included database/allocator overhead and had no old-code control; it is neither a worst-case bound nor a Pi performance result. Large real-library memory use remains a deployment consideration. These changes do not enable Engine cue/grid import or establish native Engine performance on the Pi.

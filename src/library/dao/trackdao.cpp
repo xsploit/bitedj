@@ -391,6 +391,7 @@ void TrackDAO::addTracksPrepare() {
         // true == do a db rollback
         addTracksFinish(true);
     }
+    m_addTracksFailed = false;
     // Start the transaction
     m_pTransaction = std::make_unique<SqlTransaction>(m_database);
 
@@ -516,23 +517,63 @@ void TrackDAO::addTracksPrepare() {
             "WHERE location=:location");
 }
 
-void TrackDAO::addTracksFinish(bool rollback) {
+bool TrackDAO::addTracksFinish(bool rollback, QList<TrackPointer>* pCommittedTracks) {
+    if (pCommittedTracks) {
+        pCommittedTracks->clear();
+    }
+    bool committed = false;
     if (m_pTransaction) {
-        if (rollback) {
+        if (rollback || m_addTracksFailed) {
             m_pTransaction->rollback();
-            m_tracksAddedSet.clear();
         } else {
-            m_pTransaction->commit();
+            committed = m_pTransaction->commit();
         }
     }
     m_pQueryTrackLocationInsert.reset();
     m_pQueryTrackLocationSelect.reset();
     m_pQueryLibraryInsert.reset();
+    m_pQueryLibraryUpdate.reset();
     m_pQueryLibrarySelect.reset();
-    m_pTransaction.reset();
+    m_pTransaction.reset(); // Roll back a still-active failed commit.
 
-    emit tracksAdded(m_tracksAddedSet);
+    auto pendingTracks = std::move(m_pendingAddedTracks);
+    m_pendingAddedTracks.clear();
+    const auto addedIds = m_tracksAddedSet;
     m_tracksAddedSet.clear();
+    m_addTracksFailed = false;
+    for (auto& pending : pendingTracks) {
+        if (committed) {
+            const bool cuesUnchanged = m_cueDao.finishTrackCueSave(&pending.cues);
+            if (cuesUnchanged && pending.track->getRecord() == *pending.savedRecord &&
+                    pending.track->getBeats() == pending.savedBeats &&
+                    pending.track->getCuePoints() == pending.originalCues) {
+                pending.track->markClean();
+            } else {
+                pending.track->markDirty();
+            }
+        } else {
+            {
+                GlobalTrackCacheLocker cache;
+                if (cache.lookupTrackById(pending.id) == pending.track)
+                    cache.purgeTrackId(pending.id);
+            }
+            // Direct callers may supply a Track outside GlobalTrackCache.
+            if (pending.track->getId() == pending.id)
+                pending.track->resetId();
+            if (pending.track->getDateAdded() == pending.savedRecord->getDateAdded())
+                pending.track->setDateAdded(pending.previousDateAdded);
+            pending.track->markDirty();
+        }
+    }
+    if (committed && pCommittedTracks) {
+        for (const auto& pending : pendingTracks) {
+            pCommittedTracks->append(pending.track);
+        }
+    }
+    if (committed && !addedIds.isEmpty()) {
+        emit tracksAdded(addedIds);
+    }
+    return committed;
 }
 
 namespace {
@@ -841,6 +882,7 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
                            "been prepared. Skipping track"
                         << fileInfo.location();
         DEBUG_ASSERT("Failed query");
+        m_addTracksFailed = true;
         return TrackId();
     }
 
@@ -861,6 +903,7 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
             // We can't even select this, something is wrong.
             LOG_FAILED_QUERY(*m_pQueryTrackLocationSelect)
                         << "Can't find track location ID after failing to insert. Something is wrong.";
+            m_addTracksFailed = true;
             return TrackId();
         }
         if (m_trackLocationIdColumn == UndefinedRecordIndex) {
@@ -880,6 +923,7 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
             LOG_FAILED_QUERY(*m_pQueryLibrarySelect)
                     << "Failed to query existing track: "
                     << fileInfo.location();
+            m_addTracksFailed = true;
             return TrackId();
         }
         if (m_queryLibraryIdColumn == UndefinedRecordIndex) {
@@ -895,6 +939,7 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
             DEBUG_ASSERT(trackId.isValid());
         }
         VERIFY_OR_DEBUG_ASSERT(trackId.isValid()) {
+            m_addTracksFailed = true;
             return TrackId();
         }
         pTrack->initId(trackId);
@@ -907,6 +952,7 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
                 LOG_FAILED_QUERY(*m_pQueryLibraryUpdate)
                         << "Failed to unremove existing track: "
                         << fileInfo.location();
+                m_addTracksFailed = true;
                 return TrackId();
             }
         }
@@ -931,27 +977,29 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
         // that track location from the same table. "It shouldn't
         // happen"... unless I screwed up - Albert :)
         VERIFY_OR_DEBUG_ASSERT(trackLocationId.isValid()) {
+            m_addTracksFailed = true;
             return TrackId();
         }
 
         // Time stamps are stored with timezone UTC in the database
         const auto trackDateAdded = QDateTime::currentDateTimeUtc();
         const auto trackRecord = pTrack->getRecord();
+        const auto savedBeats = pTrack->getBeats();
         if (!insertTrackLibrary(
                     m_pQueryLibraryInsert.get(),
                     trackRecord,
-                    pTrack->getBeats(),
+                    savedBeats,
                     trackLocationId,
                     fileInfo,
                     trackDateAdded)) {
+            m_addTracksFailed = true;
             return TrackId();
         }
         trackId = TrackId(m_pQueryLibraryInsert->lastInsertId());
         VERIFY_OR_DEBUG_ASSERT(trackId.isValid()) {
+            m_addTracksFailed = true;
             return TrackId();
         }
-        pTrack->initId(trackId);
-        pTrack->setDateAdded(trackDateAdded);
 
         if (m_fsAnalysisCache.isEnabled()) {
             m_fsAnalysisCache.saveTrackAnalyses(
@@ -964,9 +1012,25 @@ TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
                     pTrack->getWaveform(),
                     pTrack->getWaveformSummary());
         }
-        m_cueDao.saveTrackCues(
-                trackId,
-                pTrack->getCuePoints());
+        PendingAddedTrack pending;
+        pending.track = pTrack;
+        pending.id = trackId;
+        pending.previousDateAdded = pTrack->getDateAdded();
+        pending.savedRecord = std::make_shared<mixxx::TrackRecord>(trackRecord);
+        pending.savedRecord->setId(trackId);
+        pending.savedRecord->setDateAdded(trackDateAdded);
+        pending.savedBeats = savedBeats;
+        pending.originalCues = pTrack->getCuePoints();
+        QString cueError;
+        if (!m_pTransaction || !m_cueDao.prepareTrackCueSave(*m_pTransaction,
+                    trackId, pending.originalCues, &pending.cues, &cueError)) {
+            kLogger.warning() << "Failed to stage new-track cues" << cueError;
+            m_addTracksFailed = true;
+            return TrackId();
+        }
+        pTrack->initId(trackId);
+        pTrack->setDateAdded(trackDateAdded);
+        m_pendingAddedTracks.append(std::move(pending));
 
         DEBUG_ASSERT(!m_tracksAddedSet.contains(trackId));
         m_tracksAddedSet.insert(trackId);
@@ -1068,12 +1132,8 @@ TrackPointer TrackDAO::addTracksAddFile(
     // from within the cache scope is allowed.
     DEBUG_ASSERT(pTrack->getId() == newTrackId);
     cacheResolver.initTrackIdAndUnlockCache(newTrackId);
-    // Only newly inserted tracks must be marked as clean!
-    // Existing or unremoved tracks have not been added to
-    // m_tracksAddedSet and will keep their dirty flag unchanged.
-    if (m_tracksAddedSet.contains(newTrackId)) {
-        pTrack->markClean();
-    }
+    // addTracksFinish marks newly inserted tracks clean after commit.
+    // Existing or unremoved tracks keep their dirty flag unchanged.
     return pTrack;
 }
 
@@ -2406,9 +2466,8 @@ TrackPointer TrackDAO::getOrAddTrack(
     bool unremove = true;
     const TrackPointer pAddedTrack = addTracksAddFile(trackRef.getLocation(), unremove);
     bool rollback = !pAddedTrack;
-    addTracksFinish(rollback);
-    if (!pAddedTrack) {
-        return pAddedTrack;
+    if (!addTracksFinish(rollback) || !pAddedTrack) {
+        return {};
     }
     if (pAlreadyInLibrary) {
         *pAlreadyInLibrary = false;

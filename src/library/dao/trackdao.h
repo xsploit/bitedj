@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "library/dao/dao.h"
+#include "library/dao/cuedao.h"
 #include "library/dao/fsanalysiscache.h"
 #include "library/relocatedtrack.h"
 #include "preferences/usersettings.h"
@@ -175,7 +176,8 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
     TrackPointer addTracksAddFile(
             const QString& filePath,
             bool unremove);
-    void addTracksFinish(bool rollback = false);
+    bool addTracksFinish(bool rollback = false,
+            QList<TrackPointer>* pCommittedTracks = nullptr);
 
     bool updateTrack(const Track& track) const;
 
@@ -231,6 +233,17 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
     int m_queryLibraryIdColumn;
     int m_queryLibraryMixxxDeletedColumn;
 
+    struct PendingAddedTrack {
+        TrackPointer track;
+        TrackId id;
+        QDateTime previousDateAdded;
+        std::shared_ptr<mixxx::TrackRecord> savedRecord;
+        std::shared_ptr<const mixxx::Beats> savedBeats;
+        QList<CuePointer> originalCues;
+        CueDAO::PendingCueSave cues;
+    };
+    QList<PendingAddedTrack> m_pendingAddedTracks;
+    bool m_addTracksFailed = false;
     QSet<TrackId> m_tracksAddedSet;
 
     DISALLOW_COPY_AND_ASSIGN(TrackDAO);
