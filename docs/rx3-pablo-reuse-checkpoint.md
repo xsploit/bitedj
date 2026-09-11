@@ -324,3 +324,16 @@ not yet traced. This expands the semantic map across pads, browser/filter, sourc
 keyboard, timers and utility controls. Local coordinates are not final composed
 screen positions. Hierarchy construction, transforms and rendering remain open.
 Raw layout data and vendor images remain local, with only findings recorded here.
+
+### Recursive construction and parent linking
+
+Actual recursive construction expands the browser's 53 direct properties into
+2,837 objects, including shared control definitions instantiated more than once.
+A subsequent ARM LoadResource-prefix probe verified all parent pointers against
+an independent depth-stack rule across 24 tables (5,265 instances across separate
+scenarios). It stops after the linking pass, before later callbacks/window setup;
+this is not full LoadResource success or rendered-screen verification. Invalid
+initial-image properties remain allocated because the intermediate constructor
+dispatch does not propagate the image constructor failure. The local map now
+contains named parent relationships, while final transforms, clipping, visibility
+and dynamic image replacement remain open.
