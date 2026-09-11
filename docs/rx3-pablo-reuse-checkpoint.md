@@ -301,3 +301,14 @@ These findings support independently composed cue occupancy, color, emphasis and
 loop-marker states in a BiteDJ layout. They do not establish complete event
 behavior, rendering, or a finished skin. Vendor artwork and extracted tables
 remain in local research artifacts; none are committed here.
+
+### Hot-cue state source and palette behavior
+
+Static producer tracing, cross-checked against ARM stores, identifies the
+standalone highlight inputs as gate-playing and current loop kind. Empty cue
+state comes from the absent IN-time sentinel; loop markers come from the hot-cue
+loop flag. This is not yet an end-to-end engine-to-screen test, and HID behavior
+remains separate. The color converter was executed for 64 stock keys, all 256
+possible output bytes and a missing key. It normalizes slots 46–48 to 45 by
+mutating the matched table entry. BiteDJ can keep occupancy, color and emphasis
+explicit and normalize colors without adopting that shared-table side effect.
