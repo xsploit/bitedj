@@ -191,3 +191,14 @@ A further limitation is now proven: the default checkBeat pseudocode removes
 retries remain wrong. Export success is not correctness; use the original ARM
 behavior for reference until the reconstruction is repaired. No proprietary
 source, firmware or coefficient tables are included in this repository.
+
+### Independent reconstruction defect reproduction
+
+The checkBeat control-flow loss reproduces in a small independently written ARM
+fixture with no RX3 code. Ghidra 12.1.3 turns the conditional-move example into a
+constant return, contradicting three positive finite inputs executed in Unicorn.
+A simpler comparison control behaves correctly; a fresh RX3 import still shows
+the original loss. Predicate simplification disabled does not fix it. The exact
+backend cause remains open, so no corrected source export is claimed. A narrow
+player-wide scan finds this exact six-instruction pattern only in checkBeat; that
+is not a correctness audit of the other functions.
