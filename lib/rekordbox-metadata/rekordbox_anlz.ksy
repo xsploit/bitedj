@@ -282,24 +282,24 @@ types:
         type: u1
         doc: |
           A lookup value for a color table? We use this to index to the hot cue colors shown in rekordbox.
-        if: (len_entry - len_comment) > 44
+        if: len_entry > 44 and len_comment < len_entry - 44
       - id: color_red
         type: u1
         doc: |
           The red component of the hot cue color to be displayed.
-        if: (len_entry - len_comment) > 45
+        if: len_entry > 45 and len_comment < len_entry - 45
       - id: color_green
         type: u1
         doc: |
           The green component of the hot cue color to be displayed.
-        if: (len_entry - len_comment) > 46
+        if: len_entry > 46 and len_comment < len_entry - 46
       - id: color_blue
         type: u1
         doc: |
           The blue component of the hot cue color to be displayed.
-        if: (len_entry - len_comment) > 47
+        if: len_entry > 47 and len_comment < len_entry - 47
       - size: len_entry - 48 - len_comment  # The remainder after the color
-        if: (len_entry - len_comment) > 48
+        if: len_entry > 48 and len_comment < len_entry - 48
 
   path_tag:
     doc: |

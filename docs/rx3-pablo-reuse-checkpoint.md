@@ -381,3 +381,6 @@ the existing/default cue color through setHotCue. Complete RGB tails retain thei
 exact value. tools/test_rekordbox_optional_color.py compiles the actual helper and
 configured parser; ten empty/Unicode-comment and 0–4-color-byte fixtures pass.
 No full Track persistence test or app build was performed in this pass.
+
+
+Short extended-cue parser follow-up: a 40-byte PCP2 fixture exposed unconditional reads of an absent len_comment in optional-tail predicates. Fixed the Kaitai schema and regenerated C++ with compiler 0.11. Production parser/helper regression now passes 21 cases, including three prefilled-storage patterns, zero-byte/empty/Unicode comments and optional RGB/remainder boundaries. Baseline failed the short-record test. Full importer persistence and malformed declared-length enforcement remain unverified.

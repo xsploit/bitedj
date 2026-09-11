@@ -246,27 +246,27 @@ void rekordbox_anlz_t::cue_extended_entry_t::_read() {
         m_comment = kaitai::kstream::bytes_to_str(m__io->read_bytes(len_comment()), "UTF-16BE");
     }
     n_color_code = true;
-    if (len_entry() - len_comment() > 44) {
+    if ( ((len_entry() > 44) && (len_comment() < len_entry() - 44)) ) {
         n_color_code = false;
         m_color_code = m__io->read_u1();
     }
     n_color_red = true;
-    if (len_entry() - len_comment() > 45) {
+    if ( ((len_entry() > 45) && (len_comment() < len_entry() - 45)) ) {
         n_color_red = false;
         m_color_red = m__io->read_u1();
     }
     n_color_green = true;
-    if (len_entry() - len_comment() > 46) {
+    if ( ((len_entry() > 46) && (len_comment() < len_entry() - 46)) ) {
         n_color_green = false;
         m_color_green = m__io->read_u1();
     }
     n_color_blue = true;
-    if (len_entry() - len_comment() > 47) {
+    if ( ((len_entry() > 47) && (len_comment() < len_entry() - 47)) ) {
         n_color_blue = false;
         m_color_blue = m__io->read_u1();
     }
     n__unnamed18 = true;
-    if (len_entry() - len_comment() > 48) {
+    if ( ((len_entry() > 48) && (len_comment() < len_entry() - 48)) ) {
         n__unnamed18 = false;
         m__unnamed18 = m__io->read_bytes((len_entry() - 48) - len_comment());
     }
