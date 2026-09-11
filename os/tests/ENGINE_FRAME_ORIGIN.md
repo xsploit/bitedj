@@ -92,3 +92,10 @@ The native reset behavior is now also executed under PC ARM emulation using the 
 
 
 The probe now also executes the native decompressed quick-cue blob decoder at 0x1600660. Three synthetic blobs confirm that the serialized adjusted main position populates the main getter directly, the default position populates the secondary field, and the adjustment flag is retained. A false flag does not select the default during decoding; a serialized main value of zero stays zero. Eight hot-cue positions also decode exactly. The reader's retained `mainCueState` therefore preserves information that exists in the native decoded object, including zero. This still does not establish later deck-load or auto-cue selection policy, or a universal cross-decoder timing correction; playable cue import remains deferred.
+
+
+## Main-cue selection during track loading
+
+A statically verified `PlayCueControl` load path now connects decoded cue state to selection policy. Its method at 0xdcbb24 keeps the stored main position when it is not -1 and the adjustment flag is set. Otherwise it derives a position from `BeatGrid` at beat coordinate zero, writes that as main and default, and clears the flag. The derived grid calculation maps NaN to zero. The called helper at 0xdcb500 writes through the verified CueData main setter.
+
+This explains why simply choosing the serialized default whenever `isAdjusted` is false is insufficient: native loading can recompute that value from the beat grid. A zero main position with the adjustment flag set passes the observed sentinel check. These are instruction/RTTI findings; the full deck-load path has not been executed with controlled fixtures. Other load sources and auto-cue settings are not covered. See `tools/engine-reader/diagnostics/native-cue-load-policy.json` for offsets and scope. No cue-import selection is enabled by this research alone.
