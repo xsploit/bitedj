@@ -285,3 +285,19 @@ The backup is structurally compatible with this lookup; it is not proven to be
 the asset payload paired with firmware 1.20. No vendor images or firmware code
 are included here. Recreated BiteDJ assets still need independent layouts and
 control bindings rather than treating extracted PNGs as a complete skin.
+
+### Hot-cue controls mapped to image families
+
+The stock hot-cue selection function passed 784 controlled ARM scenarios with
+UI lookup/visibility/refresh/image sinks stubbed. Its named tables map two decks
+of eight object IDs to shared image families: two banks, eight pads, 65 color
+slots, plus loop overlays. There are 1,089 unique referenced image IDs. Tests
+cover both color sources, every color slot, selected-pad values 0/1/8, and empty
+or unhandled cue states. Color zero maps to slot nine; empty cues use slot 63.
+One bank visually adds a cyan border in the inspected pad-A sample, but the
+producer of the bank-selection state is not yet mapped to a user action.
+
+These findings support independently composed cue occupancy, color, emphasis and
+loop-marker states in a BiteDJ layout. They do not establish complete event
+behavior, rendering, or a finished skin. Vendor artwork and extracted tables
+remain in local research artifacts; none are committed here.
