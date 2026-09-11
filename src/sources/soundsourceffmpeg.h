@@ -145,7 +145,8 @@ class SoundSourceFFmpeg : public SoundSource {
 #else
     static int64_t getStreamChannelLayout(const AVStream& avStream);
 #endif
-    static IndexRange getStreamFrameIndexRange(const AVStream& avStream);
+    static IndexRange getStreamFrameIndexRange(
+            const AVFormatContext& avFormat, const AVStream& avStream);
     static SINT getStreamSeekPrerollFrameCount(const AVStream& avStream);
     static FrameCount frameBufferCapacityForStream(const AVStream& avStream);
 
