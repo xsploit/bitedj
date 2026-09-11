@@ -337,3 +337,19 @@ initial-image properties remain allocated because the intermediate constructor
 dispatch does not propagate the image constructor failure. The local map now
 contains named parent relationships, while final transforms, clipping, visibility
 and dynamic image replacement remain open.
+
+### Coordinates, visibility and cue-time evidence
+
+All 5,265 constructed layout instances matched an independent ancestor-offset
+calculation when render context was explicitly zeroed. Separate helper tests
+show that existing context affects the nominal absolute-position result and
+local show getters do not account for hidden ancestors. These are initial linked
+bounds, not final visible-screen coverage.
+
+Cue-time comparison tests executed 196 millisecond/150-frame cases in both
+directions and ten conversions, with external ceil stubbed. The specialized loop
+comparison advances the frame OUT position by one before ceiling conversion.
+This is useful for reconciling mixed time representations; it does not justify
+adding an offset to BiteDJ's direct millisecond ANLZ importer. The local map now
+flags the inaccurate cue-comparison pseudocode alongside the earlier beat-detector
+reconstruction issue, and packages the scoped verification ledger with exports.
