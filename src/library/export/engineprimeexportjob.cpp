@@ -26,6 +26,7 @@ namespace {
 const std::string kMixxxRootCrateName = "Mixxx";
 
 constexpr int kMaxHotCues = 8;
+constexpr int kMaxSavedLoops = 8;
 
 constexpr uint8_t kDefaultWaveformOpacity = 127;
 
@@ -238,6 +239,28 @@ void exportMetadata(
     // does not have a hot cue at that location.
     const auto cues = pTrack->getCuePoints();
     snapshot.hot_cues.resize(kMaxHotCues);
+    // Editing a pad can change a loop into a jump cue (or vice versa) while
+    // retaining its source identity. Do not silently omit that edited cue or
+    // reassign it to the other Engine bank, which may already be occupied.
+    for (const CuePointer& pCue : cues) {
+        const auto origin = pCue->getEngineOrigin();
+        if (origin &&
+                ((origin->bank == Cue::EngineOrigin::Bank::HotCue &&
+                         pCue->getType() != CueType::HotCue) ||
+                        (origin->bank == Cue::EngineOrigin::Bank::SavedLoop &&
+                                pCue->getType() != CueType::Loop))) {
+            const auto label = pCue->getLabel().isEmpty()
+                    ? QString("%1 %2")
+                              .arg(origin->bank == Cue::EngineOrigin::Bank::SavedLoop
+                                              ? "Saved loop" : "Hot cue")
+                              .arg(origin->slot)
+                    : pCue->getLabel();
+            throw std::runtime_error(QString("Cue '%1' no longer matches its original Engine bank. "
+                                             "Restore its original cue/loop type before exporting.")
+                                             .arg(label).toStdString());
+        }
+    }
+    std::array<bool, kMaxHotCues> exportedHotCues{};
     for (const CuePointer& pCue : cues) {
         // We are only interested in hot cues.
         if (pCue->getType() != CueType::HotCue) {
@@ -245,6 +268,13 @@ void exportMetadata(
         }
 
         int hotCueIndex = pCue->getHotCue(); // Note: Mixxx uses 0-based.
+        const auto origin = pCue->getEngineOrigin();
+        if (origin) {
+            if (origin->bank != Cue::EngineOrigin::Bank::HotCue) {
+                continue;
+            }
+            hotCueIndex = origin->slot - 1;
+        }
         if (hotCueIndex < 0 || hotCueIndex >= kMaxHotCues) {
             qInfo() << "Skipping hot cue" << hotCueIndex
                     << "as the Engine DJ format only supports at most"
@@ -274,10 +304,77 @@ void exportMetadata(
                 static_cast<uint_least8_t>(color.blue()),
                 255};
 
+        if (exportedHotCues[hotCueIndex]) {
+            throw std::runtime_error(QString("Conflicting hot cues target Engine slot %1. "
+                                             "Resolve the cue conflict before exporting.")
+                                             .arg(hotCueIndex + 1).toStdString());
+        }
         snapshot.hot_cues[hotCueIndex] = hotCue;
+        exportedHotCues[hotCueIndex] = true;
     }
 
-    // TODO (mr-smidge): Export saved loops.
+    // Export numbered saved loops to Engine's separate loop bank. Keep
+    // destination slots for which BiteDJ has no valid saved loop.
+    std::array<bool, kMaxSavedLoops> exportedLoops{};
+    std::array<bool, kMaxSavedLoops> exportedSourceLoops{};
+    for (const CuePointer& pCue : cues) {
+        if (pCue->getType() != CueType::Loop ||
+                pCue->getHotCue() == Cue::kNoHotCue) {
+            continue;
+        }
+        // Imported cues retain their original Engine bank/slot even if a
+        // different local control index is needed to avoid a hot-cue collision.
+        int index = pCue->getHotCue();
+        const auto origin = pCue->getEngineOrigin();
+        if (origin) {
+            if (origin->bank != Cue::EngineOrigin::Bank::SavedLoop) {
+                continue;
+            }
+            index = origin->slot - 1;
+        }
+        if (index < 0 || index >= kMaxSavedLoops) {
+            qWarning() << "Skipping unsupported Engine saved-loop slot" << index;
+            continue;
+        }
+        const auto positions = pCue->getStartAndEndPosition();
+        if (!positions.startPosition.isValid() || !positions.endPosition.isValid()) {
+            qWarning() << "Skipping invalid Engine saved loop" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        const double start = positions.startPosition.value();
+        const double end = positions.endPosition.value();
+        if (start < 0 || end <= start || end > frameCount) {
+            qWarning() << "Skipping invalid Engine saved loop" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        if (exportedLoops[index]) {
+            if (origin || exportedSourceLoops[index]) {
+                throw std::runtime_error(QString("Conflicting saved loops target Engine slot %1. "
+                                                 "Resolve the loop conflict before exporting.")
+                                                 .arg(index + 1).toStdString());
+            }
+            qWarning() << "Skipping duplicate Engine saved-loop slot" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        const auto color = mixxx::RgbColor::toQColor(pCue->getColor());
+        const auto label = pCue->getLabel().isEmpty()
+                ? QString("Loop %1").arg(index + 1)
+                : pCue->getLabel();
+        if (snapshot.loops.size() < kMaxSavedLoops) {
+            snapshot.loops.resize(kMaxSavedLoops);
+        }
+        snapshot.loops[index] = djinterop::loop{
+                label.toStdString(), start, end,
+                djinterop::pad_color{
+                        static_cast<uint_least8_t>(color.red()),
+                        static_cast<uint_least8_t>(color.green()),
+                        static_cast<uint_least8_t>(color.blue()), 255}};
+        exportedLoops[index] = true;
+        exportedSourceLoops[index] = origin.has_value();
+    }
 
     // Write waveform.
     if (pWaveform) {
@@ -454,8 +551,12 @@ void EnginePrimeExportJob::loadIds(const QSet<CrateId>& crateIds) {
 void EnginePrimeExportJob::loadTrack(const TrackRef& trackRef) {
     DEBUG_ASSERT_QOBJECT_THREAD_AFFINITY(m_pTrackCollectionManager);
 
-    // Load the track.
-    m_pLastLoadedTrack = m_pTrackCollectionManager->getOrAddTrack(trackRef);
+    // Export references identify tracks already present in the library.
+    m_pLastLoadedTrack = m_pTrackCollectionManager->getTrackByRef(trackRef);
+    m_pLastLoadedWaveform.reset();
+    if (!m_pLastLoadedTrack) {
+        return;
+    }
 
     // Load high-resolution waveform from analysis info. When the per-filesystem
     // cache is enabled, waveforms live on the track's own filesystem keyed by
@@ -563,7 +664,12 @@ void EnginePrimeExportJob::run() {
             return;
         }
 
-        DEBUG_ASSERT(m_pLastLoadedTrack != nullptr);
+        if (!m_pLastLoadedTrack) {
+            m_lastErrorMessage = tr("Failed to load track for export: %1")
+                                         .arg(trackRef.getLocation());
+            emit failed(m_lastErrorMessage);
+            return;
+        }
 
         qInfo() << "Exporting track" << m_pLastLoadedTrack->getId().toString()
                 << "at" << m_pLastLoadedTrack->getFileInfo().location() << "...";

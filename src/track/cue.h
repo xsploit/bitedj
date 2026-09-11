@@ -25,6 +25,24 @@ class Cue : public QObject {
     static_assert(kNoHotCue != mixxx::kFirstHotCueIndex,
             "Conflicting definitions of invalid and first hot cue index");
 
+    // Source identity is independent of the local hotcue control index.
+    struct EngineOrigin {
+        QString libraryUuid;
+        QString trackId;
+        enum class Bank { HotCue = 1, SavedLoop = 2 };
+        Bank bank;
+        int slot; // Original Engine slot, 1-based.
+
+        bool operator==(const EngineOrigin& other) const {
+            return libraryUuid == other.libraryUuid && trackId == other.trackId &&
+                    bank == other.bank && slot == other.slot;
+        }
+        bool operator!=(const EngineOrigin& other) const { return !(*this == other); }
+    };
+
+    std::optional<EngineOrigin> getEngineOrigin() const;
+    void setEngineOrigin(std::optional<EngineOrigin> origin);
+
     struct StartAndEndPositions {
         mixxx::audio::FramePos startPosition;
         mixxx::audio::FramePos endPosition;
@@ -46,7 +64,8 @@ class Cue : public QObject {
             mixxx::audio::FrameDiff_t length,
             int hotCue,
             const QString& label,
-            mixxx::RgbColor color);
+            mixxx::RgbColor color,
+            std::optional<EngineOrigin> engineOrigin = std::nullopt);
 
     /// Initialize new cue points
     Cue(
@@ -107,6 +126,7 @@ class Cue : public QObject {
     const int m_iHotCue;
     QString m_label;
     mixxx::RgbColor m_color;
+    std::optional<EngineOrigin> m_engineOrigin;
 
     friend class Track;
     friend class CueDAO;
