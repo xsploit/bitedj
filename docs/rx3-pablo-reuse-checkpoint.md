@@ -353,3 +353,17 @@ This is useful for reconciling mixed time representations; it does not justify
 adding an offset to BiteDJ's direct millisecond ANLZ importer. The local map now
 flags the inaccurate cue-comparison pseudocode alongside the earlier beat-detector
 reconstruction issue, and packages the scoped verification ledger with exports.
+
+### RX3 writer-to-parser interoperability
+
+Synthetic bytes captured from actual RX3 ARM writers now pass BiteDJ's compiled
+production ANLZ parser for PQTZ beat grids, legacy PCOB/PCPT cue banks and extended
+PCO2/PCP2 hot cues. The extended fixture verifies empty/ASCII/Unicode comments
+(including a surrogate pair), colors and loop fraction. These checks exercise the
+serialization boundary, not Track mutation or full application behavior.
+
+Injected legacy write failures expose inconsistent RX3 error propagation: short
+cue-entry writes can be logged while the outer writer returns success. That is a
+behavior to avoid in independent implementations, not a feature to copy. No device
+filesystem was exercised. The local reports retain stubbing assumptions and source
+hashes; vendor binaries and pseudocode remain outside this repository.
