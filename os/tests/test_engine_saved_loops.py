@@ -74,7 +74,9 @@ int main(){
    assert(updated.loops[7]->label=="Source loop");++cases;
    auto unchanged=updated;
    imported->origin->bank=Cue::EngineOrigin::Bank::HotCue;
-   apply(updated,{imported},rate*10);assert(updated==unchanged);++cases;
+   bool loopTypeRejected=false;
+   try {apply(updated,{imported},rate*10);} catch(const std::runtime_error& e) {loopTypeRejected=std::string(e.what()).find("original Engine bank")!=std::string::npos;}
+   assert(loopTypeRejected && updated==unchanged);++cases;
    imported->origin->bank=Cue::EngineOrigin::Bank::SavedLoop;
    for(int slot:{0,9}) {imported->origin->slot=slot;apply(updated,{imported},rate*10);assert(updated==unchanged);++cases;}
    imported->origin->slot=1;
@@ -86,7 +88,10 @@ int main(){
    apply(updated,{hot},rate*10);assert(updated.hot_cues[3]->label=="Source hot");++cases;
    auto banks=updated;
    hot->origin->bank=Cue::EngineOrigin::Bank::SavedLoop;
-   apply(updated,{hot},rate*10);assert(updated==banks);++cases;
+   hot->label.clear();
+   bool hotTypeRejected=false;
+   try {apply(updated,{hot},rate*10);} catch(const std::runtime_error& e) {hotTypeRejected=std::string(e.what()).find("Saved loop 4")!=std::string::npos;}
+   assert(hotTypeRejected && updated==banks);++cases;
    // Destination collisions must reject regardless of input order.
    for(auto type:{CueType::HotCue,CueType::Loop}) {
     auto local=cue(0,0,rate,"Local",type);
