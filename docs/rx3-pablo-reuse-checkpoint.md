@@ -268,3 +268,20 @@ because the downmix helper also serves key analysis. Next evaluation should incl
 real music, stereo phase variants, tempo changes and half/double-tempo ambiguity,
 and distinguish retained tempo from current beat timing. Raw firmware and
 proprietary pseudocode remain outside this repository.
+
+### Verified RX3 image-ID lookup
+
+The actual RX3 1.20 ARM lookup accepted every one of the 5,581 image records from
+the earlier local Pi backup. The numeric ID is the zero-based 44-byte record
+index; pixel pointer relocation and two-byte row strides matched all records.
+Three invalid IDs returned null. Seven synthetic format cases additionally tested
+stride selection and conditional auxiliary-pointer relocation. The accessor
+modifies the in-memory record, so it is not a purely read-only table lookup.
+
+Static tracing connects these IDs to glyph properties, dimensions and drawing.
+This provides a verified bridge from numbered extracted images to UI references,
+but semantic widget names, states, transparency and full rendering remain open.
+The backup is structurally compatible with this lookup; it is not proven to be
+the asset payload paired with firmware 1.20. No vendor images or firmware code
+are included here. Recreated BiteDJ assets still need independent layouts and
+control bindings rather than treating extracted PNGs as a complete skin.
