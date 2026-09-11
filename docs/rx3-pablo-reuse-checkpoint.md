@@ -384,3 +384,6 @@ No full Track persistence test or app build was performed in this pass.
 
 
 Short extended-cue parser follow-up: a 40-byte PCP2 fixture exposed unconditional reads of an absent len_comment in optional-tail predicates. Fixed the Kaitai schema and regenerated C++ with compiler 0.11. Production parser/helper regression now passes 21 cases, including three prefilled-storage patterns, zero-byte/empty/Unicode comments and optional RGB/remainder boundaries. Baseline failed the short-record test. Full importer persistence and malformed declared-length enforcement remain unverified.
+
+
+Extended-cue boundary audit: actual comment helper passes absent, NUL-only, ASCII and Unicode cases, so no speculative helper fix was made. Added schema validation for the 40-byte fixed minimum and comment length within len_entry - 44; both missing checks reproduced parser acceptance of inconsistent lengths with subsequent bytes available. New tools/test_rekordbox_cue_bounds.py verifies 4 helper cases, 6 malformed lengths with early error positions, and 4 adjacent valid entries. Existing 21 RGB cases and the captured RX3 writer fixture still pass. No full app/Track test; other malformed lengths and generic section limits remain open.

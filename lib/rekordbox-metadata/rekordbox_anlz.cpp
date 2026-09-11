@@ -226,6 +226,9 @@ void rekordbox_anlz_t::cue_extended_entry_t::_read() {
     }
     m_len_header = m__io->read_u4be();
     m_len_entry = m__io->read_u4be();
+    if (!(m_len_entry >= 40)) {
+        throw kaitai::validation_less_than_error<uint32_t>(40, m_len_entry, m__io, std::string("/types/cue_extended_entry/seq/2"));
+    }
     m_hot_cue = m__io->read_u4be();
     m_type = static_cast<rekordbox_anlz_t::cue_entry_type_t>(m__io->read_u1());
     m__unnamed5 = m__io->read_bytes(3);
@@ -239,6 +242,9 @@ void rekordbox_anlz_t::cue_extended_entry_t::_read() {
     if (len_entry() > 43) {
         n_len_comment = false;
         m_len_comment = m__io->read_u4be();
+        if (!(m_len_comment <= len_entry() - 44)) {
+            throw kaitai::validation_greater_than_error<uint32_t>(len_entry() - 44, m_len_comment, m__io, std::string("/types/cue_extended_entry/seq/12"));
+        }
     }
     n_comment = true;
     if (len_entry() > 43) {

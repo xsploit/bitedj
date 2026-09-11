@@ -231,6 +231,8 @@ types:
         type: u4
       - id: len_entry
         type: u4
+        valid:
+          min: 40
       - id: hot_cue
         type: u4
         doc: |
@@ -270,6 +272,8 @@ types:
           Zero if the loop is not quantized.
       - id: len_comment
         type: u4
+        valid:
+          max: len_entry - 44
         if: len_entry > 43
       - id: comment
         type: str
