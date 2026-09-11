@@ -190,7 +190,7 @@ void MixxxMainWindow::initialize() {
     // Initialise library exporter
     // This has to be done before switching to fullscreen
     m_pLibraryExporter = m_pCoreServices->getLibrary()->makeLibraryExporter(this);
-    m_pEngineImportDialog = std::make_unique<mixxx::DlgEngineImport>(this);
+    m_pEngineImportDialog = std::make_unique<mixxx::DlgEngineImport>(this, m_pCoreServices->getLibrary()->trackCollectionManager());
     connect(m_pCoreServices->getLibrary().get(),
             &Library::exportLibrary,
             m_pLibraryExporter.get(),

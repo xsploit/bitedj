@@ -11,11 +11,13 @@
 #include <QJsonArray>
 #include <QLabel>
 #include <QPushButton>
+#include <QPlainTextEdit>
 #include <QScroller>
 #include <QTableView>
 #include <QVBoxLayout>
 
 #include "library/engine/enginereaderservice.h"
+#include "library/engine/engineimportcoordinator.h"
 #include "moc_dlgengineimport.cpp"
 
 namespace mixxx {
@@ -50,7 +52,7 @@ class EnginePreviewModel : public QAbstractTableModel {
             const double duration = track["durationMs"].toDouble();
             if (duration < 0 || duration > 1e15)
                 return tr("Unknown");
-            const qint64 seconds = duration / 1000;
+            const qint64 seconds = static_cast<qint64>(duration / 1000);
             return QString("%1:%2").arg(seconds / 60).arg(seconds % 60, 2, 10, QChar('0'));
         }
         case 3:
@@ -102,9 +104,12 @@ QString readerLauncher() {
 }
 } // namespace
 
-DlgEngineImport::DlgEngineImport(QWidget* parent)
+DlgEngineImport::DlgEngineImport(QWidget* parent, TrackCollectionManager* manager)
         : QDialog(parent),
           m_reader(new EngineReaderService(this)),
+          m_importer(new EngineImportCoordinator(manager, this)),
+          m_apply(new QPushButton(tr("Import metadata + playlists"), this)),
+          m_details(new QPlainTextEdit(this)),
           m_model(new EnginePreviewModel(this)),
           m_status(new QLabel(tr("Choose your drive or Engine Library folder."), this)),
           m_choose(new QPushButton(tr("Choose library…"), this)),
@@ -115,7 +120,7 @@ DlgEngineImport::DlgEngineImport(QWidget* parent)
     resize(960, 600);
     auto* layout = new QVBoxLayout(this);
     auto* buttons = new QHBoxLayout;
-    for (auto* button : {m_choose, m_cancel}) {
+    for (auto* button : {m_choose, m_apply, m_cancel}) {
         button->setMinimumHeight(44);
         buttons->addWidget(button);
     }
@@ -137,7 +142,14 @@ DlgEngineImport::DlgEngineImport(QWidget* parent)
     m_tracks->verticalHeader()->setDefaultSectionSize(44);
     m_tracks->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     layout->addWidget(m_tracks);
-    auto* note = new QLabel(tr("Import support is still in development."), this);
+    m_apply->setObjectName("EngineImportApply");
+    m_details->setObjectName("EngineImportDetails");
+    m_details->setReadOnly(true);
+    m_details->setMaximumHeight(140);
+    m_details->hide();
+    QScroller::grabGesture(m_details->viewport(), QScroller::TouchGesture);
+    layout->addWidget(m_details);
+    auto* note = new QLabel(tr("Engine cues, loops and beat grids are not applied yet. Your tag-writing preferences still apply."), this);
     layout->addWidget(note);
     setBusy(false);
     connect(m_choose, &QPushButton::clicked, this, [this] {
@@ -147,10 +159,33 @@ DlgEngineImport::DlgEngineImport(QWidget* parent)
     });
     connect(close, &QPushButton::clicked, this, &QWidget::close);
     connect(this, &QDialog::finished, m_reader, &EngineReaderService::cancel);
+    connect(this, &QDialog::finished, m_importer, &EngineImportCoordinator::cancel);
+    connect(m_apply, &QPushButton::clicked, this, [this] {
+        QString error;
+        m_details->clear(); m_details->hide();
+        if (!m_importer->start(m_package, m_libraryDirectory, m_mediaRoot, &error)) {
+            m_status->setText(error); return;
+        }
+        setBusy(true);
+        m_cancel->setText(tr("Cancel import"));
+        m_status->setText(tr("Importing metadata and playlists…"));
+    });
+    connect(m_importer, &EngineImportCoordinator::progress, this, [this](int completed, int total) {
+        m_status->setText(tr("Importing %1 of %2…").arg(completed).arg(total));
+    });
+    connect(m_importer, &EngineImportCoordinator::finished, this,
+            [this](int tracks, int playlists, int attention, bool cancelled, const QStringList& details) {
+        setBusy(false);
+        m_status->setText(tr("%1 tracks processed · %2 playlists processed · %3 notices%4. Completed changes are kept.")
+                .arg(tracks).arg(playlists).arg(attention).arg(cancelled ? tr(" · Cancelled") : QString()));
+        m_details->setPlainText(details.join("\n"));
+        m_details->setVisible(!details.isEmpty());
+    });
     connect(m_cancel, &QPushButton::clicked, this, [this] {
         m_status->setText(tr("Cancelling…"));
         m_cancel->setEnabled(false);
         m_reader->cancel();
+        m_importer->cancel();
     });
     connect(m_reader, &EngineReaderService::packageReady, this, &DlgEngineImport::displayPackage);
     connect(m_reader, &EngineReaderService::failed, this, [this](const QString& error) {
@@ -164,12 +199,17 @@ DlgEngineImport::DlgEngineImport(QWidget* parent)
 }
 void DlgEngineImport::setBusy(bool busy) {
     m_choose->setEnabled(!busy);
+    m_apply->setEnabled(!busy && !m_package.isEmpty());
+    if (!busy) m_cancel->setText(tr("Cancel reading"));
     m_cancel->setEnabled(busy);
 }
 void DlgEngineImport::openLibrary(const QString& folder) {
-    if (m_reader->isRunning())
+    if (m_reader->isRunning() || m_importer->isRunning())
         return;
     m_model->setTracks({});
+    m_package = {};
+    m_apply->setEnabled(false);
+    m_details->clear(); m_details->hide();
     QDir library(folder);
     QString mediaRoot = library.absolutePath();
     if (QFileInfo::exists(library.filePath("Engine Library/Database2/m.db"))) {
@@ -187,6 +227,8 @@ void DlgEngineImport::openLibrary(const QString& folder) {
         m_status->setText(tr("The Engine library reader component is not installed."));
         return;
     }
+    m_libraryDirectory = library.absolutePath();
+    m_mediaRoot = mediaRoot;
     setBusy(true);
     m_status->setText(tr("Reading Engine library…"));
     if (!m_reader->start(launcher, library.absolutePath(), mediaRoot)) {
@@ -195,6 +237,7 @@ void DlgEngineImport::openLibrary(const QString& folder) {
     }
 }
 void DlgEngineImport::displayPackage(const QJsonObject& package) {
+    m_package = package;
     setBusy(false);
     const auto tracks = package["tracks"].toArray();
     m_model->setTracks(tracks);
@@ -202,6 +245,7 @@ void DlgEngineImport::displayPackage(const QJsonObject& package) {
 }
 void DlgEngineImport::closeEvent(QCloseEvent* event) {
     m_reader->cancel();
+    m_importer->cancel();
     QDialog::closeEvent(event);
 }
 } // namespace mixxx

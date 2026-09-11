@@ -91,6 +91,7 @@ EnginePlaylistImportPlan planEnginePlaylistImport(
     result.name = merge.values.value("name").toString();
     result.baseline = merge.baseline;
     result.conflicts = merge.conflicts;
+    result.acceptsSourceEntries = merge.values.value("entries") == QJsonValue(sourceEntries);
     if (merge.changedFields.contains(QStringLiteral("entries"))) {
         result.tracks = sourceTracks;
         result.entryIds = sourceLocalIds;

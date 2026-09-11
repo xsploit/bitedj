@@ -9,6 +9,7 @@ parser.add_argument('--build',type=Path,required=True)
 parser.add_argument('--reader-prefix',type=Path,required=True)
 parser.add_argument('--fixture-generator',type=Path,required=True)
 parser.add_argument('--output',type=Path,required=True)
+parser.add_argument('--installed-reader',action='store_true',help='Test normal app-relative reader discovery without an environment override')
 args=parser.parse_args()
 out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
 build=args.build.resolve();source=Path(__file__).resolve().parents[2]
@@ -28,6 +29,7 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-preview-') as td:
  slow=root/'slow.py';slow.write_text('#!/usr/bin/env python3\nimport time\ntime.sleep(30)\n');slow.chmod(0o700)
  before=hashlib.sha256((library/'Database2/m.db').read_bytes()).hexdigest()
  env=os.environ.copy();env.update(QT_QPA_PLATFORM='offscreen',LANG='C.UTF-8',LD_PRELOAD=str(driver),BITEDJ_PREVIEW_FIXTURE=str(drive),BITEDJ_ENGINE_IMPORT_HELPER=str(helper),BITEDJ_PREVIEW_SLOW_HELPER=str(slow),BITEDJ_PREVIEW_IMAGE=str(out/'engine-preview.png'))
+ if args.installed_reader: env.pop('BITEDJ_ENGINE_IMPORT_HELPER',None)
  with (out/'engine-preview-app.log').open('w') as log:
   done=subprocess.run([str(build/'mixxx'),'--settings-path',str(profile),'--resource-path',str(source/'res')],env=env,stdout=log,stderr=subprocess.STDOUT,timeout=65)
  after=hashlib.sha256((library/'Database2/m.db').read_bytes()).hexdigest()

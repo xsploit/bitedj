@@ -7,17 +7,20 @@ class QLabel;
 class QPushButton;
 class QTableView;
 class QCloseEvent;
+class QPlainTextEdit;
+class TrackCollectionManager;
 
 namespace mixxx {
 class EngineReaderService;
+class EngineImportCoordinator;
 class EnginePreviewModel;
 
-// Read-only first step of the Engine import workflow. Packages are not an
-// authorization to open media or mutate library/Track state.
+// Preview and explicit metadata/playlist Apply workflow. Reading alone never
+// changes the library. Timing imports remain deferred.
 class DlgEngineImport : public QDialog {
     Q_OBJECT
   public:
-    explicit DlgEngineImport(QWidget* parent = nullptr);
+    explicit DlgEngineImport(QWidget* parent = nullptr, TrackCollectionManager* manager = nullptr);
 
   public slots:
     void openLibrary(const QString& folder);
@@ -29,6 +32,12 @@ class DlgEngineImport : public QDialog {
     void setBusy(bool busy);
     void displayPackage(const QJsonObject& package);
     EngineReaderService* m_reader;
+    EngineImportCoordinator* m_importer;
+    QPushButton* m_apply;
+    QPlainTextEdit* m_details;
+    QJsonObject m_package;
+    QString m_libraryDirectory;
+    QString m_mediaRoot;
     EnginePreviewModel* m_model;
     QLabel* m_status;
     QPushButton* m_choose;

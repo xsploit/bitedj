@@ -137,6 +137,12 @@ int main(int argc, char** argv) {
         check(!mixxx::planEnginePlaylistImport(namedNew, {}, {}, "Source", {}, true).error.isEmpty(), "existing playlist treated as new");
         auto badBaseline = baseline; badBaseline.insert("entries", "broken");
         check(!mixxx::planEnginePlaylistImport(current, badBaseline, bindings, current.name, source).error.isEmpty(), "malformed baseline accepted");
+        local = current;
+        local.entryIds[0] = 999; // Same song/order, but a new unowned occurrence.
+        plan = mixxx::planEnginePlaylistImport(local, baseline, bindings, current.name, source);
+        check(plan.error.isEmpty() && plan.conflicts.isEmpty() &&
+                plan.entryIds == local.entryIds && !plan.acceptsSourceEntries,
+                "unowned replacement occurrence acquired source identity");
         auto invalid = bindings; invalid.insert("alias", bindings["a"]);
         check(!mixxx::planEnginePlaylistImport(current, baseline, invalid, current.name, source).error.isEmpty(), "duplicate binding accepted");
         auto duplicate = source; duplicate.append(source[0]);

@@ -18,6 +18,7 @@ struct EnginePlaylistImportPlan {
     QJsonObject baseline;
     QStringList conflicts;
     QString error;
+    bool acceptsSourceEntries = false;
 };
 // Detached three-way merge of name and ordered occurrences. A concurrent local
 // and source content edit conflicts as a whole; it never guesses how to combine
