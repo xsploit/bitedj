@@ -584,4 +584,13 @@ reapplying those migrations.
       UPDATE library SET filetype='aiff' WHERE filetype='aif';
     </sql>
   </revision>
+  <revision version="40" min_compatible="3">
+    <description>Preserve Engine source cue bank and slot independently of local controls.</description>
+    <sql>
+      ALTER TABLE cues ADD COLUMN engine_library_uuid TEXT DEFAULT NULL;
+      ALTER TABLE cues ADD COLUMN engine_track_id TEXT DEFAULT NULL;
+      ALTER TABLE cues ADD COLUMN engine_bank INTEGER DEFAULT NULL;
+      ALTER TABLE cues ADD COLUMN engine_slot INTEGER DEFAULT NULL;
+    </sql>
+  </revision>
 </schema>

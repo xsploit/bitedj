@@ -61,13 +61,24 @@ CuePointer cueFromRow(const QSqlRecord& row) {
         qWarning() << "Discard black hot cue" << hotcue << "found in database at position 0";
         return CuePointer();
     }
+    std::optional<Cue::EngineOrigin> origin;
+    const auto sourceUuid = row.value(row.indexOf("engine_library_uuid")).toString();
+    const auto sourceTrack = row.value(row.indexOf("engine_track_id")).toString();
+    const int sourceBank = row.value(row.indexOf("engine_bank")).toInt();
+    const int sourceSlot = row.value(row.indexOf("engine_slot")).toInt();
+    if (!sourceUuid.isEmpty() && !sourceTrack.isEmpty() &&
+            (sourceBank == 1 || sourceBank == 2) && sourceSlot >= 1 && sourceSlot <= 8) {
+        origin = Cue::EngineOrigin{sourceUuid, sourceTrack,
+                static_cast<Cue::EngineOrigin::Bank>(sourceBank), sourceSlot};
+    }
     CuePointer pCue(new Cue(id,
             type,
             position,
             lengthFrames,
             hotcue,
             label,
-            *color));
+            *color,
+            std::move(origin)));
     return pCue;
 }
 
@@ -164,7 +175,11 @@ bool CueDAO::saveCue(TrackId trackId, Cue* cue) const {
                         "length=:length,"
                         "hotcue=:hotcue,"
                         "label=:label,"
-                        "color=:color"
+                        "color=:color,"
+                        "engine_library_uuid=:engine_library_uuid,"
+                        "engine_track_id=:engine_track_id,"
+                        "engine_bank=:engine_bank,"
+                        "engine_slot=:engine_slot"
                         " WHERE id=:id"));
         query.bindValue(":id", cue->getId().toVariant());
     } else {
@@ -172,8 +187,9 @@ bool CueDAO::saveCue(TrackId trackId, Cue* cue) const {
         query.prepare(
                 QStringLiteral("INSERT INTO " CUE_TABLE
                                " (track_id, type, position, length, hotcue, "
-                               "label, color) VALUES (:track_id, :type, "
-                               ":position, :length, :hotcue, :label, :color)"));
+                               "label, color, engine_library_uuid, engine_track_id, engine_bank, engine_slot) "
+                               "VALUES (:track_id, :type, :position, :length, :hotcue, :label, :color, "
+                               ":engine_library_uuid, :engine_track_id, :engine_bank, :engine_slot)"));
     }
 
     // Bind values and execute query
@@ -184,6 +200,11 @@ bool CueDAO::saveCue(TrackId trackId, Cue* cue) const {
     query.bindValue(":hotcue", cue->getHotCue());
     query.bindValue(":label", labelToQVariant(cue->getLabel()));
     query.bindValue(":color", mixxx::RgbColor::toQVariant(cue->getColor()));
+    const auto origin = cue->getEngineOrigin();
+    query.bindValue(":engine_library_uuid", origin ? QVariant(origin->libraryUuid) : QVariant());
+    query.bindValue(":engine_track_id", origin ? QVariant(origin->trackId) : QVariant());
+    query.bindValue(":engine_bank", origin ? QVariant(static_cast<int>(origin->bank)) : QVariant());
+    query.bindValue(":engine_slot", origin ? QVariant(origin->slot) : QVariant());
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
         return false;
