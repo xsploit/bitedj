@@ -18,6 +18,7 @@
 #include <QStringList>
 #include <QTextCodec>
 #include <QtDebug>
+#include <map>
 #include <vector>
 
 #include "engine/engine.h"
@@ -546,8 +547,8 @@ void buildPlaylistTree(
         uint32_t parentID,
         const QMap<uint32_t, QString>& playlistNameMap,
         const QMap<uint32_t, bool>& playlistIsFolderMap,
-        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
         const QString& device,
         QSet<uint32_t> ancestors = {});
@@ -637,8 +638,8 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
     QMap<uint32_t, QString> albumsMap;
     QMap<uint32_t, QString> playlistNameMap;
     QMap<uint32_t, bool> playlistIsFolderMap;
-    QMap<uint32_t, QMap<uint32_t, uint32_t>> playlistTreeMap;
-    QMap<uint32_t, QMap<uint32_t, uint32_t>> playlistTrackMap;
+    QMap<uint32_t, std::multimap<uint32_t, uint32_t>> playlistTreeMap;
+    QMap<uint32_t, std::multimap<uint32_t, uint32_t>> playlistTrackMap;
     std::vector<rekordbox_pdb_t::track_row_t*> trackRows;
 
     bool folderOrPlaylistFound = false;
@@ -688,11 +689,9 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
                                         auto* playlistEntry =
                                                 static_cast<rekordbox_pdb_t::playlist_entry_row_t*>(
                                                         rowRef->body());
-                                        playlistTrackMap
-                                                [playlistEntry->playlist_id()]
-                                                [playlistEntry->entry_index()] =
-                                                        playlistEntry
-                                                                ->track_id();
+                                        playlistTrackMap[playlistEntry->playlist_id()].emplace(
+                                                playlistEntry->entry_index(),
+                                                playlistEntry->track_id());
                                     } break;
                                     case rekordbox_pdb_t::PAGE_TYPE_TRACKS: {
                                         // Written out below, once the device
@@ -711,10 +710,9 @@ QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* dev
                                         playlistIsFolderMap[playlistTree
                                                                     ->id()] =
                                                 playlistTree->is_folder();
-                                        playlistTreeMap
-                                                [playlistTree->parent_id()]
-                                                [playlistTree->sort_order()] =
-                                                        playlistTree->id();
+                                        playlistTreeMap[playlistTree->parent_id()].emplace(
+                                                playlistTree->sort_order(),
+                                                playlistTree->id());
 
                                         folderOrPlaylistFound = true;
                                     } break;
@@ -817,21 +815,21 @@ void buildPlaylistTree(
         uint32_t parentID,
         const QMap<uint32_t, QString>& playlistNameMap,
         const QMap<uint32_t, bool>& playlistIsFolderMap,
-        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
-        const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTreeMap,
+        const QMap<uint32_t, std::multimap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
         const QString& device,
         QSet<uint32_t> ancestors) {
     ancestors.insert(parentID);
-    // Exported sort keys may have gaps. Iterate existing rows in key order;
-    // indexing by a guessed sequence inserts missing rows into the map.
+    // Sort keys may have gaps or ties. Multimaps retain every exported row
+    // in key order, preserving source order among equal keys.
     const auto childrenIt = playlistTreeMap.constFind(parentID);
     if (childrenIt == playlistTreeMap.constEnd()) {
         return;
     }
     const auto& children = childrenIt.value();
-    for (auto childIt = children.constBegin(); childIt != children.constEnd(); ++childIt) {
-        const uint32_t childID = childIt.value();
+    for (auto childIt = children.cbegin(); childIt != children.cend(); ++childIt) {
+        const uint32_t childID = childIt->second;
         if (childID == 0) {
             continue;
         }
@@ -901,9 +899,9 @@ void buildPlaylistTree(
         const auto tracksIt = playlistTrackMap.constFind(childID);
         if (playlistID != kInvalidPlaylistId && tracksIt != playlistTrackMap.constEnd()) {
             const auto& tracks = tracksIt.value();
-            for (auto trackIt = tracks.constBegin(); trackIt != tracks.constEnd(); ++trackIt) {
-                const uint32_t trackIndex = trackIt.key();
-                const uint32_t rbTrackID = trackIt.value();
+            for (auto trackIt = tracks.cbegin(); trackIt != tracks.cend(); ++trackIt) {
+                const uint32_t trackIndex = trackIt->first;
+                const uint32_t rbTrackID = trackIt->second;
 
                 const int trackID = findTrackId(
                         database, static_cast<int>(rbTrackID), device);

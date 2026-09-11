@@ -34,6 +34,7 @@ cpp = r'''
 #include <QDebug>
 #include <QList>
 #include <QMap>
+#include <map>
 #include <QSet>
 #include <QString>
 #include <QVariant>
@@ -89,9 +90,9 @@ int main(int argc, char** argv) {
     }
     QMap<uint32_t, QString> names{{10,"Folder"},{20,"Empty"},{30,"Set"}};
     QMap<uint32_t, bool> folders{{10,true},{20,false},{30,false}};
-    QMap<uint32_t,QMap<uint32_t,uint32_t>> tree{
+    QMap<uint32_t,std::multimap<uint32_t,uint32_t>> tree{
             {0,{{2,10},{7,20}}}, {10,{{4,30}}}};
-    QMap<uint32_t,QMap<uint32_t,uint32_t>> tracks{{30,{{1,2},{5,1},{9,99}}}};
+    QMap<uint32_t,std::multimap<uint32_t,uint32_t>> tracks{{30,{{1,2},{5,1},{9,99}}}};
     const auto originalTree = tree;
     const auto originalTracks = tracks;
     const auto originalNames = names;
@@ -142,6 +143,27 @@ int main(int argc, char** argv) {
             multi.children[0]->children[0]->children.size()==1 &&
             multi.children[0]->children[0]->children[0]->label=="Empty",
             "ancestor cycle skipped without losing unrelated occurrences");
+    folders[30]=false;
+    tree={{0,{{7,20}}}};
+    tree[0].emplace(7,30);
+    tracks={{30,{{5,1}}}};
+    tracks[30].emplace(5,2);
+    tracks[30].emplace(5,1);
+    TreeItem ties;
+    buildPlaylistTree(db,&ties,0,names,folders,tree,tracks,"/usb/ties","A");
+    require(ties.children.size()==2, "equal sort keys must retain both playlists");
+    require(ties.children[0]->label=="Empty" && ties.children[1]->label=="Set",
+            "equal sibling sort keys retain source order");
+    require(sql.exec("SELECT t.track_id,t.position FROM rekordbox_playlist_tracks t JOIN rekordbox_playlists p ON p.id=t.playlist_id WHERE p.name='/usb/ties-->Set' ORDER BY t.rowid"), "tied entries read");
+    for (int expected: {101,102,101}) {
+        require(sql.next() && sql.value(0).toInt()==expected && sql.value(1).toInt()==5,
+                "tied track positions and repeated tracks retained in source order");
+    }
+    require(!sql.next(), "exactly three tied track entries");
+    TreeItem tiesRefreshed;
+    buildPlaylistTree(db,&tiesRefreshed,0,names,folders,tree,tracks,"/usb/ties","A");
+    require(sql.exec("SELECT count(*) FROM rekordbox_playlist_tracks t JOIN rekordbox_playlists p ON p.id=t.playlist_id WHERE p.name='/usb/ties-->Set'") && sql.next() && sql.value(0).toInt()==3,
+            "tied entries survive refresh without accumulating duplicates");
     qInfo() << "PASS: sparse/nested playlists, device identity, missing tracks, reimport, zero/large positions, immutable inputs";
 }
 '''
