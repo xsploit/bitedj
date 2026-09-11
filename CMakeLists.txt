@@ -1928,6 +1928,8 @@ if(ENGINEPRIME)
 
   # Include conditional sources only required with Engine Prime export support.
   target_sources(mixxx-lib PRIVATE
+    src/library/engine/dlgengineimport.cpp
+    src/library/engine/dlgengineimport.h
     src/library/engine/enginereaderservice.cpp
     src/library/engine/enginereaderservice.h
     src/library/engine/engineimportpackage.cpp

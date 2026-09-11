@@ -32,6 +32,7 @@
 #include "library/library_prefs.h"
 #ifdef __ENGINEPRIME__
 #include "library/export/libraryexporter.h"
+#include "library/engine/dlgengineimport.h"
 #endif
 #include "library/trackcollectionmanager.h"
 #include "mixer/playerinfo.h"
@@ -189,6 +190,7 @@ void MixxxMainWindow::initialize() {
     // Initialise library exporter
     // This has to be done before switching to fullscreen
     m_pLibraryExporter = m_pCoreServices->getLibrary()->makeLibraryExporter(this);
+    m_pEngineImportDialog = std::make_unique<mixxx::DlgEngineImport>(this);
     connect(m_pCoreServices->getLibrary().get(),
             &Library::exportLibrary,
             m_pLibraryExporter.get(),
@@ -856,6 +858,11 @@ void MixxxMainWindow::connectMenuBar() {
 
 #ifdef __ENGINEPRIME__
     DEBUG_ASSERT(m_pLibraryExporter);
+    connect(m_pMenuBar,
+            &WMainMenuBar::previewEngineLibrary,
+            m_pEngineImportDialog.get(),
+            &QWidget::show,
+            Qt::UniqueConnection);
     connect(m_pMenuBar,
             &WMainMenuBar::exportLibrary,
             m_pLibraryExporter.get(),
