@@ -34,6 +34,7 @@ cpp = r'''
 #include <QDebug>
 #include <QList>
 #include <QMap>
+#include <QSet>
 #include <QString>
 #include <QVariant>
 #include <QSqlDatabase>
@@ -56,6 +57,8 @@ struct TreeItem {
     QString label;
     std::vector<std::unique_ptr<TreeItem>> children;
     TreeItem* appendChild(const QString& name, const QVariant&) {
+        static int created = 0;
+        if (++created > 100) { fprintf(stderr, "FAIL: runaway playlist recursion\n"); std::exit(1); }
         auto child = std::make_unique<TreeItem>();
         child->label = name;
         children.push_back(std::move(child));
@@ -66,7 +69,9 @@ void require(bool ok, const char* message) {
     if (!ok) { fprintf(stderr, "FAIL: %s\n", message); std::exit(1); }
 }
 '''
-cpp += function(source, "findTrackId") + "\n" + function(source, "buildPlaylistTree")
+prototype_start = source.index("void buildPlaylistTree(")
+prototype = source[prototype_start:source.index(";", prototype_start) + 1]
+cpp += prototype + "\n" + function(source, "findTrackId") + "\n" + function(source, "buildPlaylistTree")
 cpp += r'''
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
@@ -124,6 +129,19 @@ int main(int argc, char** argv) {
     TreeItem absent;
     buildPlaylistTree(db,&absent,123,names,folders,tree,tracks,"/usb/absent","A");
     require(absent.children.empty() && !tree.contains(123), "absent parent is not inserted");
+    tree={{0,{{1,10},{2,20}}},{10,{{1,10},{2,30}}}};
+    TreeItem cyclic;
+    buildPlaylistTree(db,&cyclic,0,names,folders,tree,tracks,"/usb/cycle","A");
+    require(cyclic.children.size()==2 && cyclic.children[0]->children.size()==1 &&
+            cyclic.children[0]->children[0]->label=="Set", "self-cycle skipped, siblings retained");
+    folders[30]=true;
+    tree={{0,{{1,10},{2,20}}},{10,{{1,30}}},{30,{{1,10},{2,20}}}};
+    TreeItem multi;
+    buildPlaylistTree(db,&multi,0,names,folders,tree,tracks,"/usb/multi","A");
+    require(multi.children.size()==2 && multi.children[0]->children.size()==1 &&
+            multi.children[0]->children[0]->children.size()==1 &&
+            multi.children[0]->children[0]->children[0]->label=="Empty",
+            "ancestor cycle skipped without losing unrelated occurrences");
     qInfo() << "PASS: sparse/nested playlists, device identity, missing tracks, reimport, zero/large positions, immutable inputs";
 }
 '''

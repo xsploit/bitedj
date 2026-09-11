@@ -549,7 +549,8 @@ void buildPlaylistTree(
         const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
         const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
-        const QString& device);
+        const QString& device,
+        QSet<uint32_t> ancestors = {});
 
 QString parseDeviceDB(mixxx::DbConnectionPoolPtr dbConnectionPool, TreeItem* deviceItem) {
     QString device = deviceItem->getLabel();
@@ -819,7 +820,9 @@ void buildPlaylistTree(
         const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTreeMap,
         const QMap<uint32_t, QMap<uint32_t, uint32_t>>& playlistTrackMap,
         const QString& playlistPath,
-        const QString& device) {
+        const QString& device,
+        QSet<uint32_t> ancestors) {
+    ancestors.insert(parentID);
     // Exported sort keys may have gaps. Iterate existing rows in key order;
     // indexing by a guessed sequence inserts missing rows into the map.
     const auto childrenIt = playlistTreeMap.constFind(parentID);
@@ -830,6 +833,10 @@ void buildPlaylistTree(
     for (auto childIt = children.constBegin(); childIt != children.constEnd(); ++childIt) {
         const uint32_t childID = childIt.value();
         if (childID == 0) {
+            continue;
+        }
+        if (ancestors.contains(childID)) {
+            qWarning() << "Skipping cyclic Rekordbox playlist hierarchy" << childID;
             continue;
         }
         QString playlistItemName = playlistNameMap.value(childID);
@@ -931,7 +938,8 @@ void buildPlaylistTree(
                     playlistTreeMap,
                     playlistTrackMap,
                     currentPath,
-                    device);
+                    device,
+                    ancestors);
         }
     }
 }

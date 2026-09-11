@@ -393,3 +393,6 @@ Waveform research checkpoint: actual RX3 PWAV/PWV2 writers generated six preview
 
 
 Phrase and waveform follow-up: actual RX3 thinning passes 4,228 bounded cases and the complete conversion-to-512/400-preview path passes ten source sizes with cleanup checks. Phrase display conversion passes 481 mappings and eight guards; actual RX3 PSSI unmask/endian conversion and BiteDJ's parser agree on six masked/plain fixtures. BiteDJ's actual phrase decoder additionally passes 18 fixture variants covering labels, timing offsets, valid/ignored fills, final N+1 boundaries and duplicate-beat rejection. These do not establish full Track persistence, hardware timing or final UI equivalence. No production change is warranted by these passing cases.
+
+
+Playlist cycle fix: production buildPlaylistTree reproduced runaway recursion on a reachable self-cycle. Added per-path ancestor IDs and skip cycle edges before creating nodes/rows. Actual Qt/SQLite importer fixtures pass self- and multi-folder cycles while retaining siblings and separate-branch occurrences. This does not add OneLibrary-only support or solve deep acyclic trees, duplicate order keys or path-name collisions.
