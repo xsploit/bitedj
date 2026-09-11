@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <array>
 #include <cstdint>
+#include <cmath>
 #include <memory>
 #include <stdexcept>
 
@@ -26,6 +27,7 @@ namespace {
 const std::string kMixxxRootCrateName = "Mixxx";
 
 constexpr int kMaxHotCues = 8;
+constexpr int kMaxSavedLoops = 8;
 
 constexpr uint8_t kDefaultWaveformOpacity = 127;
 
@@ -277,7 +279,53 @@ void exportMetadata(
         snapshot.hot_cues[hotCueIndex] = hotCue;
     }
 
-    // TODO (mr-smidge): Export saved loops.
+    // Export numbered saved loops to Engine's separate loop bank. Keep
+    // destination slots for which BiteDJ has no valid saved loop.
+    std::array<bool, kMaxSavedLoops> exportedLoops{};
+    for (const CuePointer& pCue : cues) {
+        if (pCue->getType() != CueType::Loop ||
+                pCue->getHotCue() == Cue::kNoHotCue) {
+            continue;
+        }
+        const int index = pCue->getHotCue();
+        if (index < 0 || index >= kMaxSavedLoops) {
+            qWarning() << "Skipping unsupported Engine saved-loop slot" << index;
+            continue;
+        }
+        const auto positions = pCue->getStartAndEndPosition();
+        if (!positions.startPosition.isValid() || !positions.endPosition.isValid()) {
+            qWarning() << "Skipping invalid Engine saved loop" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        const double start = positions.startPosition.value();
+        const double end = positions.endPosition.value();
+        if (!std::isfinite(start) || !std::isfinite(end) ||
+                start < 0 || end <= start || end > frameCount) {
+            qWarning() << "Skipping invalid Engine saved loop" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        if (exportedLoops[index]) {
+            qWarning() << "Skipping duplicate Engine saved-loop slot" << index
+                       << "for track" << pTrack->getId();
+            continue;
+        }
+        const auto color = mixxx::RgbColor::toQColor(pCue->getColor());
+        const auto label = pCue->getLabel().isEmpty()
+                ? QString("Loop %1").arg(index + 1)
+                : pCue->getLabel();
+        if (snapshot.loops.size() < kMaxSavedLoops) {
+            snapshot.loops.resize(kMaxSavedLoops);
+        }
+        snapshot.loops[index] = djinterop::loop{
+                label.toStdString(), start, end,
+                djinterop::pad_color{
+                        static_cast<uint_least8_t>(color.red()),
+                        static_cast<uint_least8_t>(color.green()),
+                        static_cast<uint_least8_t>(color.blue()), 255}};
+        exportedLoops[index] = true;
+    }
 
     // Write waveform.
     if (pWaveform) {
