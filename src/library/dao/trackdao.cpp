@@ -701,6 +701,136 @@ bool insertTrackLibrary(
 
 } // anonymous namespace
 
+bool TrackDAO::stageTrackRecord(const SqlTransaction& transaction,
+        const mixxx::TrackRecord& record,
+        const std::shared_ptr<const mixxx::Beats>& beats,
+        QString* error) {
+    if (error) {
+        error->clear();
+    }
+    auto fail = [error](const QString& message) {
+        if (error) {
+            *error = message;
+        }
+        return false;
+    };
+    if (!transaction || !record.getId().isValid()) {
+        return fail("Track staging requires an active transaction and an existing track ID");
+    }
+    QSqlQuery query(transaction.database());
+    if (!query.prepare(
+            "UPDATE library SET "
+            "artist=:artist,"
+            "title=:title,"
+            "album=:album,"
+            "album_artist=:album_artist,"
+            "year=:year,"
+            "genre=:genre,"
+            "composer=:composer,"
+            "grouping=:grouping,"
+            "filetype=:filetype,"
+            "tracknumber=:tracknumber,"
+            "tracktotal=:tracktotal,"
+            "color=:color,"
+            "comment=:comment,"
+            "url=:url,"
+            "rating=:rating,"
+            "key=:key,"
+            "key_id=:key_id,"
+            "cuepoint=:cuepoint,"
+            "bpm=:bpm,"
+            "replaygain=:replaygain,"
+            "replaygain_peak=:replaygain_peak,"
+            "timesplayed=:timesplayed,"
+            "last_played_at=:last_played_at,"
+            "played=:played,"
+            "header_parsed=:header_parsed,"
+            "source_synchronized_ms=:source_synchronized_ms,"
+            "channels=:channels,"
+            "bitrate=:bitrate,"
+            "samplerate=:samplerate,"
+            "bitrate=:bitrate,"
+            "duration=:duration,"
+            "beats_version=:beats_version,"
+            "beats_sub_version=:beats_sub_version,"
+            "beats=:beats,"
+            "bpm_lock=:bpm_lock,"
+            "keys_version=:keys_version,"
+            "keys_sub_version=:keys_sub_version,"
+            "keys=:keys,"
+            "coverart_source=:coverart_source,"
+            "coverart_type=:coverart_type,"
+            "coverart_location=:coverart_location,"
+            "coverart_color=:coverart_color,"
+            "coverart_digest=:coverart_digest,"
+            "coverart_hash=:coverart_hash "
+            "WHERE id=:track_id")) {
+        return fail(query.lastError().text());
+    }
+
+    query.bindValue(":track_id", record.getId().toVariant());
+    bindTrackLibraryValues(&query, record, beats);
+    if (!query.exec()) return fail(query.lastError().text());
+    if (query.numRowsAffected() != 1) return fail("Staged track no longer exists or update was rejected");
+    return true;
+}
+
+bool TrackDAO::stageNewTrackRecord(const SqlTransaction& transaction,
+        const mixxx::TrackRecord& record,
+        const std::shared_ptr<const mixxx::Beats>& beats,
+        const mixxx::FileInfo& fileInfo,
+        mixxx::TrackRecord* insertedRecord,
+        QString* error) {
+    if (error) {
+        error->clear();
+    }
+    auto fail = [error](const QString& message) {
+        if (error) {
+            *error = message;
+        }
+        return false;
+    };
+    if (!insertedRecord) return fail("Missing inserted record output");
+    auto copy = record;
+    *insertedRecord = mixxx::TrackRecord();
+    if (!transaction || copy.getId().isValid() || fileInfo.location().isEmpty()) {
+        return fail("New track staging requires an active transaction, unassigned record and file location");
+    }
+    QSqlQuery query(transaction.database());
+    if (!query.exec("SAVEPOINT bitedj_stage_new_track")) return fail(query.lastError().text());
+    auto rollback = [&](const QString& message) {
+        QSqlQuery undo(transaction.database());
+        const bool rolledBack = undo.exec("ROLLBACK TO SAVEPOINT bitedj_stage_new_track");
+        const bool released = undo.exec("RELEASE SAVEPOINT bitedj_stage_new_track");
+        return fail(message + ((!rolledBack || !released) ? "; discard the outer transaction: savepoint cleanup failed" : ""));
+    };
+    if (!query.prepare("INSERT INTO track_locations (location,directory,filename,filesize,fs_deleted,needs_verification) "
+                       "VALUES (:location,:directory,:filename,:filesize,:fs_deleted,:needs_verification)")) {
+        return rollback(query.lastError().text());
+    }
+    if (!insertTrackLocation(&query, fileInfo) || query.numRowsAffected() != 1) {
+        return rollback("File location already exists or could not be inserted");
+    }
+    const auto locationId = DbId(query.lastInsertId());
+    if (!locationId.isValid()) return rollback("Missing inserted file location identity");
+    const auto dateAdded = copy.getDateAdded().isValid() ? copy.getDateAdded() : QDateTime::currentDateTimeUtc();
+    if (!query.prepare("INSERT INTO library(location,datetime_added,mixxx_deleted) VALUES(:location,:added,0)")) {
+        return rollback(query.lastError().text());
+    }
+    query.bindValue(":location", locationId.toVariant());
+    query.bindValue(":added", dateAdded);
+    if (!query.exec() || query.numRowsAffected() != 1) return rollback("Failed to insert staged library record");
+    const auto trackId = TrackId(query.lastInsertId());
+    if (!trackId.isValid()) return rollback("Missing inserted track identity");
+    copy.setId(trackId);
+    copy.setDateAdded(dateAdded);
+    QString updateError;
+    if (!stageTrackRecord(transaction, copy, beats, &updateError)) return rollback(updateError);
+    if (!query.exec("RELEASE SAVEPOINT bitedj_stage_new_track")) return rollback(query.lastError().text());
+    *insertedRecord = std::move(copy);
+    return true;
+}
+
 TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
     DEBUG_ASSERT(pTrack);
     const mixxx::FileInfo fileInfo = pTrack->getFileInfo();
@@ -1672,73 +1802,9 @@ bool TrackDAO::updateTrack(const Track& track) const {
     // PerformanceTimer time;
     // time.start();
 
-    QSqlQuery query(m_database);
-
-    // Update everything but "location", since that's what we identify the track by.
-    query.prepare(
-            "UPDATE library SET "
-            "artist=:artist,"
-            "title=:title,"
-            "album=:album,"
-            "album_artist=:album_artist,"
-            "year=:year,"
-            "genre=:genre,"
-            "composer=:composer,"
-            "grouping=:grouping,"
-            "filetype=:filetype,"
-            "tracknumber=:tracknumber,"
-            "tracktotal=:tracktotal,"
-            "color=:color,"
-            "comment=:comment,"
-            "url=:url,"
-            "rating=:rating,"
-            "key=:key,"
-            "key_id=:key_id,"
-            "cuepoint=:cuepoint,"
-            "bpm=:bpm,"
-            "replaygain=:replaygain,"
-            "replaygain_peak=:replaygain_peak,"
-            "timesplayed=:timesplayed,"
-            "last_played_at=:last_played_at,"
-            "played=:played,"
-            "header_parsed=:header_parsed,"
-            "source_synchronized_ms=:source_synchronized_ms,"
-            "channels=:channels,"
-            "bitrate=:bitrate,"
-            "samplerate=:samplerate,"
-            "bitrate=:bitrate,"
-            "duration=:duration,"
-            "beats_version=:beats_version,"
-            "beats_sub_version=:beats_sub_version,"
-            "beats=:beats,"
-            "bpm_lock=:bpm_lock,"
-            "keys_version=:keys_version,"
-            "keys_sub_version=:keys_sub_version,"
-            "keys=:keys,"
-            "coverart_source=:coverart_source,"
-            "coverart_type=:coverart_type,"
-            "coverart_location=:coverart_location,"
-            "coverart_color=:coverart_color,"
-            "coverart_digest=:coverart_digest,"
-            "coverart_hash=:coverart_hash "
-            "WHERE id=:track_id");
-
-    query.bindValue(":track_id", trackId.toVariant());
-
-    const auto trackRecord = track.getRecord();
-    bindTrackLibraryValues(
-            &query,
-            trackRecord,
-            track.getBeats());
-
-    if (!query.exec()) {
-        LOG_FAILED_QUERY(query);
-        DEBUG_ASSERT(!"Failed query");
-        return false;
-    }
-
-    if (query.numRowsAffected() == 0) {
-        kLogger.warning() << "updateTrack had no effect: trackId" << trackId << "invalid";
+    QString error;
+    if (!stageTrackRecord(transaction, track.getRecord(), track.getBeats(), &error)) {
+        kLogger.warning() << "Failed to save track" << trackId << error;
         return false;
     }
 
@@ -1758,7 +1824,9 @@ bool TrackDAO::updateTrack(const Track& track) const {
     }
     m_cueDao.saveTrackCues(
             trackId, track.getCuePoints());
-    transaction.commit();
+    if (!transaction.commit()) {
+        return false;
+    }
 
     // Mirror hot cues and memory cues onto the track's own drive, but only if
     // the DJ actually changed them since the track was loaded — an unchanged

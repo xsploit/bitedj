@@ -1,5 +1,8 @@
 #include "library/dao/cuedao.h"
 
+#include <QMutexLocker>
+#include <QSet>
+#include <QSqlError>
 #include <QThread>
 #include <QVariant>
 #include <QtDebug>
@@ -9,6 +12,7 @@
 #include "util/assert.h"
 #include "util/color/rgbcolor.h"
 #include "util/db/fwdsqlquery.h"
+#include "util/db/sqltransaction.h"
 #include "util/logger.h"
 
 namespace {
@@ -205,7 +209,7 @@ bool CueDAO::saveCue(TrackId trackId, Cue* cue) const {
     query.bindValue(":engine_track_id", origin ? QVariant(origin->trackId) : QVariant());
     query.bindValue(":engine_bank", origin ? QVariant(static_cast<int>(origin->bank)) : QVariant());
     query.bindValue(":engine_slot", origin ? QVariant(origin->slot) : QVariant());
-    if (!query.exec()) {
+    if (!query.exec() || query.numRowsAffected() != 1) {
         LOG_FAILED_QUERY(query);
         return false;
     }
@@ -264,4 +268,87 @@ void CueDAO::saveTrackCues(
                 << "orphaned cue(s) of track"
                 << trackId;
     }
+}
+
+bool CueDAO::stageTrackCues(const SqlTransaction& transaction,
+        TrackId trackId,
+        const QList<CuePointer>& cues,
+        QList<CuePointer>* staged,
+        QString* error) const {
+    if (error)
+        error->clear();
+    auto fail = [error](const QString& message) {
+        if (error)
+            *error = message;
+        return false;
+    };
+    if (!staged)
+        return fail("Missing staged cue output");
+    const auto inputCues = cues; // The output container may alias the input.
+    staged->clear();
+    if (!transaction || transaction.database().connectionName() != m_database.connectionName() || !trackId.isValid()) {
+        return fail("Cue staging requires an active transaction on this connection and a valid track ID");
+    }
+    QList<CuePointer> copies;
+    QSet<int> controlIndices;
+    QSet<QString> existingIds;
+    for (const auto& cue : inputCues) {
+        if (!cue)
+            return fail("Null cue in staged cue list");
+        // Capture each cue consistently under its own mutex. This is a detached
+        // snapshot; callers must separately check that live data did not change
+        // between planning and postcommit publication.
+        QMutexLocker lock(&cue->m_mutex);
+        CuePointer copy(new Cue(cue->m_type, cue->m_iHotCue, cue->m_startPosition, cue->m_endPosition, cue->m_color));
+        copy->m_dbId = cue->m_dbId;
+        copy->m_label = cue->m_label;
+        copy->m_engineOrigin = cue->m_engineOrigin;
+        copy->m_bDirty = true;
+        if (copy->m_iHotCue != Cue::kNoHotCue) {
+            if (controlIndices.contains(copy->m_iHotCue))
+                return fail("Duplicate local cue control index");
+            controlIndices.insert(copy->m_iHotCue);
+        }
+        if (copy->m_dbId.isValid()) {
+            const auto id = copy->m_dbId.toString();
+            if (existingIds.contains(id))
+                return fail("Duplicate cue database identity");
+            existingIds.insert(id);
+        }
+        copies.append(std::move(copy));
+    }
+    QSqlQuery query(m_database);
+    if (!query.exec("SAVEPOINT bitedj_stage_cues"))
+        return fail(query.lastError().text());
+    auto rollback = [&](const QString& message) {
+        QSqlQuery undo(m_database);
+        const bool rolledBack = undo.exec("ROLLBACK TO SAVEPOINT bitedj_stage_cues");
+        const bool released = undo.exec("RELEASE SAVEPOINT bitedj_stage_cues");
+        return fail(message + ((!rolledBack || !released) ? "; discard the outer transaction: savepoint cleanup failed" : ""));
+    };
+    QStringList ids;
+    for (const auto& copy : copies) {
+        if (copy->getId().isValid()) {
+            if (!query.prepare("SELECT track_id FROM cues WHERE id=:id"))
+                return rollback(query.lastError().text());
+            query.bindValue(":id", copy->getId().toVariant());
+            if (!query.exec())
+                return rollback(query.lastError().text());
+            if (!query.next() || TrackId(query.value(0)) != trackId)
+                return rollback("Stale cue identity or cue belongs to another track");
+            query.finish();
+        }
+        if (!saveCue(trackId, copy.get()))
+            return rollback("Failed to write staged cue");
+        ids.append(copy->getId().toString());
+    }
+    if (!query.prepare(QString("DELETE FROM cues WHERE track_id=:track_id AND id NOT IN (%1)").arg(ids.join(','))))
+        return rollback(query.lastError().text());
+    query.bindValue(":track_id", trackId.toVariant());
+    if (!query.exec())
+        return rollback(query.lastError().text());
+    if (!query.exec("RELEASE SAVEPOINT bitedj_stage_cues"))
+        return rollback(query.lastError().text());
+    *staged = std::move(copies);
+    return true;
 }

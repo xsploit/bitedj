@@ -33,6 +33,8 @@ def compile_command(entry, source, target):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('build_dir',type=Path)
+    parser.add_argument('--probe-arg',action='append',default=[],help='Argument passed to the C++ probe')
+    parser.add_argument('--fresh-trackdao',action='store_true',help='Compile current TrackDAO separately for staged-write diagnostics')
     parser.add_argument('--probe-source',type=Path,help='Alternative local C++ persistence/planning probe')
     parser.add_argument('--ninja',default='ninja',help='Ninja executable path')
     parser.add_argument('--fresh-cues',action='store_true',help='Compile current Cue/CueDAO sources separately; not a full-build validation')
@@ -55,8 +57,11 @@ def main():
         source=args.probe_source.resolve() if args.probe_source else Path(__file__).with_name('engine_cue_origin_probe.cpp')
         subprocess.run(compile_command(dao,source,obj),cwd=build,check=True)
         objects=[obj]
-        if args.fresh_cues:
-            for suffix in ('/src/track/cue.cpp','/src/library/dao/cuedao.cpp'):
+        fresh_sources=[]
+        if args.fresh_cues:fresh_sources+=['/src/track/cue.cpp','/src/library/dao/cuedao.cpp']
+        if args.fresh_trackdao:fresh_sources+=['/src/library/dao/trackdao.cpp']
+        if fresh_sources:
+            for suffix in fresh_sources:
                 entry=next(e for e in entries if Path(e['file']).as_posix().endswith(suffix))
                 target=work/(Path(suffix).stem+'.o')
                 subprocess.run(compile_command(entry,entry['file'],target),cwd=build,check=True)
@@ -68,7 +73,7 @@ def main():
             output.append(link[i]);i+=1
         output[1:1]=[str(p) for p in objects]
         subprocess.run(output,cwd=build,check=True)
-        subprocess.run([str(exe)],cwd=work,check=True,timeout=30)
-    print('Mode: '+('fresh production source objects' if args.fresh_cues else 'completed application archive'))
+        subprocess.run([str(exe),*args.probe_arg],cwd=work,check=True,timeout=30)
+    print('Mode: '+('fresh production source objects' if (args.fresh_cues or args.fresh_trackdao) else 'completed application archive'))
 
 if __name__=='__main__':main()

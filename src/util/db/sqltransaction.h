@@ -2,7 +2,6 @@
 
 #include <QSqlDatabase>
 
-
 class SqlTransaction final {
   public:
     explicit SqlTransaction(
@@ -12,6 +11,10 @@ class SqlTransaction final {
 
     operator bool() const {
         return m_active;
+    }
+
+    const QSqlDatabase& database() const {
+        return m_database;
     }
 
     bool commit();
