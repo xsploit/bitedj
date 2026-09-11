@@ -23,3 +23,5 @@ python os/tests/test_engine_cue_origin.py BUILD --ninja NINJA --probe-source /ab
 ```
 
 The generator produces two distinct playable 3-second stereo PCM WAVs at44.1kHz and Engine schema3.0.2 libraries with stable source identities. The persistence probe validates both packages, creates the actual BiteDJ schema0→41 and stages the planner output through production CueDAO and EngineImportRegistry. Initial import, rolled-back update, committed update, repeated import and reload preserve IDs, separate hot1/loop1, fractional frames and loop8 ending at132300. Its Cue materialization/snapshot adapter is test code with detached DAO objects; it does not establish safe publication to loaded player objects. Native Engine duplicate playlist membership is separately represented as a protocol-only fixture, because the generated native schema forbids it.
+
+Cue materialization must map the detached `endFrame == Cue::kNoPosition` sentinel to `audio::kInvalidFramePos`, not `FramePos(-1)`: negative finite FramePos values are valid, while unset uses NaN. The persistence probe explicitly checks that hot-cue ends remain unset after database reload.

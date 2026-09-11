@@ -34,7 +34,7 @@ QVector<EngineCueImportItem> snapshots(const QList<CuePointer>& cues) {
     // These are detached DAO results in this single-threaded probe, not live
     // player objects. A production caller must capture a consistent live view.
     for (const auto& cue : cues) {
-        result.append({cue->getId().toVariant().toLongLong(), cue->getHotCue(), cue->getType(), cue->getPosition().value(), cue->getEndPosition().value(), cue->getLabel(), static_cast<quint32>(cue->getColor()), cue->getEngineOrigin()});
+        result.append({cue->getId().toVariant().toLongLong(), cue->getHotCue(), cue->getType(), cue->getPosition().value(), cue->getEndPosition().isValid() ? cue->getEndPosition().value() : Cue::kNoPosition, cue->getLabel(), static_cast<quint32>(cue->getColor()), cue->getEngineOrigin()});
     }
     return result;
 }
@@ -46,7 +46,9 @@ QList<CuePointer> materialize(const QVector<EngineCueImportItem>& items) {
         if (item.databaseId) {
             cue = CuePointer(new Cue(DbId(QVariant(item.databaseId)), item.type, F(item.startFrame), item.endFrame == Cue::kNoPosition ? 0 : item.endFrame - item.startFrame, item.control, item.label, RgbColor(item.rgb), item.origin));
         } else {
-            cue = CuePointer(new Cue(item.type, item.control, F(item.startFrame), F(item.endFrame), RgbColor(item.rgb)));
+            cue = CuePointer(new Cue(item.type, item.control, F(item.startFrame), audio::kInvalidFramePos, RgbColor(item.rgb)));
+            if (item.endFrame != Cue::kNoPosition)
+                cue->setEndPosition(F(item.endFrame));
             cue->setLabel(item.label);
             cue->setEngineOrigin(item.origin);
         }
@@ -118,7 +120,7 @@ int main(int argc, char** argv) {
             reimportIds.append(cue.databaseId);
             check(cue.origin && cue.origin->trackId == "1" && cue.origin->libraryUuid == key.libraryUuid, "persisted provenance");
             if (cue.origin->bank == Cue::EngineOrigin::Bank::HotCue)
-                hot = cue.origin->slot == 1 && cue.startFrame == 33075.5 && cue.label == "Cue B";
+                hot = cue.origin->slot == 1 && cue.startFrame == 33075.5 && cue.label == "Cue B" && cue.endFrame == Cue::kNoPosition;
             else if (cue.origin->slot == 1)
                 loop = cue.startFrame == 55125.25 && cue.endFrame == 99225.75 && cue.label == "Loop B";
             else if (cue.origin->slot == 8)

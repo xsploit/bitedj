@@ -217,7 +217,7 @@ TEST_F(FsCueOverrideStoreTest, LeavesUnmanagedCuesAlone) {
             framesForSeconds(0.1),
             framesForSeconds(179.0));
 
-    EXPECT_EQ(QByteArrayLiteral("[]"), FsCueOverrideStore::serializeCues(*pTrack));
+    EXPECT_EQ(QByteArrayLiteral("{\"cues\":[],\"version\":2}"), FsCueOverrideStore::serializeCues(*pTrack));
 
     FsCueOverrideStore::applyPayload(pTrack.get(), QByteArrayLiteral("[]"));
 

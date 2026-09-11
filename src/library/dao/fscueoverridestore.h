@@ -17,7 +17,7 @@ class Track;
 /// the cues travel with the stick and reload on any other Bite DJ unit.
 ///
 /// A stored entry is an *override*: it is the whole picture of a track's hot
-/// cue bank, memory cue bank and main cue, and it is applied after the
+/// cue bank, memory cue bank, Engine-identified cue controls and main cue, and it is applied after the
 /// rekordbox ANLZ import, so it wins over whatever rekordbox exported. An entry
 /// with no cues in it is meaningful — that is a track whose cues the DJ deleted
 /// — which is why the store distinguishes "no entry" from "an empty entry".
@@ -91,7 +91,8 @@ class FsCueOverrideStore {
     static bool restoreImportedCues(Track* pTrack);
 
     /// The stored payload: the track's hot cues, memory cues and main cue as a
-    /// compact JSON array with positions in seconds. Also serves as the
+    /// version2 JSON object with positions in seconds and Engine source identity.
+    /// Legacy version1 arrays remain readable. Also serves as the
     /// baseline to compare a later cue set against, so the same cues always
     /// have to serialize to the same bytes.
     ///
@@ -100,7 +101,10 @@ class FsCueOverrideStore {
     static QByteArray serializeCues(const Track& track);
 
     /// Replace the track's hot cue bank, memory cue bank and main cue with the
-    /// ones in `payload`, leaving every other cue (intro, outro, the
+    /// ones in `payload`. Version2 also manages Engine-identified controls
+    /// outside the legacy banks; version1 leaves those newer controls alone.
+    /// Rejects invalid version2 data or custom-control collisions before edits.
+    /// Leaves every other cue (intro, outro, the
     /// analyzer's own) alone.
     static void applyPayload(Track* pTrack, const QByteArray& payload);
 
