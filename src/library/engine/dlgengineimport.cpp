@@ -63,6 +63,8 @@ class EnginePreviewModel : public QAbstractTableModel {
                 return tr("Found");
             if (status == "missing")
                 return tr("Missing");
+            if (status == "unreadable")
+                return tr("Unreadable");
             if (status == "outside-media-root")
                 return tr("Outside folder");
             if (status == "unsupported-reference" || status == "invalid-reference")

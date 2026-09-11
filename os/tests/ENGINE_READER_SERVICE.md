@@ -15,3 +15,11 @@ Run `python os/tests/test_engine_reader_service.py`. The test compiles actual se
 The separately installed reader is checked with `tools/engine-reader/tests/check_metadata.py GENERATOR LAUNCHER` and `check_raw_metadata.py GENERATOR LAUNCHER`. The latter changes SQL directly for schemas3.0.0 and3.0.2 and checks source bytes are unchanged. `check_cancellation.py` tests the actual Python launcher with a controlled adjacent child.
 
 This service delivers a validated import package. It does not yet mutate Track/playlist objects, coordinate library caches, expose an import dialog, resolve edit/deletion conflicts or allocate saved-loop controls. Those are required before claiming a complete Engine import feature. The included package and process-group behavior are verified on Linux; Windows packaging/runtime remains unverified.
+
+## Parent-side media resolution
+
+The service canonicalizes the caller-selected library/root, requires the library inside that root, and passes those same canonical paths to the helper. After protocol validation it replaces every helper-supplied media result and path context with its own filesystem resolution on the worker thread. Absolute/foreign references, NULs, lexical escapes and existing symlinks outside the root do not produce an eligible path. Missing/unreadable files remain explicit statuses. Cancellation is checked between tracks.
+
+`python3 os/tests/test_engine_media_resolver.py` covers valid and missing files, Windows/UNC references, root-prefix/traversal rejection, symlinks and retargeting. The asynchronous service test includes forged media/context claims and a selected directory alias; the result must use the actual selected canonical folder, actual file size, and no path for the outside reference. Existing strict-JSON, lifecycle, limits and descendant-cancellation checks remain enabled.
+
+These observations are not an atomic filesystem snapshot or an audio-identity match. Recheck on actual open and establish decoded frame/sample-rate/origin compatibility before applying cues. Database-to-local Track matching remains the coordinator's responsibility.

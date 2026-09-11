@@ -1,5 +1,7 @@
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QFileInfo>
+#include <QJsonArray>
 #include <QThread>
 #include <QTimer>
 #include <iostream>
@@ -13,7 +15,8 @@ int main(int argc, char** argv) {
     const QString mode(argv[3]);
     const bool queuedCancel = mode == "cancel-queued";
     const bool twice = mode == "ready-twice";
-    const QString expected = queuedCancel ? "cancelled" : twice ? "ready" : mode;
+    const bool media = mode == "ready-media";
+    const QString expected = queuedCancel ? "cancelled" : (twice || media) ? "ready" : mode;
     int ticks = 0, terminals = 0, result = 1;
     QTimer heartbeat;
     QObject::connect(&heartbeat, &QTimer::timeout, &app, [&] { ++ticks; });
@@ -33,6 +36,20 @@ int main(int argc, char** argv) {
         QTimer::singleShot(20, &app, &QCoreApplication::quit);
     };
     QObject::connect(&service, &mixxx::EngineReaderService::packageReady, &app, [&](const QJsonObject& p) {
+        if (media) {
+            const auto tracks = p["tracks"].toArray();
+            if (tracks.size() != 2 ||
+                    tracks[0].toObject()["media"].toObject()["path"] != QFileInfo(QString(argv[2]) + "/a.wav").canonicalFilePath() ||
+                    tracks[0].toObject()["media"].toObject()["sizeBytes"] != "7" ||
+                    tracks[1].toObject()["media"].toObject()["status"] != "outside-media-root" ||
+                    tracks[1].toObject()["media"].toObject().contains("path") ||
+                    p["receivedLibraryArgument"] != QFileInfo(argv[2]).canonicalFilePath() ||
+                    p["receivedMediaRoot"] != QFileInfo(argv[2]).canonicalFilePath() ||
+                    p["mediaPathContext"].toObject()["libraryDirectory"] != QFileInfo(argv[2]).canonicalFilePath()) {
+                done("wrong parent media resolution");
+                return;
+            }
+        }
         if (p["sourceUuid"].toString().isEmpty())
             done("wrong package");
         else

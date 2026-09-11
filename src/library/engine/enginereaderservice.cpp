@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include "library/engine/engineimportpackage.h"
+#include "library/engine/enginemediaresolver.h"
 #include "moc_enginereaderservice.cpp"
 #ifdef Q_OS_UNIX
 #include <signal.h>
@@ -202,6 +203,7 @@ QJsonObject readPackage(const QString& launcher,
     if (!QFileInfo(library).isDir() || !QFileInfo(mediaRoot).isDir()) {
         throw std::runtime_error("Engine library and media root must be existing directories");
     }
+    const EngineMediaResolver mediaResolver(library, mediaRoot);
     QProcess process;
     process.setProcessChannelMode(QProcess::SeparateChannels);
 #ifdef Q_OS_UNIX
@@ -218,7 +220,7 @@ QJsonObject readPackage(const QString& launcher,
     QElapsedTimer elapsed;
     elapsed.start();
     process.start(executable.canonicalFilePath(),
-            {QFileInfo(library).absoluteFilePath(), "--media-root", QFileInfo(mediaRoot).absoluteFilePath()});
+            {mediaResolver.libraryDirectory(), "--media-root", mediaResolver.mediaRoot()});
     QByteArray output;
     QByteArray diagnostic;
     try {
@@ -273,11 +275,25 @@ QJsonObject readPackage(const QString& launcher,
             throw std::runtime_error("Invalid JSON from Engine reader");
         }
         checkDuplicateKeys(output, cancel);
-        const auto package = document.object();
+        auto package = document.object();
         QString error;
         if (!validateEngineImportPackage(package, &error)) {
             throw std::runtime_error(error.toStdString());
         }
+        // The helper's path/context claims are not authoritative. Resolve from
+        // the user's original selection on this worker before showing a preview.
+        auto tracks = package["tracks"].toArray();
+        for (qsizetype i = 0; i < tracks.size(); ++i) {
+            checkCancel(cancel);
+            auto track = tracks[i].toObject();
+            track.insert("media", mediaResolver.resolve(track["relativePath"].toString()));
+            tracks[i] = track;
+        }
+        package.insert("tracks", tracks);
+        package.insert("mediaPathContext", QJsonObject{
+                {"libraryDirectory", mediaResolver.libraryDirectory()},
+                {"relativePathBase", "original Engine Library directory"},
+                {"resolvePolicy", "revalidate before opening audio"}});
         checkCancel(cancel);
         stop(process, processGroup);
         return package;
