@@ -1,0 +1,55 @@
+{
+  "scope": "Actual completed BiteDJ providers; matched AAC encodes differing in perceptual-noise-substitution encoder option. No listening/quality test or universal AAC alignment claim.",
+  "bitedjBinarySHA256": "976ae771510b42e1f9569fd49dda865b21f66791b68222d1a665179932dbb9f4",
+  "encoding": "ffmpeg -i 48000-2ch.wav -c:a aac -b:a 192k -aac_pns 0 or 1 output.m4a",
+  "tracks": [
+    {
+      "channels": 2,
+      "endFrame": "144000",
+      "file": "48000-2ch.no-pns.m4a",
+      "firstFrame": "0",
+      "firstReadFrames": 64,
+      "frameLength": "144000",
+      "provider": "FFmpeg n9.0.1",
+      "sampleRate": 48000,
+      "tailSeekFiniteAndSameLength": true,
+      "tailSeekFrames": 64,
+      "tailSeekMatchesSequential": true,
+      "tailSeekMaxAbsDifference": 0,
+      "tailSeekReferenceFrames": 64,
+      "tailSeekRmsDifference": 0,
+      "inputSHA256": "b67b6b5944693d1e952965d71401c5c0bf3c85d41359545cc6ce68e29ef1b2e6"
+    },
+    {
+      "channels": 2,
+      "endFrame": "144000",
+      "file": "48000-2ch.pns-control.m4a",
+      "firstFrame": "0",
+      "firstReadFrames": 64,
+      "frameLength": "144000",
+      "provider": "FFmpeg n9.0.1",
+      "sampleRate": 48000,
+      "tailSeekFiniteAndSameLength": true,
+      "tailSeekFrames": 64,
+      "tailSeekMatchesSequential": false,
+      "tailSeekMaxAbsDifference": 0.002436116337776184,
+      "tailSeekReferenceFrames": 64,
+      "tailSeekRmsDifference": 0.0008940061480356486,
+      "inputSHA256": "7f43372c2ebab0235877262ea93f0ddc576190ddae35b37176b4019ae3651d38"
+    }
+  ],
+  "nativeNoPnsFrameCount": 143360,
+  "biteNoPnsFrameCount": 144000,
+  "first8000StereoFrameComparison": [
+    {
+      "biteOffsetFrames": 0,
+      "rms": 0.272969010250695,
+      "maxAbsDifference": 0.6408470720052719
+    },
+    {
+      "biteOffsetFrames": 1024,
+      "rms": 1.438565701843699e-08,
+      "maxAbsDifference": 1.043081283569336e-07
+    }
+  ]
+}

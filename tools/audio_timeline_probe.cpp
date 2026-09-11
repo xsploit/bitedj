@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <vector>
 
@@ -78,6 +79,27 @@ int main(int argc, char** argv) {
         const bool tailMatches = endRead.frameLength() == count &&
                 tail.size() == qint64(tailBytes) &&
                 std::memcmp(tail.constData(), endRead.readableData(), tailBytes) == 0;
+        // Byte inequality alone cannot distinguish a timing error from tiny
+        // floating-point decoder differences. Keep the exact check and report
+        // numerical magnitude separately, without inventing a quality gate.
+        const bool tailSameLength = endRead.frameLength() == count &&
+                tail.size() == qint64(tailBytes);
+        bool tailFinite = tailSameLength;
+        double tailMaxError = 0, tailSquaredError = 0;
+        if (tailSameLength) {
+            for (SINT sample = 0; sample < count * channels; ++sample) {
+                CSAMPLE expected;
+                std::memcpy(&expected, tail.constData() + sample * sizeof(CSAMPLE), sizeof(CSAMPLE));
+                const auto actual = endRead.readableData()[sample];
+                if (!std::isfinite(expected) || !std::isfinite(actual)) {
+                    tailFinite = false;
+                    break;
+                }
+                const double error = double(actual) - double(expected);
+                tailMaxError = std::max(tailMaxError, std::abs(error));
+                tailSquaredError += error * error;
+            }
+        }
         tracks.append(QJsonObject{
                 {"file", path},
                 {"provider", proxy.getProvider()->getDisplayName()},
@@ -87,7 +109,12 @@ int main(int argc, char** argv) {
                 {"endFrame", QString::number(end)},
                 {"frameLength", QString::number(audio->frameLength())},
                 {"firstReadFrames", int(readCount)},
-                {"tailSeekMatchesSequential", tailMatches}});
+                {"tailSeekMatchesSequential", tailMatches},
+                {"tailSeekFrames", int(endRead.frameLength())},
+                {"tailSeekReferenceFrames", int(count)},
+                {"tailSeekFiniteAndSameLength", tailFinite},
+                {"tailSeekMaxAbsDifference", tailFinite ? QJsonValue(tailMaxError) : QJsonValue(QJsonValue::Null)},
+                {"tailSeekRmsDifference", tailFinite ? QJsonValue(std::sqrt(tailSquaredError / (count * channels))) : QJsonValue(QJsonValue::Null)}});
         audio->close();
         if (readCount != count) {
             return 5;
