@@ -235,3 +235,14 @@ runtime plugin loading remain unverified. MP3/FLAC decoding, ALSA I/O, g2d/Direc
 graphics and JPEG/text conversion are separately identifiable dependency boundaries
 for further source matching and porting research. No supporting firmware binaries
 are added to this repository.
+
+### Startup and loader evidence
+
+Rootfs startup scripts launch rbp without a loader-path override in the inspected
+chain. Framebuffer graphics aliases and actual rootfs paths narrow dependency
+selection to 22 contents including the player/interpreter. A stock ARM loader
+trace under QEMU in a read-only, network-isolated synthetic root exited 0; every
+listed dependency file matched the profile's hash. This is a loader-only check,
+not player startup or hardware validation. The update script's library-copy phase
+is separate from normal startup. Installed pkg-config version declarations provide
+source-matching leads but are not yet proven binary build identities.
