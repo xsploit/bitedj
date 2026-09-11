@@ -312,3 +312,15 @@ remains separate. The color converter was executed for 64 stock keys, all 256
 possible output bytes and a missing key. It normalizes slots 46–48 to 45 by
 mutating the matched table entry. BiteDJ can keep occupancy, color and emphasis
 explicit and normalize colors without adopting that shared-table side effect.
+
+### Named layout map
+
+The ELF retains 2,483 named layout objects and 24 property/depth tables. All 2,481
+non-null references resolve uniquely; the other two named objects are browser and
+start roots. Actual ARM image-property construction succeeded for 1,261 properties,
+verifying initial image IDs, local positions and bounds. Seventy more use image
+ID -1 and returned failure after partial initialization; dynamic replacement is
+not yet traced. This expands the semantic map across pads, browser/filter, source,
+keyboard, timers and utility controls. Local coordinates are not final composed
+screen positions. Hierarchy construction, transforms and rendering remain open.
+Raw layout data and vendor images remain local, with only findings recorded here.
