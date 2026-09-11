@@ -1936,6 +1936,7 @@ if(ENGINEPRIME)
     src/library/engine/enginemediaresolver.cpp
     src/library/engine/enginemetadataimport.cpp
     src/library/engine/enginecueimport.cpp
+    src/library/engine/engineplaylistimport.cpp
     src/library/engine/engineimportmerge.cpp
     src/library/engine/engineimportregistry.cpp
     src/library/export/dlglibraryexport.cpp

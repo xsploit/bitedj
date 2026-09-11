@@ -606,4 +606,33 @@ reapplying those migrations.
       );
     </sql>
   </revision>
+  <revision version="42" min_compatible="3">
+    <description>Invalidate Engine playlist bindings when local rows are deleted.</description>
+    <sql separator=";;">
+      CREATE INDEX IF NOT EXISTS idx_engine_import_local_identity
+        ON engine_import_entities(entity_kind, local_id);;
+      -- Pre-trigger bindings may already refer to recycled row IDs. Retain
+      -- baselines but discard these uncertain links on the first upgrade only.
+      UPDATE engine_import_entities SET local_id=NULL
+        WHERE entity_kind='entry' AND NOT EXISTS
+          (SELECT 1 FROM sqlite_master WHERE type='trigger'
+            AND name='engine_import_entry_deleted');;
+      UPDATE engine_import_entities SET local_id=NULL
+        WHERE entity_kind='playlist' AND NOT EXISTS
+          (SELECT 1 FROM sqlite_master WHERE type='trigger'
+            AND name='engine_import_playlist_deleted');;
+      CREATE TRIGGER IF NOT EXISTS engine_import_entry_deleted
+        AFTER DELETE ON PlaylistTracks
+        BEGIN
+          UPDATE engine_import_entities SET local_id=NULL
+            WHERE entity_kind='entry' AND local_id=OLD.id;
+        END;;
+      CREATE TRIGGER IF NOT EXISTS engine_import_playlist_deleted
+        AFTER DELETE ON Playlists
+        BEGIN
+          UPDATE engine_import_entities SET local_id=NULL
+            WHERE entity_kind='playlist' AND local_id=OLD.id;
+        END;;
+    </sql>
+  </revision>
 </schema>
