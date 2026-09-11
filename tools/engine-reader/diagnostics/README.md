@@ -13,4 +13,23 @@ python3 check-decoder-entry.py \
 
 Requires Linux user/network namespaces and `qemu-aarch64-static` (override with `--qemu`). The runner compiles an ARM64 preload shim in a temporary directory, verifies the executable hash, runs with an isolated network namespace and a20-second limit, and records exit status, source/runtime hashes and output. It does not connect to a Pi or launch Engine's UI. No music is read by this entry probe.
 
-The next stage requires a valid native file-provider object and a PCM/seek harness. The known reader constructor at0x1619610 consumes ownership of such an object; passing a filename or guessed structure would not test the real interface correctly. See `os/tests/ENGINE_FRAME_ORIGIN.md` for the remaining timing gate.
+The PCM probe below implements the native file-provider and PCM/seek stage. The known reader constructor at0x1619610 consumes ownership of such an object; passing a filename or guessed structure would not test the real interface correctly. See `os/tests/ENGINE_FRAME_ORIGIN.md` for the remaining timing gate.
+
+## Native PCM and repeated seeks
+
+`check-decoder-pcm.py` constructs Engine's actual `airFileFactory`, obtains its native file object with lock state, and passes it to the native reader. It reads sequential float32 PCM and nine seek positions through the real wrapper. Application main remains intercepted. Each test exits without object teardown; this is a bounded research process, not an embeddable player.
+
+```sh
+python3 check-decoder-pcm.py \
+  --runtime /path/to/preserved/runtime64 \
+  --zig /path/to/zig \
+  --input /path/to/synthetic-signal.mp3 \
+  --pcm-output /path/to/results/native \
+  --result /path/to/results/native.json
+```
+
+Outputs are `native.stream.f32` and `native.seek0.f32` through `native.seek8.f32`. Stdout records interleaved sample positions/counts. The loop is capped at300 blocks of4096 samples; use short synthetic inputs. The runner requires successful compilation before launching, checks the executable hash, verifies unchanged input bytes, and captures a diagnostic stack on native faults. Passing means execution succeeded, not that cross-decoder alignment is established.
+
+`native-reader-fixture-results.json` records the completed comparison with BiteDJ's actual providers. WAV is exact; CBR/VBR MP3 have equal decoded lengths and maximum PCM differences below0.000001. Native WAV/MP3 repeated seeks match sequential output exactly. AAC best aligns with a1024-frame later point in BiteDJ, with a different tail length and small seek differences. No universal AAC correction is established.
+
+Fixtures: stereo signed16 WAV,44100 Hz,132300 frames; left=`int(9000*sin(i*0.062))`, right=`int(6000*sin(i*0.037))`. FFmpeg encodings: `libmp3lame -b:a 192k`, `libmp3lame -q:a 2`, and `aac -b:a 192k` in M4A. BiteDJ was measured using its completed-archive `tools/audio_timeline_probe.cpp` on those exact files. Hashes and provider/build evidence are in the JSON. Mono, other sample rates, untagged MP3, other encoders and source database cue semantics remain unverified.

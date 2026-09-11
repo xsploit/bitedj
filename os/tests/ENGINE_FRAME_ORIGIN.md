@@ -29,3 +29,18 @@ Until that gate passes, the metadata/playlist importer retains timing values in 
 The optional `tools/engine-reader/diagnostics/check-decoder-entry.py` probe passed under ARM emulation with the preserved executable's real shared libraries. It verifies relocated RTTI and the read-wrapper function pointer, then exits before Engine main or any decoder call. This establishes a PC execution entry point; it does not close the audio/seek gate.
 
 The verified constructor is0x1619610, with a0x150-byte reader allocation observed at its caller. It consumes an owning input-object pointer and opens through that object's virtual interface. The constructor initializes origin field0xd0 and skip field0xd8 to zero before opening. A filename string or fabricated file-object layout must not be substituted for the native provider in a claimed full-wrapper test.
+
+## Native PCM comparison completed for four fixtures
+
+The native file factory and reader now execute under PC ARM emulation without application main. Compared against BiteDJ's completed providers on identical three-second stereo44100-Hz synthetic files:
+
+| Fixture | Native frames | BiteDJ frames | Maximum same-offset PCM difference |
+|---|---:|---:|---:|
+| WAV |132300|132300|0|
+| MP3 CBR |132300|132300|0.000000507|
+| MP3 VBR |132300|132300|0.000000536|
+| AAC/M4A |132096|132300|0.425|
+
+Native WAV/MP3 seeks, including the last frame and beyond EOF, match sequential PCM exactly. For the AAC comparison's first8000 frames, shifting the BiteDJ reference forward1024 frames reduces RMS difference from about0.0933 to0.00000870. Native AAC reports origin=-1024; its tail count also differs. This argues against assuming unadjusted AAC alignment, not for a universal offset rule.
+
+See `tools/engine-reader/diagnostics/` for the harness, fixture details and hashed results. Passing runs use the actual native allocation/file-factory and lock-state setup, without assertion bypasses or fake file providers. Broader codec/rate/channel coverage and source database cue-coordinate confirmation remain before enabling timing import.
