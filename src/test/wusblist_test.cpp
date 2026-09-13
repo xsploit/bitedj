@@ -273,13 +273,13 @@ TEST_F(WUsbListTest, TapArmsTheRowScrolledUnderTheFinger) {
 }
 
 TEST_F(WUsbListTest, TapOnRowScrolledOutOfSightArmsNothing) {
-    const QPoint firstRowCenter = ejectButtonCenter(0);
     scrollBar()->setValue(scrollBar()->maximum());
     layOut();
 
     // The first row has been scrolled above the viewport, so a tap at the
     // coordinates its button was pushed to must not reach it.
-    ASSERT_LT(ejectButtonCenter(0).y(), m_pList->mapToGlobal(QPoint(0, 0)).y());
+    const QPoint firstRowCenter = ejectButtonCenter(0);
+    ASSERT_LT(firstRowCenter.y(), m_pList->mapToGlobal(QPoint(0, 0)).y());
     tap(firstRowCenter);
 
     EXPECT_EQ(0, armedCount());

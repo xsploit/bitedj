@@ -2,13 +2,18 @@
 #include <djinterop/engine/v3/engine_library.hpp>
 #include <iostream>
 int main(int argc, char** argv) {
-    if (argc != 3)
+    if (argc != 3 && argc != 4)
         return 2;
     try {
         using namespace djinterop;
         const std::string action = argv[2];
+        const std::string schema = argc == 4 ? argv[3] : "3.0.2";
+        if (schema != "3.0.0" && schema != "3.0.2")
+            return 2;
         if (action == "initial") {
-            auto db = engine::create_database(argv[1], engine::engine_schema::schema_3_0_2);
+            auto db = engine::create_database(argv[1], schema == "3.0.0"
+                            ? engine::engine_schema::schema_3_0_0
+                            : engine::engine_schema::schema_3_0_2);
             auto list = db.create_root_playlist("Prepared set");
             for (int i = 0; i < 2; ++i) {
                 track_snapshot s;

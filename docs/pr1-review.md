@@ -5,14 +5,67 @@ Incoming PR head: `02deb46aae9194ba0136be9f54efb016ee767e5d`.
 
 The incoming PR contains 117 changed files. This review examined its application,
 reader, shared database, test and research-document changes. The review fixes add
-four previously unchanged files. The file ledger below covers those 121 files;
+twelve previously unchanged files. The file ledger below covers those 129 files;
 this review document is the additional file.
+
+## Acceptance follow-up
+
+The initial review was insufficient as full acceptance: it used a selected unit
+suite and small app fixtures. The follow-up ran the complete enabled test suite,
+provided disposable mount fixtures for the storage tests, exercised both supported
+Engine schemas, and added larger-library and concurrent decoded-audio checks.
+
+- **1,005 enabled unit tests passed across two fixture configurations.** The full
+  run passed 1,004 and skipped the single-drive test because additional drives
+  were visible. That test then passed in its own private namespace with `/mnt`
+  and `/run/media` overlaid. An earlier rerun without the `/run/media` overlay
+  still skipped and is not counted. Thirteen pre-existing `DISABLED_` tests
+  remain disabled (soft takeover timing, three keylock toggles, core startup).
+- The tested unit binary SHA-256 is
+  `386432bb08bb7eaa601067b3119ae7d8416b7b6ae9621ed7de40d9636be41a7e`.
+  The application binary is unchanged from the initial review hash below.
+- Five pre-existing fixture assumptions were corrected without changing player
+  behavior: both player-manager/sampler fixtures now create the preview deck
+  before Library/EDMC setup; Opus cover testing requires an actual Opus provider;
+  touch selection uses Qt's laid-out row rather than a font-dependent height;
+  the offscreen USB-row test taps its post-scroll coordinates; MP3 first-sound
+  expectations distinguish FFmpeg from MAD. An independent FFmpeg CLI decode
+  with unity-gain mono-to-stereo duplication confirmed the MP3 sample references.
+- The two real decoded deck buffers remained finite and non-silent while the
+  real coordinator imported 500 tracks on the GUI thread. The full-suite run
+  observed 40 audio callbacks during import, 40 audible buffers on each deck,
+  maximum processing time 832 microseconds, and a 472 ms import. The paced
+  callback interval was 11.61 ms. These are observed desktop values, not latency
+  guarantees or a physical sound-device/analysis stress test.
+
+| Real preview + Apply fixture | Preview | Apply | Largest Apply GUI timer gap | Sampled app peak RSS |
+| --- | ---: | ---: | ---: | ---: |
+| 1,000 tracks, Engine 3.0.2 | 334 ms | 1,140 ms | 13 ms | 554.5 MiB |
+| 5,000 tracks, Engine 3.0.2 | 1,324 ms | 14,555 ms | 63 ms | 599.8 MiB |
+| 1,000 tracks, Engine 3.0.0 | 310 ms | 1,141 ms | 15 ms | 555.5 MiB |
+
+All three cases preserve the exact ordered playlist, source database and audio
+bytes, track/provenance counts and SQLite integrity. The 10 ms timer measures
+GUI event-loop gaps, not display FPS. RSS excludes reader children. Hardlinked
+synthetic WAVs do not model slow physical USB or arbitrary music libraries.
+Commands and test limits are in [ENGINE_APPLY.md](../os/tests/ENGINE_APPLY.md).
+
+**Still open:** install/run the reviewed build on the Pi and test physical touch,
+FLX6 playback/headphones, browse/Back/View, and import plus analysis while audio
+is output. Hardware availability was requested; no Pi session occurred in this
+review. The user subsequently authorized merging the desktop-verified work
+without the Pi. The desktop evidence supports source integration; physical
+acceptance remains a release/deployment gate, not a claim made by this merge.
+
+The controller audit found no changes to `res/controllers` or `res/skins` in
+PR #1 and no FLX4-specific assumption in the added Engine application code.
+Both FLX4 and FLX6 mappings already exist in the base. Future Pablo-derived work
+must be checked against the user's preferred FLX6 behavior independently.
 
 ## Finding and scope
 
 The metadata/playlist workflow is implemented and exercised through the actual
-Linux application. It is suitable for further integration testing after the fixes
-below. This is not approval of Pi performance or a live-show deployment.
+Linux application. The desktop checks support merging the fixes and import workflow below. This is not approval of Pi performance or a live-show deployment.
 
 The user-facing change is **Library → Preview Engine DJ library… → Import metadata
 + playlists**. Local edits, playlist occurrence IDs and source provenance survive
@@ -118,15 +171,16 @@ python3 tools/test_audio_timeline.py BUILD --ninja NINJA \
 
 - Linux x86_64, synthetic temporary profiles/audio and an installed standalone
   reader were used. No user's music/profile or Pi was modified by these checks.
-- Pi touch, FLX6 physical operation, Windows runtime and audio under concurrent
-  analysis/import still require device testing. No FPS/CPU/RAM gain is claimed.
-- Large-library memory and responsiveness remain unmeasured. Reading is in a
-  worker, but Apply does synchronous per-item work on the GUI thread, and a scan
-  retains strong track references until its batch commits.
+- Pi touch, FLX6 physical operation, Windows runtime and physical audio output
+  under concurrent analysis/import still require device testing. The added
+  concurrent-buffer fixture is a narrower PC check. No performance gain is claimed.
+- The larger synthetic desktop import measurements above are not a worst-case
+  bound. Reading is in a worker, but Apply does synchronous per-item work on the
+  GUI thread, and a scan retains strong references until its batch commits.
 - Engine helper installation is separate from the app build. Preview reports a
   missing helper; it does not silently install one. Apply requires native SQLite
-  support. Tested synthetic Engine fixtures use schema 3.0.2, not every accepted
-  schema or an arbitrary real export.
+  support. Synthetic Engine fixtures now exercise both accepted schemas, 3.0.0 and
+  3.0.2; arbitrary real exports remain a separate acceptance case.
 - No explicit take-source conflict UI exists. Local values are retained and
   conflicts reported. Source timing remains provenance until alignment and safe
   live publication are validated. External-collection synchronization is not an
@@ -262,5 +316,13 @@ probe is not equivalent to physical hardware or full feature validation.
 | [`tools/engine-reader/tests/check_metadata.py`](../tools/engine-reader/tests/check_metadata.py) | Real installed helper metadata fixtures; passed. |
 | [`tools/engine-reader/tests/check_raw_metadata.py`](../tools/engine-reader/tests/check_raw_metadata.py) | Raw source SQLite semantics including main-cue state; passed. |
 | [`tools/engine-reader/tests/create_metadata_fixture.cpp`](../tools/engine-reader/tests/create_metadata_fixture.cpp) | Opt-in synthetic dependency fixture generator; no installed profile/music access. |
-| [`tools/engine-reader/tests/create_reimport_fixture.cpp`](../tools/engine-reader/tests/create_reimport_fixture.cpp) | Opt-in initial/update/maincue-state synthetic Engine library generator. |
+| [`tools/engine-reader/tests/create_reimport_fixture.cpp`](../tools/engine-reader/tests/create_reimport_fixture.cpp) | Opt-in initial/update/maincue-state synthetic generator; optional 3.0.0/3.0.2 schema selection exercised. |
 | [`tools/engine-reader/tests/prepare_reimport_fixture.py`](../tools/engine-reader/tests/prepare_reimport_fixture.py) | Creates synthetic audio and validated initial/update packages for persistence probe; passed. |
+| [`os/tests/engine_large_library_app_driver.cpp`](../os/tests/engine_large_library_app_driver.cpp) | Real menu/preview/Apply test driver; captures GUI timer gaps without replacing importer code. |
+| [`os/tests/test_engine_large_library_app.py`](../os/tests/test_engine_large_library_app.py) | Disposable larger-library generator/runner; exact count/order/provenance/hash/integrity checks; both accepted schemas passed. |
+| [`src/test/coverartutils_test.cpp`](../src/test/coverartutils_test.cpp) | Corrected Opus fixture gate to require an actual provider rather than a MIME filename alias; full suite passed. |
+| [`src/test/playermanagertest.cpp`](../src/test/playermanagertest.cpp) | Real preview deck setup plus 500-track import concurrent with two decoded deck buffers; all six tests passed. |
+| [`src/test/samplerdrive_test.cpp`](../src/test/samplerdrive_test.cpp) | Constructs preview controls before Library/EDMC as CoreServices does; actual private-mount storage tests passed. |
+| [`src/test/soundproxy_test.cpp`](../src/test/soundproxy_test.cpp) | Provider-specific first-sound references independently checked with FFmpeg CLI; full suite passed. |
+| [`src/test/touchscrollfilter_test.cpp`](../src/test/touchscrollfilter_test.cpp) | Uses independently laid-out Qt hit target for the scroll/tap fixture instead of assuming a font-dependent row height. |
+| [`src/test/wusblist_test.cpp`](../src/test/wusblist_test.cpp) | Tests offscreen row coordinates after scrolling; keeps the separate positive visible-row tap test. |

@@ -68,3 +68,39 @@ test of electrical USB disconnects or arbitrary I/O errors during playback.
 Run the same command with `--media-recheck-only` for two additional full-app cases: a synthetic audio file whose byte size differs from the Engine record, and a same-content symlink that resolves outside the selected drive. Each case must import only the unaffected track and defer both playlists without omitting entries. The checks also verify source/media hashes and SQLite integrity. These cases start with changed media before preview; they do not simulate an eject or a change between preview and Apply.
 
 Use `--main-cue-state-only` for the full-app default/adjusted main-cue regression. It generates one track with a nonzero default and zero unadjusted cue, and another with a nonzero adjusted cue, checks exact `mainCueState` preservation in deferred timing provenance, and repeats the import to verify unchanged local content and source state. Source/media hashes and the absence of applied Engine-origin cues are checked in both runs. The fixture generator's `maincue-state` action is for disposable test libraries only.
+
+## Larger-library and concurrent audio acceptance
+
+`test_engine_large_library_app.py` runs the real menu, standalone reader and Apply
+workflow against a disposable library with 2–10,000 synthetic hardlinked WAV paths.
+It verifies complete track count, source provenance, exact playlist order, media
+and source hashes, and SQLite integrity. A 10 ms GUI timer records the largest
+observed event-loop gap separately during preview and Apply. RSS is sampled for
+the application process only; it excludes the reader subprocess and is not a Pi
+memory bound. The test does not open a real profile or drive.
+
+```sh
+python3 os/tests/test_engine_large_library_app.py \
+  --build /absolute/app-build --reader-prefix /absolute/reader-stage \
+  --fixture-generator /absolute/reader-build/engine-reimport-fixture \
+  --tracks 5000 --schema 3.0.2 --output /path/to/results
+```
+
+Both accepted schemas can be exercised: use `--schema 3.0.0` or `3.0.2` with the
+rebuilt fixture generator. The generator's optional fourth argument chooses the
+schema for its `initial` action; existing commands still default to 3.0.2.
+
+`PlayerManagerTest.EngineImportWhileTwoDecksProcessAudio` runs the real collection,
+player manager, decoder buffers, mixer processing and import coordinator. It loads
+two copies of the repository's synthetic sine fixture, processes 512 stereo frames
+per paced callback on a separate thread, imports 500 synthetic track paths, and
+checks non-silent finite buffers on both decks during import, retained loaded
+track identity/play state, track count and database integrity. It reports maximum
+callback processing time. There is no physical sound-device callback, UI frame
+presentation, listening test or Pi realtime-priority validation in this fixture.
+
+```sh
+QT_QPA_PLATFORM=offscreen /absolute/app-build/mixxx-test \
+  --gtest_filter=PlayerManagerTest.EngineImportWhileTwoDecksProcessAudio \
+  --resource-path /absolute/repo/res --logLevel warning
+```

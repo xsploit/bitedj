@@ -869,7 +869,20 @@ TEST_F(SoundSourceProxyTest, firstSoundTest) {
 
                 const SINT firstSoundSample = AnalyzerSilence::findFirstSoundInChunk(samples);
                 if (firstSoundSample < static_cast<SINT>(samples.size())) {
-                    EXPECT_EQ(firstSoundSample, ref.firstSoundSample)
+                    SINT expectedFirstSound = ref.firstSoundSample;
+                    if (providerRegistration.getProvider()->getDisplayName().startsWith(
+                                QStringLiteral("FFmpeg"))) {
+                        // The Linux/Windows defaults above describe MAD's
+                        // timeline. Independently decoded FFmpeg PCM, with
+                        // mono duplicated to stereo at unity gain, places
+                        // these fixtures' first >= -60 dB samples here.
+                        if (ref.path == QStringLiteral("cover-test-png.mp3")) {
+                            expectedFirstSound = 584;
+                        } else if (ref.path == QStringLiteral("cover-test-vbr.mp3")) {
+                            expectedFirstSound = 1166;
+                        }
+                    }
+                    EXPECT_EQ(firstSoundSample, expectedFirstSound)
                             << filePath.toStdString() << " "
                             << providerRegistration.getProvider()
                                        ->getDisplayName()

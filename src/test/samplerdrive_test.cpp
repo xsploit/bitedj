@@ -139,6 +139,8 @@ class SamplerDriveTest : public MixxxDbTest, SoundSourceProviderRegistration {
                 m_pEffectsManager.get(),
                 m_pEngine.get());
         m_pPlayerManager->addConfiguredDecks();
+        // Match CoreServices: EDMC binds preview controls during Library setup.
+        m_pPlayerManager->addPreviewDeck();
         for (int i = 0; i < kSamplerCount; ++i) {
             m_pPlayerManager->addSampler();
         }
