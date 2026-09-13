@@ -17,8 +17,22 @@ available; the selected view is saved.
 - Eight live A–H hot-cue pads per deck. The CUES button opens the existing full
   drawer for the memory bank and editing/deletion. Small pads deliberately omit
   the destructive corner badge.
-- Existing FX selection/routing/mix controls, key tools, linked waveform zoom and
-  beat-grid editing remain available on the right.
+- Five compact right-rail tabs: **FX, Loop, Key, Wave, Grid**. Each page scrolls
+  if needed without changing the waveform or deck-card height.
+- FX exposes the native effect selector, deck routing, an interactive wet/dry
+  knob and value, effect enable, every loaded continuous parameter and loaded
+  parameter switch. Parameter names, ranges and scaling come from the effect.
+  The previous reciprocal beat buckets were removed: their labels were wrong
+  for period-based effects such as Echo. Values now show native numeric units;
+  there is no universal musical beat-length preset or AZ DSP emulation.
+- Loop has its own explicit Deck 1/2 selector, loop size halve/double, loop
+  start/exit, momentary roll, jump size halve/double, backward/forward jump,
+  slip and quantize. This selection does not change controller deck routing.
+- Key shows both decks' current keys and semitone offsets, with single-semitone
+  shifts, keylock, harmonic match and reset.
+- Wave exposes linked zoom with a live readout, waveform height presets and
+  fixed/EQ-following drawing. Grid exposes each deck's file BPM, beat position
+  nudges/set-to-playhead, small BPM adjustments and half/double BPM.
 - **Independent collapsible sides:** the left handle hides both deck-information
   rails, the right handle hides the FX/tools panel. Both handles remain available
   when collapsed. Waveforms expand into the space; their renderer widgets are
@@ -52,7 +66,10 @@ OpenGL, an ALSA null output and two disposable synthesized 128 BPM tracks. It
 clicks the actual widgets, checks panel visibility and waveform geometry/identity,
 checks time mode, quantize/keylock, loop start/exit, beat jump and hot-cue state,
 opens the existing cue/zoom/grid controls, switches between AZ and native layouts,
-and restarts the app to check collapsed-state persistence. It saves screenshots,
+checks the new loop/jump sizes, deck isolation, key shift/reset, live zoom,
+waveform height selection, grid BPM half/double, native Echo parameter and
+wet/dry changes, and scrolling to the final effect switches. It then restarts
+the app to check collapsed-state persistence. It saves screenshots,
 logs and the tested executable hash. Null output is not a physical playback or
 real-time audio benchmark.
 
@@ -77,3 +94,11 @@ and 1220px with both sides hidden. The presentation fixture also passed.
 
 Target screenshot size is 1280×800. Physical touch hit accuracy, narrow-screen
 fit, four-deck behavior and Pi CPU/RAM/frame-time measurements remain unverified.
+
+## Performance rail previews
+
+Actual desktop app with synthesized test tracks:
+
+![FX parameters](images/az-rail-fx.png)
+
+![Loop and beat-jump tools](images/az-rail-loop.png)

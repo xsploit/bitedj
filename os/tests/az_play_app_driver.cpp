@@ -1,5 +1,8 @@
 // Test-only Qt driver for the actual BiteDJ AZ play layout. No engine code is replaced.
 #include <QApplication>
+#include <QComboBox>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -133,6 +136,89 @@ void run() {
         require(visible(main, "GridPanel_Title"), "grid tools open");
         click("FxPanel_TabFx");
         capture("-checked");
+        auto valueText = [&](const QString& name) {
+            auto* label = qobject_cast<QLabel*>(visible(main, name));
+            require(label, "live rail value present");
+            return label->text();
+        };
+        click("FxPanel_TabLoop");
+        click("RailLoopDeck1");
+        const auto loopBefore = valueText("RailLoopSize1");
+        click("RailLoopDouble1");
+        require(valueText("RailLoopSize1") != loopBefore, "loop size changes");
+        click("RailLoopHalf1");
+        require(valueText("RailLoopSize1") == loopBefore, "loop size restored");
+        click("RailLoopToggle1");
+        require(visible(main, "RailLoopToggle1")->property("highlight").toDouble() == 1, "rail starts loop");
+        click("RailLoopToggle1");
+        require(visible(main, "RailLoopToggle1")->property("highlight").toDouble() == 0, "rail exits loop");
+        const auto jumpBefore = valueText("RailJumpSize1");
+        click("RailJumpDouble1");
+        require(valueText("RailJumpSize1") != jumpBefore, "jump size changes");
+        click("RailJumpHalf1");
+        const auto positionBefore = valueText("AzTime1");
+        click("RailJumpForward1");
+        require(valueText("AzTime1") != positionBefore, "rail jump moves deck");
+        click("RailJumpBack1");
+        capture("-rail-loop");
+        click("RailLoopDeck2");
+        require(!visible(main, "RailLoopSize1") && visible(main, "RailLoopSize2"), "loop deck selection isolates controls");
+        click("FxPanel_TabKey");
+        const auto keyBefore = valueText("RailPitch1");
+        const auto otherKey = valueText("RailPitch2");
+        click("RailKeyUp1");
+        require(valueText("RailPitch1") != keyBefore && valueText("RailPitch2") == otherKey, "key shift affects selected deck only");
+        capture("-rail-key");
+        click("RailKeyReset1");
+        require(valueText("RailPitch1") == keyBefore, "key reset restored");
+        click("FxPanel_TabWave");
+        const auto zoomBefore = valueText("RailZoom");
+        click("WavePanel_ZoomIn");
+        require(valueText("RailZoom") != zoomBefore, "zoom value follows control");
+        click("WavePanel_ZoomOut");
+        click("RailGainBold");
+        require(visible(main,"RailGainBold")->property("displayValue").toDouble() == 1, "waveform height preset selected");
+        require(wave->width() == fullWidth, "wave tools preserve waveform width");
+        capture("-rail-wave");
+        click("FxPanel_TabGrid");
+        const auto gridBefore = valueText("RailGridBpm1");
+        click("RailGridDouble1");
+        require(valueText("RailGridBpm1") != gridBefore, "grid tempo doubled");
+        click("RailGridHalf1");
+        require(valueText("RailGridBpm1") == gridBefore, "grid tempo restored");
+        capture("-rail-grid");
+        click("FxPanel_TabFx");
+        auto* selector = qobject_cast<QComboBox*>(visible(main,"EffectSelector"));
+        require(selector, "native effect selector");
+        const int echo = selector->findText("Echo", Qt::MatchContains);
+        require(echo >= 0, "Echo available");
+        selector->setCurrentIndex(echo);
+        QMetaObject::invokeMethod(selector, "activated", Q_ARG(int,echo));
+        QTest::qWait(250);
+        auto dragKnob = [&](const QString& knobName, const QString& numberName) {
+            const auto before = valueText(numberName);
+            auto* k = visible(main,knobName); require(k,"effect knob present");
+            QTest::mousePress(k,Qt::LeftButton,Qt::NoModifier,QPoint(26,26));
+            QTest::mouseMove(k,QPoint(26,48),50);
+            QTest::mouseRelease(k,Qt::LeftButton,Qt::NoModifier,QPoint(26,48));
+            QTest::qWait(150);
+            require(valueText(numberName) != before, "effect knob changes actual value");
+        };
+        dragKnob("RailMixKnob","RailMixValue");
+        dragKnob("RailParamKnob1","RailParamValue1");
+        capture("-rail-fx");
+        auto* scroll = main->findChild<QScrollArea*>("RailScroll0");
+        require(scroll && scroll->verticalScrollBar()->maximum() > 0, "long FX page scrolls");
+        scroll->verticalScrollBar()->setValue(scroll->verticalScrollBar()->maximum());
+        QTest::qWait(200);
+        auto* effectSwitch = visible(main,"RailEffectSwitch1");
+        require(effectSwitch,"loaded FX switch visible");
+        const auto switchBefore = effectSwitch->property("value").toDouble();
+        click("RailEffectSwitch1");
+        require(effectSwitch->property("value").toDouble() != switchBefore, "effect switch controls native parameter");
+        capture("-rail-fx-bottom");
+        scroll->verticalScrollBar()->setValue(0);
+        require(wave->height() == waveHeight, "all rail pages preserve waveform height");
         // Exercise the actual settings path and return to the new layout.
         click("AzTabButtonSettings");
         auto subtabs = main->findChildren<QWidget*>("SettingsSubtabButton");

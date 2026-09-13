@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory(prefix='bitedj-az-play-') as temporary:
             if not select.select([server.stdout],[],[],15)[0]: raise TimeoutError('Xvfb startup')
             display=server.stdout.readline().strip()
             assert display.isdigit(), 'Xvfb did not provide a display'
-            env=dict(os.environ,DISPLAY=':'+display,QT_QPA_PLATFORM='xcb',QT_QPA_PLATFORMTHEME='',LIBGL_ALWAYS_SOFTWARE='1',ALSA_CONFIG_PATH=str(root/'alsa.conf'),LD_PRELOAD=str(root/'driver.so'),AZ_CAPTURE=str(out/'play'))
+            env=dict(os.environ,DISPLAY=':'+display,QT_QPA_PLATFORM='xcb',QT_QPA_PLATFORMTHEME='',LIBGL_ALWAYS_SOFTWARE='1',ALSA_CONFIG_PATH=str(root/'alsa.conf'),WINEDLLOVERRIDES='mscoree,mshtml=',LD_PRELOAD=str(root/'driver.so'),AZ_CAPTURE=str(out/'play'))
             binary=a.build.resolve()/'mixxx'
             for phase in ('controls','persistence'):
                 env['AZ_EXPECT_COLLAPSED']='1' if phase=='persistence' else '0'

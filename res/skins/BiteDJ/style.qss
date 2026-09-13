@@ -1870,3 +1870,20 @@ WBeatSpinBox::up-button {
 #PlayerSidebarHandle { background: #000; }
 #PlayerToggleLeft, #PlayerToggleRight { font-size: 28px; color: #ddd; background: #242424; border: 1px solid #343434; border-radius: 3px; }
 #PlayerToggleLeft[value="0"], #PlayerToggleRight[value="0"] { color: #2995ff; }
+
+/* Performance rail: compact tabs, readable values and consistent touch targets. */
+#BeatFX_Container WPushButton { font-size: 13px; min-height: 40px; }
+#FxPanel_TabBar WPushButton { font-size: 11px; padding: 0; border-width: 1px; }
+#BeatFX_Container QScrollArea { background: #101014; }
+#BeatFX_Container QScrollBar:vertical { width: 18px; }
+#RailRow WPushButton { background: #202027; color: #ddd; border: 1px solid #444; }
+#RailRow WPushButton[value="1"], #RailRow WPushButton[displayValue="1"],
+#RailRow WPushButton[highlight="1"] { background: #205483; color: white; }
+#RailRow WPushButton:pressed { background: #367bb4; }
+#RailRow { margin: 1px 0; spacing: 2px; }
+#RailKeyBlock { margin-bottom: 12px; }
+#BeatFX_ParamRow { border-bottom: 1px solid #292932; }
+
+#RailLoopPage, #RailLoopDeck1, #RailLoopDeck2 { qproperty-layoutAlignment: 'AlignTop'; }
+#Overview_Singleton[highlight="1"] #BeatFX_DeckAssign1[displayValue="1"],
+#Overview_Singleton[highlight="1"] #BeatFX_DeckAssign2[displayValue="1"] { background: #205483; color: white; }
