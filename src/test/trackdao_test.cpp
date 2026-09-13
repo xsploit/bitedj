@@ -9,6 +9,53 @@ using ::testing::UnorderedElementsAre;
 class TrackDAOTest : public LibraryTest {
 };
 
+TEST_F(TrackDAOTest, SaveUnaddedTrackPreservesPendingChanges) {
+    auto track = Track::newTemporary(mixxx::FileAccess(mixxx::FileInfo(
+            getTestDataDir().filePath(QStringLiteral("unadded.wav")))));
+    track->setTitle(QStringLiteral("Pending import"));
+    track->markForMetadataExport();
+    ASSERT_FALSE(track->getId().isValid());
+    ASSERT_FALSE(track->getDateAdded().isValid());
+    ASSERT_TRUE(track->isDirty());
+
+    EXPECT_EQ(TrackCollectionManager::SaveTrackResult::Skipped,
+            trackCollectionManager()->saveTrack(track));
+    EXPECT_TRUE(track->isDirty());
+    EXPECT_TRUE(track->isMarkedForMetadataExport());
+    EXPECT_FALSE(track->getSourceSynchronizedAt().isValid());
+    EXPECT_TRUE(internalCollection()->getTrackDAO().getAllTrackLocations().isEmpty());
+
+    // The same object can still be added and saved successfully afterwards.
+    ASSERT_TRUE(internalCollection()->addTrack(track, false).isValid());
+    ASSERT_TRUE(track->getDateAdded().isValid());
+    track->setTitle(QStringLiteral("Retried import"));
+    EXPECT_EQ(TrackCollectionManager::SaveTrackResult::Saved,
+            trackCollectionManager()->saveTrack(track));
+    EXPECT_FALSE(track->isDirty());
+}
+
+TEST_F(TrackDAOTest, SavePurgedTrackStillCompletes) {
+    auto track = Track::newTemporary(mixxx::FileAccess(mixxx::FileInfo(
+            getTestDataDir().filePath(QStringLiteral("purged.wav")))));
+    const auto id = internalCollection()->addTrack(track, false);
+    ASSERT_TRUE(id.isValid());
+    // Hold the cached instance so the real purge path resets its ID.
+    track = trackCollectionManager()->getTrackById(id);
+    ASSERT_TRUE(track);
+    const auto dateAdded = track->getDateAdded();
+    ASSERT_TRUE(dateAdded.isValid());
+    trackCollectionManager()->purgeTracks(
+            {TrackRef::fromFileInfo(track->getFileInfo(), track->getId())});
+    ASSERT_FALSE(track->getId().isValid());
+    ASSERT_EQ(dateAdded, track->getDateAdded());
+    track->setTitle(QStringLiteral("Final metadata"));
+
+    EXPECT_EQ(TrackCollectionManager::SaveTrackResult::Saved,
+            trackCollectionManager()->saveTrack(track));
+    EXPECT_FALSE(track->isDirty());
+    EXPECT_TRUE(internalCollection()->getTrackDAO().getAllTrackLocations().isEmpty());
+}
+
 
 TEST_F(TrackDAOTest, detectMovedTracks) {
     TrackDAO& trackDAO = internalCollection()->getTrackDAO();
