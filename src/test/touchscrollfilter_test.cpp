@@ -178,11 +178,15 @@ TEST_F(TouchScrollFilterTest, TapAfterScrollStillSelects) {
     ASSERT_TRUE(selectedRows().isEmpty());
 
     const int y = 30;
+    // The active font/style can enforce rows taller than kRowHeight.
+    // Qt's laid-out hit target is the independent selection expectation.
+    const auto expectedIndex = m_view.indexAt(QPoint(10, y));
+    ASSERT_TRUE(expectedIndex.isValid());
     press(y);
     release(y);
 
     ASSERT_EQ(1, selectedRows().size());
-    EXPECT_EQ((scrollPosition() + y) / kRowHeight, selectedRows().first().row());
+    EXPECT_EQ(expectedIndex.row(), selectedRows().first().row());
 }
 
 TEST_F(TouchScrollFilterTest, RightPressIsNotHeldBack) {

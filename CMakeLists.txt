@@ -631,6 +631,7 @@ add_library(mixxx-lib STATIC EXCLUDE_FROM_ALL
   src/library/dao/fsstore.cpp
   src/library/dao/libraryhashdao.cpp
   src/library/dao/playlistdao.cpp
+  src/library/dao/playlistdao_import.cpp
   src/library/dao/settingsdao.cpp
   src/library/dao/trackdao.cpp
   src/library/dao/trackschema.cpp
@@ -1927,6 +1928,19 @@ if(ENGINEPRIME)
 
   # Include conditional sources only required with Engine Prime export support.
   target_sources(mixxx-lib PRIVATE
+    src/library/engine/engineimportcoordinator.cpp
+    src/library/engine/engineimportcoordinator.h
+    src/library/engine/dlgengineimport.cpp
+    src/library/engine/dlgengineimport.h
+    src/library/engine/enginereaderservice.cpp
+    src/library/engine/enginereaderservice.h
+    src/library/engine/engineimportpackage.cpp
+    src/library/engine/enginemediaresolver.cpp
+    src/library/engine/enginemetadataimport.cpp
+    src/library/engine/enginecueimport.cpp
+    src/library/engine/engineplaylistimport.cpp
+    src/library/engine/engineimportmerge.cpp
+    src/library/engine/engineimportregistry.cpp
     src/library/export/dlglibraryexport.cpp
     src/library/export/engineprimeexportjob.cpp
     src/library/export/libraryexporter.cpp)

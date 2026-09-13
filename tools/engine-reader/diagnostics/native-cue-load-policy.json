@@ -1,0 +1,43 @@
+{
+  "scope": "Static ARM control-flow and RTTI evidence in a PlayCueControl track-load path; not full deck execution",
+  "engineSHA256": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
+  "loadEntry": "0xddaca0",
+  "loadHelper": "0xdd3120",
+  "playCueControlRTTI": "0x2b55ad0",
+  "playCueControlVtable": "0x2b59528",
+  "policyVirtualOffset": "0x168",
+  "policyFunction": "0xdcbb24",
+  "mainSetterHelper": "0xdcb500",
+  "cueObjectFields": {
+    "main": "0x28",
+    "default": "0x30",
+    "isAdjusted": "0x38"
+  },
+  "selection": {
+    "retainStoredMain": "main != -1 and isAdjusted has bit 0 set",
+    "otherwise": "derive position from BeatGrid virtual method +0x68, apply main, update default, clear isAdjusted"
+  },
+  "beatGrid": {
+    "type": "8BeatGrid",
+    "vtableRTTISlot": "0x2ae0fb0",
+    "methodSlot": "0x2ae1020",
+    "method": "0x160aa04",
+    "behavior": "Interpolate or extrapolate the selected grid segment at beat coordinate zero; NaN result becomes zero"
+  },
+  "evidenceInstructions": {
+    "mainSentinelComparison": "0xdcbbe8",
+    "adjustedFlagMethod": "0xdcbc08",
+    "derivedMainSetter": "0xdcbcb0",
+    "defaultSetterMethod": "0xdcbcd0",
+    "clearFlagMethod": "0xdcbcfc",
+    "retainedMainSetter": "0xdcbdd0",
+    "mainWriteVirtualCall": "0xdcb574"
+  },
+  "limitations": [
+    "Static control-flow evidence, not an executed full deck-load fixture.",
+    "Requires valid track/beat-data objects in this path; not a claim about every load source or auto-cue mode.",
+    "A stale serialized default may be replaced by a freshly derived grid position.",
+    "Source-to-BiteDJ decoder frame alignment remains a separate requirement.",
+    "No proprietary decompiled source or firmware is distributed."
+  ]
+}

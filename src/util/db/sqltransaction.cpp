@@ -1,5 +1,12 @@
 #include "util/db/sqltransaction.h"
 
+#include <QSqlDriver>
+#include <QVariant>
+#include <cstring>
+#ifdef __SQLITE3__
+#include <sqlite3.h>
+#endif
+
 #include "util/logger.h"
 #include "util/assert.h"
 
@@ -57,7 +64,33 @@ void SqlTransaction::release() {
     m_active = false;
 }
 
+SqlTransaction::operator bool() const {
+    if (!m_active) {
+        return false;
+    }
+    if (!m_database.isOpen()) {
+        m_active = false;
+        return false;
+    }
+#ifdef __SQLITE3__
+    // SQLite may end the transaction itself (e.g. RAISE(ROLLBACK)). A stale
+    // wrapper must not let a later SAVEPOINT/RELEASE commit outside our BEGIN.
+    // This uses the same Qt/native SQLite linkage contract as DbConnection.
+    QVariant handle = m_database.driver()->handle();
+    if (handle.isValid() && std::strcmp(handle.typeName(), "sqlite3*") == 0) {
+        auto* sqlite = *static_cast<sqlite3**>(handle.data());
+        if (!sqlite || sqlite3_get_autocommit(sqlite)) {
+            m_active = false;
+        }
+    }
+#endif
+    return m_active;
+}
+
 bool SqlTransaction::commit() {
+    if (!static_cast<bool>(*this)) {
+        return false;
+    }
     DEBUG_ASSERT(m_active);
     if (!m_database.isOpen()) {
         kLogger.warning()
@@ -81,6 +114,9 @@ bool SqlTransaction::commit() {
 }
 
 bool SqlTransaction::rollback() {
+    if (!static_cast<bool>(*this)) {
+        return false;
+    }
     DEBUG_ASSERT(m_active);
     if (!m_database.isOpen()) {
         kLogger.warning()

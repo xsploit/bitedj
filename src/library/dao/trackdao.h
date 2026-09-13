@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "library/dao/dao.h"
+#include "library/dao/cuedao.h"
 #include "library/dao/fsanalysiscache.h"
 #include "library/relocatedtrack.h"
 #include "preferences/usersettings.h"
@@ -21,6 +22,7 @@ class LibraryHashDAO;
 
 namespace mixxx {
 class FileInfo;
+class Beats;
 class TrackRecord;
 
 } // namespace mixxx
@@ -28,7 +30,6 @@ class TrackRecord;
 class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackCacheRelocator {
     Q_OBJECT
   public:
-
     enum class ResolveTrackIdFlag : int {
         ResolveOnly = 0,
         UnhideHidden = 1,
@@ -73,6 +74,24 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
 
     // Only used by friend class TrackCollection, but public for testing!
     bool saveTrack(Track* pTrack) const;
+
+    // Update a detached record inside the caller's active transaction. No live
+    // Track/Cue state, analysis files, override stores or model signals change.
+    // Cue and source-registry staging may share this transaction. Publication
+    // belongs to the caller after a successful commit.
+    static bool stageTrackRecord(const SqlTransaction& transaction,
+            const mixxx::TrackRecord& record,
+            const std::shared_ptr<const mixxx::Beats>& beats,
+            QString* error);
+
+    // Insert a detached new record without publishing it to GlobalTrackCache.
+    // Existing file locations are rejected for the caller to resolve/merge.
+    static bool stageNewTrackRecord(const SqlTransaction& transaction,
+            const mixxx::TrackRecord& record,
+            const std::shared_ptr<const mixxx::Beats>& beats,
+            const mixxx::FileInfo& fileInfo,
+            mixxx::TrackRecord* insertedRecord,
+            QString* error);
 
     /// Update the play counter properties according to the corresponding
     /// aggregated properties obtained from the played history.
@@ -157,7 +176,8 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
     TrackPointer addTracksAddFile(
             const QString& filePath,
             bool unremove);
-    void addTracksFinish(bool rollback = false);
+    bool addTracksFinish(bool rollback = false,
+            QList<TrackPointer>* pCommittedTracks = nullptr);
 
     bool updateTrack(const Track& track) const;
 
@@ -190,7 +210,7 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
             volatile const bool* pCancel);
 
     void detectCoverArtForTracksWithoutCover(volatile const bool* pCancel,
-                                        QSet<TrackId>* pTracksChanged);
+            QSet<TrackId>* pTracksChanged);
 
     // Callback for GlobalTrackCache
     mixxx::FileAccess relocateCachedTrack(TrackId trackId) override;
@@ -213,6 +233,17 @@ class TrackDAO : public QObject, public virtual DAO, public virtual GlobalTrackC
     int m_queryLibraryIdColumn;
     int m_queryLibraryMixxxDeletedColumn;
 
+    struct PendingAddedTrack {
+        TrackPointer track;
+        TrackId id;
+        QDateTime previousDateAdded;
+        std::shared_ptr<mixxx::TrackRecord> savedRecord;
+        std::shared_ptr<const mixxx::Beats> savedBeats;
+        QList<CuePointer> originalCues;
+        CueDAO::PendingCueSave cues;
+    };
+    QList<PendingAddedTrack> m_pendingAddedTracks;
+    bool m_addTracksFailed = false;
     QSet<TrackId> m_tracksAddedSet;
 
     DISALLOW_COPY_AND_ASSIGN(TrackDAO);

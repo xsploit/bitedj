@@ -1,0 +1,96 @@
+{
+  "scope": "Fresh native Engine seeks vs actual BiteDJ sequential provider PCM; deterministic synthetic 420-second stereo CBR MP3 at 44100 Hz; no Pi or performance measurement",
+  "inputSHA256": "d55b7dcb33e5185dec2834716d0210731b8edcace9550d3f1cad5fdaea4ac9f6",
+  "bitedj": {
+    "channels": 2,
+    "endFrame": "18522000",
+    "file": "seven-minute-noise.mp3",
+    "firstFrame": "0",
+    "firstReadFrames": 64,
+    "frameLength": "18522000",
+    "provider": "FFmpeg n9.0.1",
+    "sampleRate": 44100,
+    "tailSeekFiniteAndSameLength": true,
+    "tailSeekFrames": 64,
+    "tailSeekMatchesSequential": true,
+    "tailSeekMaxAbsDifference": 0,
+    "tailSeekReferenceFrames": 64,
+    "tailSeekRmsDifference": 0
+  },
+  "nativeSeeks": [
+    {
+      "requestedFrame": 44100,
+      "returnedInterleavedSamples": 256,
+      "sameOffset": {
+        "referenceShiftFrames": 0,
+        "rms": 1.930773439444121e-07,
+        "maxAbsDifference": 6.556510925292969e-07
+      },
+      "bestWithinFourFrames": {
+        "referenceShiftFrames": 0,
+        "rms": 1.930773439444121e-07,
+        "maxAbsDifference": 6.556510925292969e-07
+      }
+    },
+    {
+      "requestedFrame": 16777100,
+      "returnedInterleavedSamples": 256,
+      "sameOffset": {
+        "referenceShiftFrames": 0,
+        "rms": 1.7649173867634217e-07,
+        "maxAbsDifference": 5.140900611877441e-07
+      },
+      "bestWithinFourFrames": {
+        "referenceShiftFrames": 0,
+        "rms": 1.7649173867634217e-07,
+        "maxAbsDifference": 5.140900611877441e-07
+      }
+    },
+    {
+      "requestedFrame": 16777216,
+      "returnedInterleavedSamples": 256,
+      "sameOffset": {
+        "referenceShiftFrames": 0,
+        "rms": 2.1117395884429257e-07,
+        "maxAbsDifference": 5.848705768585205e-07
+      },
+      "bestWithinFourFrames": {
+        "referenceShiftFrames": 0,
+        "rms": 2.1117395884429257e-07,
+        "maxAbsDifference": 5.848705768585205e-07
+      }
+    },
+    {
+      "requestedFrame": 17640000,
+      "returnedInterleavedSamples": 256,
+      "sameOffset": {
+        "referenceShiftFrames": 0,
+        "rms": 1.8496130586281656e-07,
+        "maxAbsDifference": 6.407499313354492e-07
+      },
+      "bestWithinFourFrames": {
+        "referenceShiftFrames": 0,
+        "rms": 1.8496130586281656e-07,
+        "maxAbsDifference": 6.407499313354492e-07
+      }
+    },
+    {
+      "requestedFrame": 18521872,
+      "returnedInterleavedSamples": 256,
+      "sameOffset": {
+        "referenceShiftFrames": 0,
+        "rms": 1.5013254606707075e-07,
+        "maxAbsDifference": 4.917383193969727e-07
+      },
+      "bestWithinFourFrames": {
+        "referenceShiftFrames": 0,
+        "rms": 1.5013254606707075e-07,
+        "maxAbsDifference": 4.917383193969727e-07
+      }
+    }
+  ],
+  "engineSHA256": "76fd56d8906a9818d3de3cdad03dc37d0eb1594fa910ec3ec3796f63b673e888",
+  "nativeProbeSHA256": "db95a470f01f9492b4cc742b7cbd093b7ab986cf5abeb613cbd2c9a203c94925",
+  "bitedjBinarySHA256": "28d3001d73e19dbc11d12ff17d871ae39043c63ab29182dcf1be5638fbacb3d7",
+  "fixtureCommand": "ffmpeg -f lavfi -i anoisesrc=color=white:sample_rate=44100:duration=420:seed=123:amplitude=0.25 -ac 2 -c:a libmp3lame -b:a 192k seven-minute-noise.mp3"
+}

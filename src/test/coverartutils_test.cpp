@@ -83,7 +83,9 @@ TEST_F(CoverArtUtilTest, extractEmbeddedCover) {
                 referencePNGImage);
     }
 
-    if (SoundSourceProxy::isFileSuffixSupported(QStringLiteral("opus"))) {
+    // MIME aliases can advertise .opus through Ogg even when this build has
+    // no Opus decoder. The fixture needs an actual provider for its format.
+    if (SoundSourceProxy::isFileTypeSupported(QStringLiteral("opus"))) {
         // opus
         extractEmbeddedCover(getTestDir().filePath(QStringLiteral("id3-test-data/cover-test.opus")),
                 referencePNGImage);

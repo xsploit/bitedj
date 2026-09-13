@@ -1,6 +1,16 @@
 #include <gtest/gtest.h>
 
 #include <QTest>
+#include <QElapsedTimer>
+#include <QJsonArray>
+#include <QSqlQuery>
+#include <atomic>
+#include <chrono>
+#include <filesystem>
+#include <thread>
+
+#include "library/engine/engineimportcoordinator.h"
+#include "util/fpclassify.h"
 
 #include "control/controlindicatortimer.h"
 #include "database/mixxxdb.h"
@@ -15,6 +25,7 @@
 #include "library/coverartcache.h"
 #include "library/library.h"
 #include "library/trackcollectionmanager.h"
+#include "library/trackcollection.h"
 #include "mixer/basetrackplayer.h"
 #include "mixer/deck.h"
 #include "mixer/playerinfo.h"
@@ -76,6 +87,9 @@ class PlayerManagerTest : public MixxxDbTest, SoundSourceProviderRegistration {
 
         m_pPlayerManager->addConfiguredDecks();
         m_pPlayerManager->addSampler();
+        // Library's EDMC feature binds preview controls, just as it does in
+        // CoreServices. Construct the real preview deck before the library.
+        m_pPlayerManager->addPreviewDeck();
         PlayerInfo::create();
         m_pEffectsManager->setup();
 
@@ -258,4 +272,117 @@ TEST_F(PlayerManagerTest, UnReplaceTest) {
     // First track should be reloaded
     ASSERT_NE(nullptr, deck1->getLoadedTrack());
     ASSERT_EQ(testId1, deck1->getLoadedTrack()->getId());
+}
+
+// Run the real coordinator while a separately paced thread processes two actual
+// decoded deck buffers. This does not open a sound device or establish Pi timing.
+TEST_F(PlayerManagerTest, EngineImportWhileTwoDecksProcessAudio) {
+#ifndef __SQLITE3__
+    GTEST_SKIP() << "Engine Apply requires native SQLite";
+#else
+    QTemporaryDir media;
+    ASSERT_TRUE(media.isValid());
+    const auto libraryPath = media.filePath("Engine Library");
+    ASSERT_TRUE(QDir().mkpath(libraryPath));
+    const auto seed = media.filePath("track-1.wav");
+    ASSERT_TRUE(QFile::copy(getTestDir().filePath("sine-30.wav"), seed));
+    constexpr int kTracks = 500;
+    QJsonArray sources;
+    for (int i = 1; i <= kTracks; ++i) {
+        const auto name = QString("track-%1.wav").arg(i);
+        if (i > 1) {
+            std::error_code error;
+            std::filesystem::create_hard_link(seed.toStdString(), media.filePath(name).toStdString(), error);
+            ASSERT_FALSE(error) << error.message();
+        }
+        sources.append(QJsonObject{{"id", QString::number(i)}, {"title", name},
+                {"relativePath", QString("../" + name)}, {"artist", QJsonValue::Null},
+                {"album", QJsonValue::Null}, {"genre", QJsonValue::Null},
+                {"bpm", QJsonValue::Null}, {"durationMs", QJsonValue::Null},
+                {"mainCueFrame", QJsonValue::Null}, {"sampleCount", "0"},
+                {"sampleRate", 44100}, {"hotCues", QJsonArray{}}, {"loops", QJsonArray{}},
+                {"sameSlotCollisions", QJsonArray{}}, {"beatgrid", QJsonArray{}}});
+    }
+    QList<TrackPointer> playing;
+    for (int i = 0; i < 2; ++i) {
+        const auto track = getOrAddTrackByLocation(media.filePath(QString("track-%1.wav").arg(i+1)));
+        ASSERT_TRUE(track);
+        playing.append(track);
+        auto* deck = m_pPlayerManager->getDeck(i);
+        deck->slotLoadTrack(track, true);
+        m_pEngine->process(1024);
+        QElapsedTimer loading; loading.start();
+        while (!deck->getEngineDeck()->getEngineBuffer()->isTrackLoaded() && loading.elapsed() < 3000)
+            QTest::qWait(5);
+        ASSERT_TRUE(deck->getEngineDeck()->getEngineBuffer()->isTrackLoaded());
+        ControlObject::set(ConfigKey(PlayerManager::groupForDeck(i), "main_mix"), 1);
+        ControlObject::set(ConfigKey(PlayerManager::groupForDeck(i), "volume"), 1);
+        ControlObject::set(ConfigKey(PlayerManager::groupForDeck(i), "play"), 1);
+    }
+    std::atomic<int> callbacks{0}, audible1{0}, audible2{0}, nonfinite{0};
+    std::atomic<long long> maxCallbackUs{0};
+    std::jthread audio([&](std::stop_token stop) {
+        auto next = std::chrono::steady_clock::now();
+        while (!stop.stop_requested()) {
+            const auto start = std::chrono::steady_clock::now();
+            m_pEngine->process(1024);
+            const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::steady_clock::now() - start).count();
+            maxCallbackUs.store(std::max(maxCallbackUs.load(), static_cast<long long>(elapsed)));
+            for (int deck = 0; deck < 2; ++deck) {
+                const auto* pcm = m_pEngine->getChannelBuffer(PlayerManager::groupForDeck(deck));
+                bool audible = false;
+                for (int sample = 0; sample < 1024; ++sample) {
+                    if (!util_isfinite(double(pcm[sample]))) ++nonfinite;
+                    if (std::abs(pcm[sample]) > .001f) audible = true;
+                }
+                if (audible) ++(deck ? audible2 : audible1);
+            }
+            ++callbacks;
+            next += std::chrono::microseconds(11610); // 512 stereo frames / 44.1 kHz
+            std::this_thread::sleep_until(next);
+        }
+    });
+    QTest::qWait(200);
+    const int before = callbacks, beforeAudible1 = audible1, beforeAudible2 = audible2;
+    mixxx::EngineImportCoordinator importer(m_pTrackCollectionManager.get());
+    bool finished = false, cancelled = false;
+    int imported = 0, attention = -1;
+    QObject::connect(&importer, &mixxx::EngineImportCoordinator::finished,
+            [&](int tracks, int, int notices, bool cancel, const QStringList&) {
+                imported = tracks; attention = notices; cancelled = cancel; finished = true;
+            });
+    const QJsonObject package{{"protocol", "bitedj.engine.import"}, {"protocolVersion", 1},
+            {"schema", "3.0.2"}, {"sourceUuid", "concurrent-audio-fixture"},
+            {"frameUnit", "audio frames at track sample rate"},
+            {"mediaPathContext", QJsonObject{{"libraryDirectory", libraryPath},
+                    {"relativePathBase", "original Engine Library directory"}}},
+            {"tracks", sources}, {"playlists", QJsonArray{}}};
+    QString error;
+    ASSERT_TRUE(importer.start(package, libraryPath, media.path(), &error)) << error.toStdString();
+    QElapsedTimer wait; wait.start();
+    while (!finished && wait.elapsed() < 15000) QTest::qWait(2);
+    audio.request_stop(); audio.join();
+    ASSERT_TRUE(finished);
+    EXPECT_FALSE(cancelled);
+    EXPECT_EQ(kTracks, imported);
+    EXPECT_EQ(0, attention);
+    EXPECT_GT(callbacks.load() - before, 0);
+    EXPECT_GT(audible1.load() - beforeAudible1, 0);
+    EXPECT_GT(audible2.load() - beforeAudible2, 0);
+    EXPECT_EQ(0, nonfinite.load());
+    for (int i = 0; i < 2; ++i) {
+        EXPECT_EQ(playing[i], m_pPlayerManager->getDeck(i)->getLoadedTrack());
+        EXPECT_EQ(1, ControlObject::get(ConfigKey(PlayerManager::groupForDeck(i), "play")));
+    }
+    const auto db = m_pTrackCollectionManager->internalCollection()->database();
+    QSqlQuery count(db);
+    ASSERT_TRUE(count.exec("SELECT count(*) FROM library") && count.next());
+    EXPECT_EQ(kTracks, count.value(0).toInt());
+    ASSERT_TRUE(count.exec("PRAGMA integrity_check") && count.next());
+    EXPECT_EQ("ok", count.value(0).toString());
+    std::cout << "CONCURRENT_IMPORT tracks=" << imported << " callbacksDuringImport=" << callbacks-before
+              << " audibleDeck1=" << audible1-beforeAudible1 << " audibleDeck2=" << audible2-beforeAudible2
+              << " maxCallbackUs=" << maxCallbackUs << " importMs=" << wait.elapsed() << '\n';
+#endif
 }

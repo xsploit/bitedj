@@ -28,6 +28,7 @@ class SkinLoader;
 
 #ifdef __ENGINEPRIME__
 class LibraryExporter;
+class DlgEngineImport;
 #endif
 
 } // namespace mixxx
@@ -151,6 +152,7 @@ class MixxxMainWindow : public QMainWindow {
 #ifdef __ENGINEPRIME__
     // Library exporter
     std::unique_ptr<mixxx::LibraryExporter> m_pLibraryExporter;
+    std::unique_ptr<mixxx::DlgEngineImport> m_pEngineImportDialog;
 #endif
 
     mixxx::preferences::Tooltips m_toolTipsCfg;

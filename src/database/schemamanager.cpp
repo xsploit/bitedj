@@ -222,9 +222,14 @@ SchemaManager::Result SchemaManager::upgradeToSchemaVersion(
 
         SqlTransaction transaction(m_settingsDao.database());
 
-        // TODO(XXX) We can't have semicolons in schema.xml for anything other
-        // than statement separators.
-        QStringList sqlStatements = sql.split(";");
+        // Compound SQLite statements (for example trigger bodies) contain
+        // semicolons. A revision may explicitly choose another separator.
+        const QString separator = eSql.attribute("separator", ";");
+        if (separator.isEmpty()) {
+            kLogger.critical() << "Empty schema statement separator";
+            return Result::SchemaError;
+        }
+        QStringList sqlStatements = sql.split(separator);
 
         QStringListIterator it(sqlStatements);
 
