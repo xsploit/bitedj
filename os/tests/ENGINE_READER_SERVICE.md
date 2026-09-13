@@ -1,5 +1,11 @@
 # Asynchronous Engine reader service
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 `mixxx::EngineReaderService` is owned and called on the GUI thread. `start(launcher, library, mediaRoot)` rejects a concurrent request and runs the executable, JSON decoding and package validation on a private QThread. The launcher must be an absolute executable path; both directories must exist. Connect `packageReady(QJsonObject)`, `failed(QString)` and `cancelled()` on the owner thread.
 
 A request stays busy until its terminal result is delivered to the owner thread. Cancellation also suppresses an already-completed but undelivered package. This prevents a new request from overtaking old queued output. Destruction requests cancellation and joins the worker; cancellation is polled during process reads and JSON scans. Qt's parser and the final package validator are not interrupted mid-call.

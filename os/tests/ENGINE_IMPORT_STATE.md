@@ -1,5 +1,11 @@
 # Engine import baseline and merge foundation
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 Run `python os/tests/test_engine_import_state.py` with Qt6 Core/SQL development packages and a C++20 compiler. It compiles the actual production merge and registry code with warnings treated as errors, and applies revision 41 from `res/schema.xml` to synthetic in-memory SQLite data.
 
 The field merge compares the last accepted source value, the current local value, and the incoming value. Unchanged local fields accept source changes; local edits survive unchanged source values. Concurrent different edits produce conflicts and retain the old baseline, so repeated imports continue reporting unresolved conflicts. Missing incoming fields are unmanaged; explicit JSON null is a value. Nested objects and arrays are compared as whole field values.

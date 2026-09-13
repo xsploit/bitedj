@@ -10,9 +10,10 @@ p.add_argument('--fixture-generator',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
 p.add_argument('--main-cue-state-only',action='store_true',help='Verify lossless main-cue source-state provenance and repeat import')
 p.add_argument('--media-recheck-only',action='store_true',help='Run only changed-size and outside-root media acceptance cases')
+p.add_argument('--disconnect-only',action='store_true',help='Disconnect the synthetic drive after preview, then reconnect and retry Apply')
 p.add_argument('--portable-mount',type=Path,help='Empty disposable mount in a private namespace; never use a real USB drive')
 a=p.parse_args()
-if a.main_cue_state_only and a.media_recheck_only:p.error("select only one focused test mode")
+if sum((a.main_cue_state_only, a.media_recheck_only, a.disconnect_only)) > 1:p.error("select only one focused test mode")
 build=a.build.resolve(); source=Path(__file__).resolve().parents[2]
 helper=a.reader_prefix.resolve()/'libexec/bitedj-engine/engine-import.py'
 generator=a.fixture_generator.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
@@ -75,6 +76,13 @@ with tempfile.TemporaryDirectory(prefix='bitedj-engine-apply-') as temporary:
   (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
   print('PASS',name,len(state['tracks']),'tracks',len(state['playlists']),'playlists',flush=True)
   return state,text
+ if a.disconnect_only:
+  state,text=run('disconnect-retry',profile('disconnect-profile'),BITEDJ_APPLY_DISCONNECT='1')
+  assert len(state['tracks'])==2 and len(state['playlists'])==2
+  assert 'disconnected drive rejected; retrying after reconnect' in text
+  results['binarySHA256']=hashlib.sha256((build/'mixxx').read_bytes()).hexdigest()
+  (out/'engine-apply-results.json').write_text(json.dumps(results,indent=2))
+  raise SystemExit(0)
  if a.main_cue_state_only:
   subprocess.run([str(generator),str(library),'maincue-state'],check=True)
   settings=profile('maincue-profile')

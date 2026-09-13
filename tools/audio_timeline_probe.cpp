@@ -13,6 +13,7 @@
 
 #include "sources/soundsourceproxy.h"
 #include "track/track.h"
+#include "util/fpclassify.h"
 
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
                 CSAMPLE expected;
                 std::memcpy(&expected, tail.constData() + sample * sizeof(CSAMPLE), sizeof(CSAMPLE));
                 const auto actual = endRead.readableData()[sample];
-                if (!std::isfinite(expected) || !std::isfinite(actual)) {
+                if (!util_isfinite(double(expected)) || !util_isfinite(double(actual))) {
                     tailFinite = false;
                     break;
                 }

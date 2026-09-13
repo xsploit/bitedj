@@ -874,6 +874,13 @@ bool TrackDAO::stageNewTrackRecord(const SqlTransaction& transaction,
 
 TrackId TrackDAO::addTracksAddTrack(const TrackPointer& pTrack, bool unremove) {
     DEBUG_ASSERT(pTrack);
+    // A statement can end the transaction itself (e.g. RAISE(ROLLBACK)).
+    // Reject the rest of the batch before any INSERT can run in autocommit
+    // mode. A failed BEGIN must likewise never permit untransactional writes.
+    if (m_addTracksFailed || !m_pTransaction || !*m_pTransaction) {
+        m_addTracksFailed = true;
+        return TrackId();
+    }
     const mixxx::FileInfo fileInfo = pTrack->getFileInfo();
 
     if (!(m_pQueryLibraryInsert || m_pQueryTrackLocationInsert ||

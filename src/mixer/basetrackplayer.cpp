@@ -649,7 +649,8 @@ void BaseTrackPlayerImpl::slotTrackLoaded(TrackPointer pNewTrack,
         auto* returnToPlay = ControlObject::getControl(
                 ConfigKey("[PiFlex]", "return_to_play"), ControlFlag::NoWarnIfMissing);
         if (getGroup().startsWith("[Channel") && (!returnToPlay || returnToPlay->toBool())) {
-            if (auto* overview = ControlObject::getControl(ConfigKey("[Tab]", "overview"))) {
+            if (auto* overview = ControlObject::getControl(
+                        ConfigKey("[Tab]", "overview"), ControlFlag::NoWarnIfMissing)) {
                 overview->set(1.0);
             }
         }

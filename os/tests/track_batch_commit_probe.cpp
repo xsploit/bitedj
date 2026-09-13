@@ -150,6 +150,49 @@ int main(int argc, char** argv) {
         return 29;
     if (!q.exec("SELECT count(*) FROM library") || !q.next() || q.value(0).toInt() != 1)
         return 25;
+    q.finish();
+    auto aborted = makeTrack("batch-aborted.wav");
+    auto afterAbort = makeTrack("batch-after-abort.wav");
+    if (!aborted || !afterAbort)
+        return 40;
+    tracks.addTracksPrepare();
+    // This trigger disappears with the transaction it rolls back. A later
+    // track would then be writable in SQLite autocommit mode unless the DAO
+    // rejects the rest of the batch before doing any SQL writes.
+    if (!q.exec("CREATE TEMP TRIGGER abort_library_insert BEFORE INSERT ON library BEGIN SELECT RAISE(ROLLBACK, 'injected batch rollback'); END"))
+        return 41;
+    if (tracks.addTracksAddTrack(aborted, true).isValid() ||
+            tracks.addTracksAddTrack(afterAbort, true).isValid())
+        return 42;
+    if (tracks.addTracksFinish(false, &committedTracks) || !committedTracks.isEmpty() || !announced.isEmpty())
+        return 43;
+    if (!q.exec("SELECT count(*) FROM library") || !q.next() || q.value(0).toInt() != 1) {
+        std::cerr << "FAIL: a later track escaped a rolled-back batch into autocommit\n";
+        return 44;
+    }
+    q.finish();
+    if (!q.exec("SELECT count(*) FROM track_locations") || !q.next() || q.value(0).toInt() != 1)
+        return 45;
+    q.finish();
+    tracks.addTracksPrepare();
+    // Also cover a transaction lost before the first insertion, without the
+    // DAO having seen an earlier statement failure.
+    if (!q.exec("ROLLBACK"))
+        return 46;
+    if (tracks.addTracksAddTrack(afterAbort, true).isValid() || tracks.addTracksFinish())
+        return 47;
+    if (!q.exec("SELECT count(*) FROM library") || !q.next() || q.value(0).toInt() != 1)
+        return 48;
+    q.finish();
+    if (!q.exec("SELECT count(*) FROM track_locations") || !q.next() || q.value(0).toInt() != 1)
+        return 49;
+    q.finish();
+    tracks.addTracksPrepare();
+    if (!tracks.addTracksAddTrack(afterAbort, true).isValid() ||
+            !tracks.addTracksFinish(false, &committedTracks) ||
+            committedTracks != QList<TrackPointer>{afterAbort})
+        return 50;
+    std::cout << "PASS: implicit rollback and lost transactions cannot leak later insertions; a fresh batch still succeeds.\n";
     std::cout << "PASS: committed-track output is populated only on success and cleared on rejected commit, cue failure and explicit rollback.\n";
     std::cout << "PASS: a second-track cue failure rolls back both new tracks; explicit rollback also clears provisional IDs without announcements.\n";
     std::cout << "PASS: rejected batch leaves SQL empty, no announcement, invalid live IDs and dirty state; retry commits one track and accepts cue state. Registered cache ID removed on rollback, canonical-path lookup retains the same Track, retry registers its committed ID.\n";

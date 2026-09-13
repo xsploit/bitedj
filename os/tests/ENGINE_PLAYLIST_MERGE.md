@@ -1,5 +1,11 @@
 # Engine playlist re-import planning
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 `planEnginePlaylistImport` compares a source playlist with the last accepted
 baseline and an ordered local snapshot. It plans a name and ordered occurrence
 list without touching SQL, live Tracks, or playlist caches. A repeated track is

@@ -1,5 +1,11 @@
 # Staged track/cue database writes
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 The import path needs one transaction covering track metadata, cue identities and source baselines. The existing live-object save path also changes cue IDs/dirty flags, emits signals and writes analysis/override files. These new APIs expose database-only operations:
 
 - `TrackDAO::stageTrackRecord(transaction, record, beats, error)` updates one existing detached record using the same serializer as ordinary track saves. It rejects missing/ignored rows and does not commit, modify a live Track, write caches/files or publish model signals.

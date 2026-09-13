@@ -1,5 +1,11 @@
 # Engine playlist staging
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 PlaylistDAO now has stageNewPlaylist, stagePlaylistUpdate and commitStagedPlaylists for importing visible playlists. Staging shares the caller SqlTransaction, uses a savepoint, checks referenced tracks, preserves ordered duplicate occurrences with separate returned entry IDs, and does not change membership caches or emit signals. Engine playlist/entry provenance can be written in the same transaction with those IDs.
 
 commitStagedPlaylists validates the staged playlist names, visibility, entry IDs, track IDs and order, then commits the caller's entire transaction. Only after a successful commit does it fill membership caches and emit notifications. It populates all supplied playlist caches before the first signal. Failed validation leaves the transaction active for caller rollback; failed commit emits nothing. Already completed transactions cannot publish again. These methods require the DAO thread and connection.

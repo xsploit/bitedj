@@ -16,6 +16,10 @@ This is not one atomic transaction for an entire library. Each track is publishe
 
 Each playlist and its source bindings commit together, with cache publication after commit. Cancellation is checked between items; completed changes remain. Large individual items can still occupy the UI thread. No large-library responsiveness or concurrent playback performance claim is made.
 
+If the selected drive disappears after preview, Apply reports a recoverable
+error. Reconnect it and retry, or choose the library again. The importer must
+not let path-validation exceptions escape through the UI event handler.
+
 When both local and source values change, local edits are retained and listed for review. There is no take-source conflict button yet. Deleted or invalidated local bindings require review before restoration. Source playlist disappearance does not automatically delete local playlists. Schema42 invalidates deleted playlist/occurrence bindings transactionally to prevent reused SQLite row IDs from claiming replacement content.
 
 ## Actual-app regression
@@ -53,6 +57,13 @@ unshare -Umr --propagation private bash -c '
 The mounts exist only in the private namespace. Do not pass a real USB drive to this fixture generator. A tmpfs test exercises the app's removable-storage code path, not physical USB behavior.
 
 These desktop tests do not establish physical USB removal behavior, Windows runtime behavior, Pi touch interaction, FLX6 mapping or audio performance. The Pi remains off during this work.
+
+Add `--disconnect-only` to simulate the selected drive disappearing after
+preview by renaming the disposable fixture directory. The test presses Apply,
+expects an error without a crash or a busy importer, restores the directory,
+then retries the same preview successfully. It checks source/media hashes and
+the final imported rows. This is a filesystem-disappearance regression, not a
+test of electrical USB disconnects or arbitrary I/O errors during playback.
 
 Run the same command with `--media-recheck-only` for two additional full-app cases: a synthetic audio file whose byte size differs from the Engine record, and a same-content symlink that resolves outside the selected drive. Each case must import only the unaffected track and defer both playlists without omitting entries. The checks also verify source/media hashes and SQLite integrity. These cases start with changed media before preview; they do not simulate an eject or a change between preview and Apply.
 

@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QThread>
 #include <limits>
+#include <stdexcept>
 
 #include "library/engine/engineimportpackage.h"
 #include "library/dao/fscueoverridestore.h"
@@ -53,7 +54,14 @@ bool EngineImportCoordinator::start(const QJsonObject& package,
         if (error) *error = tr("This library needs the Engine import schema update.");
         return false;
     }
-    m_media = std::make_unique<EngineMediaResolver>(libraryDirectory, mediaRoot);
+    try {
+        m_media = std::make_unique<EngineMediaResolver>(libraryDirectory, mediaRoot);
+    } catch (const std::runtime_error&) {
+        // The selected drive may disappear or its mount may change after the
+        // preview. Report a recoverable error instead of unwinding a Qt slot.
+        if (error) *error = tr("The selected Engine library or media folder is unavailable. Reconnect the drive or choose the library again.");
+        return false;
+    }
     if (m_media->libraryDirectory().isEmpty() || m_media->mediaRoot().isEmpty()) {
         if (error) *error = tr("The selected media folders are unavailable.");
         return false;

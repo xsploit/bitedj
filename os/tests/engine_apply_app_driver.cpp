@@ -2,6 +2,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QDialog>
+#include <QDir>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -44,6 +45,16 @@ void step() {
     if (!apply || !status || !details) { fail("missing import widgets"); return; }
     if (stage == 1) {
         if (!apply->isEnabled()) return;
+        if (qEnvironmentVariableIsSet("BITEDJ_APPLY_DISCONNECT")) {
+            const auto drive = qEnvironmentVariable("BITEDJ_PREVIEW_FIXTURE");
+            const auto detached = drive + ".disconnected";
+            if (!QDir().rename(drive, detached)) { fail("detach synthetic drive"); return; }
+            apply->click();
+            const bool rejected = status->text().contains("Reconnect") && apply->isEnabled();
+            if (!QDir().rename(detached, drive)) { fail("restore synthetic drive"); return; }
+            if (!rejected) { fail("missing drive was not rejected safely"); return; }
+            std::fprintf(stderr, "APPLY_TEST disconnected drive rejected; retrying after reconnect\n");
+        }
         if (qEnvironmentVariableIsSet("BITEDJ_APPLY_CANCEL")) {
             bool connected = false;
             for (auto* child : dialog->findChildren<QObject*>()) {

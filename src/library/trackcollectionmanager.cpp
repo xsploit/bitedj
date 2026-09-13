@@ -205,6 +205,12 @@ TrackCollectionManager::SaveTrackResult TrackCollectionManager::saveTrack(
     VERIFY_OR_DEBUG_ASSERT(pTrack) {
         return SaveTrackResult::Skipped;
     }
+    if (!pTrack->getId().isValid() && !pTrack->getDateAdded().isValid()) {
+        // A failed insertion can leave an unsaved track in the cache. It has
+        // never belonged to the collection: do not export its metadata or
+        // treat it as a purged track. Preserve its dirty state for a retry.
+        return SaveTrackResult::Skipped;
+    }
     DEBUG_ASSERT(pTrack->getDateAdded().isValid());
 
     // Export track metadata regardless of the track's clean/dirty

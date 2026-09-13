@@ -1,5 +1,11 @@
 # Engine metadata planning against TrackRecord
 
+> Current integration: the metadata and playlist Apply workflow is implemented
+> and documented in [ENGINE_APPLY.md](ENGINE_APPLY.md). The component-level
+> notes below include earlier implementation checkpoints. References to an
+> unfinished coordinator or UI are historical; playable cue/grid import,
+> explicit conflict-resolution controls, and Pi playback validation remain open.
+
 `planEngineMetadataImport` copies a current TrackRecord, translates fields from an already validated Engine track and applies the three-way merge to that copy. It returns the proposed record, accepted baseline, changed fields, conflicts and values that cannot be represented. It does not alter a live Track, emit model/audio signals, open a transaction or export tags.
 
 Run against a completed Linux build:
