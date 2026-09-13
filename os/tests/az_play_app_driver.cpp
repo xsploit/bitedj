@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QScreen>
+#include <QStackedWidget>
 #include <QTimer>
 #include <QtTest/QTest>
 #include <cstdio>
@@ -73,6 +74,25 @@ void run() {
         require(!visible(main, "BeatFX_Container"), "right stays hidden");
         click("PlayerToggleRight");
         require(wave->width() == fullWidth, "original waveform width restored");
+        // Folding must preserve the selected layout, not just the rail width.
+        auto requireAzRails = [&] {
+            const auto rails = main->findChildren<QStackedWidget*>("MainViewDeckInfoStack");
+            require(rails.size() == 2, "two deck rail stacks");
+            for (auto* rail : rails) {
+                require(rail->isVisible() && rail->currentIndex() == 3,
+                        "reopened rail retains AZ layout");
+            }
+            require(visible(main, "AzPlay1") && visible(main, "AzPlay2"),
+                    "both AZ transport rows remain visible");
+            require(!visible(main, "WaveformInfo"), "default rail remains hidden");
+        };
+        requireAzRails();
+        for (int repeat = 0; repeat < 5; ++repeat) {
+            click("PlayerToggleLeft");
+            click("PlayerToggleLeft");
+            requireAzRails();
+        }
+        capture("-az-reopened");
         // A loaded, analyzed fixture is required: these exercise real control bindings.
         for (const QString channel : {"1", "2"}) {
             auto* time = qobject_cast<QLabel*>(visible(main, "AzTime" + channel));
