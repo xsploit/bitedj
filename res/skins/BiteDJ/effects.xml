@@ -461,5 +461,6 @@
       </WidgetStack>
 
     </Children>
+  <Connection><ConfigKey>[Skin],player_right_tools</ConfigKey><BindProperty>visible</BindProperty></Connection>
   </WidgetGroup>
 </Template>

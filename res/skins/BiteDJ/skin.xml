@@ -8,6 +8,7 @@
 		<license>GPL</license>
 		<attributes>
 			<attribute config_key="[App],num_decks">4</attribute>
+            <attribute persist="true" config_key="[BiteDJ],main_view_style">0</attribute>
 			<attribute config_key="[App],num_samplers">16</attribute>
 			<attribute persist="true" config_key="[Skin],show_maximized_library">0</attribute>
             <!-- Independent deck readouts; tapping toggles elapsed/remaining. -->
@@ -23,6 +24,8 @@
 			<attribute persist="true" config_key="[Skin],show_preview_decks">0</attribute>
 			<attribute persist="true" config_key="[Skin],show_library_coverart">0</attribute>
 			<attribute config_key="[Sidebar],sidebar_visible">1</attribute>
+		<attribute persist="true" config_key="[Skin],player_left_rail">1</attribute>
+            <attribute persist="true" config_key="[Skin],player_right_tools">1</attribute>
 		</attributes>
 	</manifest>
 

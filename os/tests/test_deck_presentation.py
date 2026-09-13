@@ -28,7 +28,9 @@ def function(path, signature):
 deck = ET.parse(ROOT / 'res/skins/BiteDJ/deck.xml').getroot()
 wave = ET.parse(ROOT / 'res/skins/BiteDJ/waveform.xml').getroot()
 skin = ET.parse(ROOT / 'res/skins/BiteDJ/skin.xml').getroot()
-named = lambda name: next(n for n in deck.iter() if n.findtext('ObjectName') == name)
+summary = ET.parse(ROOT / 'res/skins/BiteDJ/templates/deck_overview.xml').getroot()
+named = lambda name: next(n for root in (deck, summary) for n in root.iter()
+                          if n.findtext('ObjectName') == name)
 for name in ('DeckTitle', 'DeckArtist'):
     assert named(name).findtext('Elide') == 'scroll'
 for tag in ('SignalColor', 'SignalLowColor', 'SignalMidColor', 'SignalHighColor'):
@@ -97,7 +99,7 @@ struct ControlProxy {
     double get() const {return values.value(key);}
     void set(double value) {
         values[key] = value;
-        for (auto* p: proxies) if (p->key == key && p->changed) p->changed(value);
+        for (auto* p: proxies) if (p != this && p->key == key && p->changed) p->changed(value);
     }
     template<class T> void connectValueChanged(T* receiver, void (T::*slot)(double)) {
         changed=[=](double value){(receiver->*slot)(value);};
@@ -206,11 +208,12 @@ int main(int argc, char** argv) {
     assert(one.m_displayMode == TrackTime::DisplayMode::REMAINING);
     click(legacy, Qt::LeftButton);
     assert(ControlProxy::values["[Controls],ShowDurationRemaining"] == 1);
-    one.m_pShowTrackTimeRemaining->set(2);
+    mini.m_pShowTrackTimeRemaining->set(2);
     assert(one.m_displayMode == TrackTime::DisplayMode::REMAINING);
-    one.m_pShowTrackTimeRemaining->set(-123);
+    mini.m_pShowTrackTimeRemaining->set(-123);
     assert(one.m_displayMode == TrackTime::DisplayMode::REMAINING);
-    legacy.m_pShowTrackTimeRemaining->set(2);
+    ControlProxy external("[Controls]", "ShowDurationRemaining", nullptr, ControlFlag::NoAssertIfMissing);
+    external.set(2);
     assert(legacy.m_displayMode == TrackTime::DisplayMode::ELAPSED_AND_REMAINING);
 }
 '''

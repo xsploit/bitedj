@@ -1,0 +1,469 @@
+<Template>
+  <WidgetGroup>
+    <ObjectName>AzDeckCard</ObjectName>
+    <Layout>vertical</Layout>
+    <Size>0me,0me</Size>
+    <Children>
+      <WidgetGroup>
+        <ObjectName>AzPadRow</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,36f</Size>
+        <Children>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_1</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>1</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>A</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>A</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>A</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_2</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>2</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>B</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>B</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>B</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_3</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>3</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>C</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>C</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>C</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_4</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>4</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>D</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>D</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>D</Text>
+            </State>
+          </HotcueButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzPadRow</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,36f</Size>
+        <Children>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_5</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>5</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>E</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>E</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>E</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_6</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>6</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>F</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>F</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>F</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_7</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>7</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>G</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>G</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>G</Text>
+            </State>
+          </HotcueButton>
+          <HotcueButton>
+            <ObjectName>AzHotcue<Variable name="channel" />_8</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <Hotcue>8</Hotcue>
+            <Size>0me,36f</Size>
+            <NumberStates>3</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>H</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>H</Text>
+            </State>
+            <State>
+              <Number>2</Number>
+              <Text>H</Text>
+            </State>
+          </HotcueButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzTrackHeader</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,44f</Size>
+        <Children>
+          <Label>
+            <ObjectName>AzDeckBadge</ObjectName>
+            <Text>
+              <Variable name="channel" />
+            </Text>
+            <Size>46f,44f</Size>
+          </Label>
+          <WidgetGroup>
+            <ObjectName>AzMetadata</ObjectName>
+            <Layout>vertical</Layout>
+            <Size>0me,0me</Size>
+            <Children>
+              <TrackProperty>
+                <ObjectName>AzTitle</ObjectName>
+                <Channel>
+                  <Variable name="channel" />
+                </Channel>
+                <Property>titleInfo</Property>
+                <Elide>scroll</Elide>
+                <DisableActions>true</DisableActions>
+                <Size>0me,26f</Size>
+              </TrackProperty>
+              <TrackProperty>
+                <ObjectName>AzArtist</ObjectName>
+                <Channel>
+                  <Variable name="channel" />
+                </Channel>
+                <Property>artist</Property>
+                <Elide>scroll</Elide>
+                <DisableActions>true</DisableActions>
+                <Size>0me,18f</Size>
+              </TrackProperty>
+            </Children>
+          </WidgetGroup>
+          <PushButton>
+            <ObjectName>AzCueDrawer<Variable name="channel" />
+            </ObjectName>
+            <Size>55f,44f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>CUES</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>CUES</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Skin],cue_deck<Variable name="channel" />
+              </ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzReadouts</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,70f</Size>
+        <Children>
+          <WidgetGroup>
+            <ObjectName>AzTrackIndex</ObjectName>
+            <Layout>vertical</Layout>
+            <Size>48f,70f</Size>
+            <Children>
+              <Label>
+                <ObjectName>AzCaption</ObjectName>
+                <Text>TRACK</Text>
+                <Size>0me,18f</Size>
+              </Label>
+              <TrackProperty>
+                <ObjectName>AzTrackNumber</ObjectName>
+                <Property>trackNumber</Property>
+                <Channel>
+                  <Variable name="channel" />
+                </Channel>
+                <DisableActions>true</DisableActions>
+                <Size>0me,32f</Size>
+              </TrackProperty>
+              <Label>
+                <ObjectName>AzQuantizeStatus</ObjectName>
+                <Text>Q</Text>
+                <Size>0me,20f</Size>
+                <Connection>
+                  <ConfigKey>[Channel<Variable name="channel" />],quantize</ConfigKey>
+                  <BindProperty>highlight</BindProperty>
+                </Connection>
+              </Label>
+            </Children>
+          </WidgetGroup>
+          <WidgetGroup>
+            <ObjectName>AzTimeBlock</ObjectName>
+            <Layout>vertical</Layout>
+            <Size>0me,70f</Size>
+            <Children>
+              <WidgetGroup>
+                <ObjectName>AzTimeCaption</ObjectName>
+                <Layout>horizontal</Layout>
+                <Size>0me,18f</Size>
+                <Children>
+                  <Label>
+                    <ObjectName>AzCaption</ObjectName>
+                    <Text>REMAIN</Text>
+                    <Size>0me,18f</Size>
+                    <Connection>
+                      <ConfigKey>[PiFlex],time_mode<Variable name="channel" />
+                      </ConfigKey>
+                      <BindProperty>visible</BindProperty>
+                    </Connection>
+                  </Label>
+                  <Label>
+                    <ObjectName>AzCaption</ObjectName>
+                    <Text>ELAPSED</Text>
+                    <Size>0me,18f</Size>
+                    <Connection>
+                      <ConfigKey>[PiFlex],time_mode<Variable name="channel" />
+                      </ConfigKey>
+                      <BindProperty>visible</BindProperty>
+                      <Transform>
+                        <Not />
+                      </Transform>
+                    </Connection>
+                  </Label>
+                </Children>
+              </WidgetGroup>
+              <WidgetGroup>
+                <ObjectName>AzTimeValue</ObjectName>
+                <Layout>horizontal</Layout>
+                <Size>0me,52f</Size>
+                <Children>
+                  <NumberPos>
+                    <ObjectName>AzTime<Variable name="channel" />
+                    </ObjectName>
+                    <Channel>
+                      <Variable name="channel" />
+                    </Channel>
+                    <ModeConfigKey>[PiFlex],time_mode<Variable name="channel" />
+                    </ModeConfigKey>
+                    <Size>0me,52f</Size>
+                    <Connection>
+                      <ConfigKey>[Channel<Variable name="channel" />],track_loaded</ConfigKey>
+                      <BindProperty>visible</BindProperty>
+                    </Connection>
+                  </NumberPos>
+                  <Label>
+                    <ObjectName>AzEmptyTime</ObjectName>
+                    <Text>00:00.00</Text>
+                    <Size>0me,52f</Size>
+                    <Connection>
+                      <ConfigKey>[Channel<Variable name="channel" />],track_loaded</ConfigKey>
+                      <BindProperty>visible</BindProperty>
+                      <Transform>
+                        <Not />
+                      </Transform>
+                    </Connection>
+                  </Label>
+                </Children>
+              </WidgetGroup>
+            </Children>
+          </WidgetGroup>
+          <WidgetGroup>
+            <ObjectName>AzRateBlock</ObjectName>
+            <Layout>vertical</Layout>
+            <Size>86f,70f</Size>
+            <Children>
+              <Label>
+                <ObjectName>AzCaption</ObjectName>
+                <Text>TEMPO</Text>
+                <Size>0me,18f</Size>
+              </Label>
+              <WidgetGroup>
+                <ObjectName>AzRangeRow</ObjectName>
+                <Layout>horizontal</Layout>
+                <Size>0me,20f</Size>
+                <Children>
+                  <Label>
+                    <ObjectName>AzCaption</ObjectName>
+                    <Text>&#177;</Text>
+                    <Size>18f,20f</Size>
+                  </Label>
+                  <RateRange>
+                    <ObjectName>AzRange</ObjectName>
+                    <Channel>
+                      <Variable name="channel" />
+                    </Channel>
+                    <Size>0me,20f</Size>
+                    <Display>range</Display>
+                  </RateRange>
+                </Children>
+              </WidgetGroup>
+              <WidgetGroup>
+                <Layout>horizontal</Layout>
+                <Size>0me,32f</Size>
+                <Children>
+                  <NumberRate>
+                    <ObjectName>AzRate<Variable name="channel" />
+                    </ObjectName>
+                    <Channel>
+                      <Variable name="channel" />
+                    </Channel>
+                    <NumberOfDigits>2</NumberOfDigits>
+                    <Size>0me,32f</Size>
+                  </NumberRate>
+                  <Label>
+                    <ObjectName>AzCaption</ObjectName>
+                    <Text>%</Text>
+                    <Size>14f,32f</Size>
+                  </Label>
+                </Children>
+              </WidgetGroup>
+            </Children>
+          </WidgetGroup>
+          <WidgetGroup>
+            <ObjectName>AzBpmBlock</ObjectName>
+            <Layout>vertical</Layout>
+            <Size>118f,70f</Size>
+            <Children>
+              <WidgetGroup>
+                <ObjectName>AzBpmCaption</ObjectName>
+                <Layout>horizontal</Layout>
+                <Size>0me,22f</Size>
+                <Children>
+                  <Label>
+                    <ObjectName>AzCaption</ObjectName>
+                    <Text>BPM</Text>
+                    <Size>0me,0me</Size>
+                  </Label>
+                  <PushButton>
+                    <ObjectName>AzMaster<Variable name="channel" />
+                    </ObjectName>
+                    <Size>65f,22f</Size>
+                    <NumberStates>2</NumberStates>
+                    <State>
+                      <Number>0</Number>
+                      <Text>MASTER</Text>
+                    </State>
+                    <State>
+                      <Number>1</Number>
+                      <Text>MASTER</Text>
+                    </State>
+                    <Connection>
+                      <ConfigKey>[Channel<Variable name="channel" />],sync_leader</ConfigKey>
+                      <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+                    </Connection>
+                  </PushButton>
+                </Children>
+              </WidgetGroup>
+              <NumberBpm>
+                <ObjectName>AzBpm<Variable name="channel" />
+                </ObjectName>
+                <Channel>
+                  <Variable name="channel" />
+                </Channel>
+                <NumberOfDigits>1</NumberOfDigits>
+                <Size>0me,48f</Size>
+                <Connection>
+                  <ConfigKey>[Channel<Variable name="channel" />],visual_bpm</ConfigKey>
+                </Connection>
+              </NumberBpm>
+            </Children>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],sync_leader</ConfigKey>
+              <BindProperty>highlight</BindProperty>
+            </Connection>
+          </WidgetGroup>
+        </Children>
+      </WidgetGroup>
+      <Template src="skin:templates/deck_overview.xml">
+        <SetVariable name="channel">
+          <Variable name="channel" />
+        </SetVariable>
+      </Template>
+    </Children>
+  </WidgetGroup>
+</Template>
