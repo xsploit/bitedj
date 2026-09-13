@@ -55,6 +55,9 @@ void WNumberPos::mousePressEvent(QMouseEvent* event) {
     if (m_perDeckMode && event->button() == Qt::LeftButton) {
         m_pShowTrackTimeRemaining->set(
                 m_displayMode == TrackTime::DisplayMode::REMAINING ? 0.0 : 1.0);
+        // ControlProxy suppresses valueChanged for its own setter. Refresh
+        // this readout too; the other views receive the normal notification.
+        slotSetDisplayMode(m_pShowTrackTimeRemaining->get());
         event->accept();
         return;
     }

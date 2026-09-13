@@ -1,465 +1,1661 @@
-<!--
-  The Overview panel to the right of the waveforms. Four pages behind an
-  FX / KEY / WAVE / GRID tab bar, so every control set gets the full panel instead of
-  sharing it:
-
-  FX  — single-column BeatFX for [EffectRack1_EffectUnit1_Effect1]. The
-        header pins the effect picker, deck routing, mix meter, and
-        Active toggle; the rows below expose the loaded Beats-typed
-        (bucket) parameters via templates/effect_param_row.xml. Rows
-        whose parameter{N}_loaded == 0 — or whose parameter is non-Beats
-        and not opted in via [Skin],beatfx_show_param{N} in mixxx.cfg —
-        collapse so the list packs from the top.
-
-  KEY — one stacked block per deck (deck 1 top, deck 2 bottom) with the
-        current key, +/-2 semitone nudges, harmonic Match, and a reset (see
-        templates/keyfx_deck_row.xml).
-
-  WAVE — linked scrolling-waveform zoom. The buttons target deck 1 because
-         BiteDJ enables waveform zoom synchronization; the FLX6 mapping also
-         drives both decks explicitly.
-
-  GRID — compact per-deck beatgrid translation and tempo adjustment.
-
-  [FxPanel],current selects the page; [FxPanel],fx / [FxPanel],key are
-  the per-page triggers the tab buttons write. All three are created by
-  the skin parser. Persisted so the appliance returns to the DJ's preferred
-  FX, key, waveform, or beatgrid tool after a restart.
--->
 <Template>
   <WidgetGroup>
     <ObjectName>BeatFX_Container</ObjectName>
     <Layout>vertical</Layout>
     <Size>230max,0me</Size>
     <Children>
-
       <WidgetGroup>
         <ObjectName>FxPanel_TabBar</ObjectName>
-        <Layout>vertical</Layout>
-        <Size>0me,88f</Size>
+        <Layout>horizontal</Layout>
+        <Size>0me,44f</Size>
         <Children>
-          <!-- Keep the side panel narrow, but give each tab half the panel
-               width by using two rows instead of cramming four into one. -->
-          <WidgetGroup>
-            <ObjectName>FxPanel_TabRowPrimary</ObjectName>
-            <Layout>horizontal</Layout>
+          <PushButton>
+            <ObjectName>FxPanel_TabFx</ObjectName>
             <Size>0me,44f</Size>
-            <Children>
-              <PushButton>
-                <ObjectName>FxPanel_TabFx</ObjectName>
-                <Size>0me,44f</Size>
-                <NumberStates>2</NumberStates>
-                <State><Number>0</Number><Text>FX</Text></State>
-                <State><Number>1</Number><Text>FX</Text></State>
-                <LeftClickIsPushButton>true</LeftClickIsPushButton>
-                <Connection>
-                  <ConfigKey>[FxPanel],fx</ConfigKey>
-                  <EmitOnDownPress>true</EmitOnDownPress>
-                </Connection>
-              </PushButton>
-              <PushButton>
-                <ObjectName>FxPanel_TabKey</ObjectName>
-                <Size>0me,44f</Size>
-                <NumberStates>2</NumberStates>
-                <State><Number>0</Number><Text>Key</Text></State>
-                <State><Number>1</Number><Text>Key</Text></State>
-                <LeftClickIsPushButton>true</LeftClickIsPushButton>
-                <Connection>
-                  <ConfigKey>[FxPanel],key</ConfigKey>
-                  <EmitOnDownPress>true</EmitOnDownPress>
-                </Connection>
-              </PushButton>
-            </Children>
-          </WidgetGroup>
-
-          <WidgetGroup>
-            <ObjectName>FxPanel_TabRowTools</ObjectName>
-            <Layout>horizontal</Layout>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>FX</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>FX</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[FxPanel],fx</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+          </PushButton>
+          <PushButton>
+            <ObjectName>FxPanel_TabLoop</ObjectName>
             <Size>0me,44f</Size>
-            <Children>
-              <PushButton>
-                <ObjectName>FxPanel_TabWave</ObjectName>
-                <Size>0me,44f</Size>
-                <NumberStates>2</NumberStates>
-                <State><Number>0</Number><Text>Wave</Text></State>
-                <State><Number>1</Number><Text>Wave</Text></State>
-                <LeftClickIsPushButton>true</LeftClickIsPushButton>
-                <Connection>
-                  <ConfigKey>[FxPanel],wave</ConfigKey>
-                  <EmitOnDownPress>true</EmitOnDownPress>
-                </Connection>
-              </PushButton>
-              <PushButton>
-                <ObjectName>FxPanel_TabGrid</ObjectName>
-                <Size>0me,44f</Size>
-                <NumberStates>2</NumberStates>
-                <State><Number>0</Number><Text>Grid</Text></State>
-                <State><Number>1</Number><Text>Grid</Text></State>
-                <LeftClickIsPushButton>true</LeftClickIsPushButton>
-                <Connection>
-                  <ConfigKey>[FxPanel],grid</ConfigKey>
-                  <EmitOnDownPress>true</EmitOnDownPress>
-                </Connection>
-              </PushButton>
-            </Children>
-          </WidgetGroup>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Loop</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Loop</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[FxPanel],loop</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+          </PushButton>
+          <PushButton>
+            <ObjectName>FxPanel_TabKey</ObjectName>
+            <Size>0me,44f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Key</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Key</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[FxPanel],key</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+          </PushButton>
+          <PushButton>
+            <ObjectName>FxPanel_TabWave</ObjectName>
+            <Size>0me,44f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Wave</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Wave</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[FxPanel],wave</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+          </PushButton>
+          <PushButton>
+            <ObjectName>FxPanel_TabGrid</ObjectName>
+            <Size>0me,44f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Grid</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Grid</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[FxPanel],grid</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+          </PushButton>
         </Children>
       </WidgetGroup>
-
-      <!--
-        Ignored vertical policy on purpose. WWidgetStack forwards its
-        minimumSizeHint to the *current* page, so pages of unequal height
-        re-drive the Overview's vertical layout on every switch: the FX page
-        (140px header + a parameter row) asks for more than KEY, which stole
-        ~5px off the deck strip and made the bottom of the screen jump
-        between FX and KEY — and again whenever an effect with a bucket row
-        was loaded. Ignored drops the stack out of the minimum-height
-        calculation, so this 230px side panel is sized purely by the
-        waveform column beside it. Pages are AlignTop, so content that
-        outgrows the panel packs from the top instead of shoving the rest of
-        the layout around.
-      -->
       <WidgetStack currentpage="[FxPanel],current" persist="true">
         <ObjectName>FxPanel_Stack</ObjectName>
         <SizePolicy>me,i</SizePolicy>
         <Children>
-
-          <WidgetGroup trigger="[FxPanel],fx">
-            <ObjectName>FxPanel_Page</ObjectName>
-            <Layout>vertical</Layout>
-            <SizePolicy>me,me</SizePolicy>
+          <Scrollable trigger="[FxPanel],fx">
+            <ObjectName>RailScroll0</ObjectName>
+            <HorizontalScrollBarPolicy>off</HorizontalScrollBarPolicy>
+            <Style>QScrollArea { qproperty-widgetResizable: true; border: none; background-color: #101014; } QScrollArea &gt; QWidget { background-color: #101014; } QScrollBar:vertical { width: 22px; background: #181820; } QScrollBar::handle:vertical { background: #555563; min-height: 36px; }</Style>
             <Children>
-
               <WidgetGroup>
-                <ObjectName>BeatFX_Header</ObjectName>
+                <ObjectName>FxPanel_Page</ObjectName>
                 <Layout>vertical</Layout>
-                <Size>0me,170f</Size>
+                <SizePolicy>me,me</SizePolicy>
                 <Children>
-
-                  <EffectSelector>
-                    <ObjectName>EffectSelector</ObjectName>
-                    <EffectRack>1</EffectRack>
-                    <EffectUnit>1</EffectUnit>
-                    <Effect>1</Effect>
-                    <Elide>right</Elide>
-                    <Size>0me,40f</Size>
-                  </EffectSelector>
-
                   <WidgetGroup>
-                    <ObjectName>BeatFX_DeckRouting</ObjectName>
-                    <Layout>horizontal</Layout>
-                    <Size>0me,52f</Size>
+                    <ObjectName>BeatFX_Header</ObjectName>
+                    <Layout>vertical</Layout>
+                    <Size>0me,184f</Size>
                     <Children>
-                      <PushButton>
-                        <ObjectName>BeatFX_DeckAssign1</ObjectName>
+                      <EffectSelector>
+                        <ObjectName>EffectSelector</ObjectName>
+                        <EffectRack>1</EffectRack>
+                        <EffectUnit>1</EffectUnit>
+                        <Effect>1</Effect>
+                        <Elide>right</Elide>
+                        <Size>0me,40f</Size>
+                      </EffectSelector>
+                      <WidgetGroup>
+                        <ObjectName>BeatFX_DeckRouting</ObjectName>
+                        <Layout>horizontal</Layout>
                         <Size>0me,52f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>BeatFX_DeckAssign1</ObjectName>
+                            <Size>0me,52f</Size>
+                            <NumberStates>2</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>1</Text>
+                            </State>
+                            <State>
+                              <Number>1</Number>
+                              <Text>1</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[EffectRack1_EffectUnit1],group_[Channel1]_enable</ConfigKey>
+                              <ConnectValueToWidget>true</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>BeatFX_DeckAssign2</ObjectName>
+                            <Size>0me,52f</Size>
+                            <NumberStates>2</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>2</Text>
+                            </State>
+                            <State>
+                              <Number>1</Number>
+                              <Text>2</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[EffectRack1_EffectUnit1],group_[Channel2]_enable</ConfigKey>
+                              <ConnectValueToWidget>true</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>BeatFX_WetRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,52f</Size>
+                        <Children>
+                          <Label>
+                            <ObjectName>RailLabel</ObjectName>
+                            <Text>Wet / dry</Text>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                          </Label>
+                          <KnobComposed>
+                            <ObjectName>RailMixKnob</ObjectName>
+                            <Size>52f,52f</Size>
+                            <Knob scalemode="STRETCH_ASPECT">icons/knob.svg</Knob>
+                            <MinAngle>-140</MinAngle>
+                            <MaxAngle>140</MaxAngle>
+                            <Connection>
+                              <ConfigKey>[EffectRack1_EffectUnit1],mix</ConfigKey>
+                            </Connection>
+                          </KnobComposed>
+                          <Number>
+                            <ObjectName>RailMixValue</ObjectName>
+                            <Text>%1</Text>
+                            <NumberOfDigits>2</NumberOfDigits>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                            <Connection>
+                              <ConfigKey>[EffectRack1_EffectUnit1],mix</ConfigKey>
+                              <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                            </Connection>
+                          </Number>
+                        </Children>
+                      </WidgetGroup>
+                      <PushButton>
+                        <ObjectName>BeatFX_ActiveToggle</ObjectName>
+                        <Size>0me,36f</Size>
                         <NumberStates>2</NumberStates>
                         <State>
                           <Number>0</Number>
-                          <Text>1</Text>
+                          <Text>Off</Text>
                         </State>
                         <State>
                           <Number>1</Number>
-                          <Text>1</Text>
+                          <Text>Active</Text>
                         </State>
                         <Connection>
-                          <ConfigKey>[EffectRack1_EffectUnit1],group_[Channel1]_enable</ConfigKey>
-                          <ConnectValueToWidget>true</ConnectValueToWidget>
-                        </Connection>
-                      </PushButton>
-                      <PushButton>
-                        <ObjectName>BeatFX_DeckAssign2</ObjectName>
-                        <Size>0me,52f</Size>
-                        <NumberStates>2</NumberStates>
-                        <State>
-                          <Number>0</Number>
-                          <Text>2</Text>
-                        </State>
-                        <State>
-                          <Number>1</Number>
-                          <Text>2</Text>
-                        </State>
-                        <Connection>
-                          <ConfigKey>[EffectRack1_EffectUnit1],group_[Channel2]_enable</ConfigKey>
+                          <ConfigKey>[EffectRack1_EffectUnit1_Effect1],enabled</ConfigKey>
                           <ConnectValueToWidget>true</ConnectValueToWidget>
                         </Connection>
                       </PushButton>
                     </Children>
                   </WidgetGroup>
-
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">1</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">2</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">3</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">4</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">5</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">6</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">7</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">8</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">9</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">10</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">11</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">12</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">13</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">14</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">15</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/effect_param_row.xml">
+                    <SetVariable name="rack">1</SetVariable>
+                    <SetVariable name="unit">1</SetVariable>
+                    <SetVariable name="effect">1</SetVariable>
+                    <SetVariable name="param">16</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">1</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">2</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">3</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">4</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">5</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">6</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">7</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">8</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">9</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">10</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">11</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">12</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">13</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">14</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">15</SetVariable>
+                  </Template>
+                  <Template src="skin:templates/rail_effect_switch.xml">
+                    <SetVariable name="param">16</SetVariable>
+                  </Template>
                   <WidgetGroup>
-                    <ObjectName>BeatFX_WetRow</ObjectName>
-                    <Layout>horizontal</Layout>
-                    <Size>0me,22f</Size>
+                    <ObjectName>BeatFX_Spacer</ObjectName>
+                    <Size>0me,0me</Size>
+                  </WidgetGroup>
+                </Children>
+                <Style>WWidgetGroup { background-color: #101014; } QLabel { color: #ddd; }</Style>
+              </WidgetGroup>
+            </Children>
+          </Scrollable>
+          <Scrollable trigger="[FxPanel],key">
+            <ObjectName>RailScroll1</ObjectName>
+            <HorizontalScrollBarPolicy>off</HorizontalScrollBarPolicy>
+            <Style>QScrollArea { qproperty-widgetResizable: true; border: none; background-color: #101014; } QScrollArea &gt; QWidget { background-color: #101014; } QScrollBar:vertical { width: 22px; background: #181820; } QScrollBar::handle:vertical { background: #555563; min-height: 36px; }</Style>
+            <Children>
+              <WidgetGroup>
+                <ObjectName>FxPanel_Page</ObjectName>
+                <Layout>vertical</Layout>
+                <SizePolicy>me,me</SizePolicy>
+                <Children>
+                  <WidgetGroup>
+                    <ObjectName>RailKeyBlock</ObjectName>
+                    <Layout>vertical</Layout>
                     <Children>
-                      <Label>
-                        <ObjectName>BeatFX_MixLabel</ObjectName>
-                        <Text>Mix</Text>
-                        <Size>36f,me</Size>
-                      </Label>
-                      <VuMeter>
-                        <ObjectName>BeatFX_MixMeter</ObjectName>
-                        <Size>0me,14f</Size>
-                        <PathBack scalemode="STRETCH">icons/effect_meter_bg.png</PathBack>
-                        <PathVu scalemode="STRETCH">icons/effect_meter_fg.png</PathVu>
-                        <Horizontal>true</Horizontal>
-                        <PeakHoldSize>0</PeakHoldSize>
-                        <PeakHoldTime>0</PeakHoldTime>
-                        <PeakFallTime>0</PeakFallTime>
-                        <PeakFallStep>0</PeakFallStep>
+                      <WidgetGroup>
+                        <ObjectName>KeyFX_DeckHeader</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,30f</Size>
+                        <Children>
+                          <Label>
+                            <ObjectName>KeyFX_DeckLabel_1</ObjectName>
+                            <Text>Deck 1</Text>
+                            <Size>0me,30f</Size>
+                            <Alignment>left</Alignment>
+                          </Label>
+                          <Key>
+                            <ObjectName>KeyFX_DeckKey</ObjectName>
+                            <TooltipId>visual_key</TooltipId>
+                            <Size>72max,30f</Size>
+                            <Alignment>right</Alignment>
+                            <Channel>1</Channel>
+                            <Connection>
+                              <ConfigKey>[Channel1],visual_key</ConfigKey>
+                            </Connection>
+                            <Connection>
+                              <ConfigKey>[Channel1],key_shifted</ConfigKey>
+                              <BindProperty>highlight</BindProperty>
+                            </Connection>
+                          </Key>
+                        </Children>
+                      </WidgetGroup>
+                      <Number>
+                        <ObjectName>RailPitch1</ObjectName>
+                        <Text>%1 semitones</Text>
+                        <NumberOfDigits>1</NumberOfDigits>
+                        <Size>0me,28f</Size>
+                        <Alignment>center</Alignment>
                         <Connection>
-                          <ConfigKey>[EffectRack1_EffectUnit1],mix</ConfigKey>
+                          <ConfigKey>[Channel1],pitch</ConfigKey>
+                          <ConnectValueFromWidget>false</ConnectValueFromWidget>
                         </Connection>
-                      </VuMeter>
+                      </Number>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailKeyDown1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>−1</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],pitch_down</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyUp1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>+1</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],pitch_up</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyLock1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>2</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Lock</Text>
+                            </State>
+                            <State>
+                              <Number>1</Number>
+                              <Text>Lock</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],keylock</ConfigKey>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailKeyMatch1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Match</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],sync_key</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyReset1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Reset</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],reset_key</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
                     </Children>
                   </WidgetGroup>
-
-                  <PushButton>
-                    <ObjectName>BeatFX_ActiveToggle</ObjectName>
-                    <Size>0me,36f</Size>
-                    <NumberStates>2</NumberStates>
-                    <State>
-                      <Number>0</Number>
-                      <Text>Off</Text>
-                    </State>
-                    <State>
-                      <Number>1</Number>
-                      <Text>Active</Text>
-                    </State>
-                    <Connection>
-                      <ConfigKey>[EffectRack1_EffectUnit1_Effect1],enabled</ConfigKey>
-                      <ConnectValueToWidget>true</ConnectValueToWidget>
-                    </Connection>
-                  </PushButton>
-
+                  <WidgetGroup>
+                    <ObjectName>RailKeyBlock</ObjectName>
+                    <Layout>vertical</Layout>
+                    <Children>
+                      <WidgetGroup>
+                        <ObjectName>KeyFX_DeckHeader</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,30f</Size>
+                        <Children>
+                          <Label>
+                            <ObjectName>KeyFX_DeckLabel_2</ObjectName>
+                            <Text>Deck 2</Text>
+                            <Size>0me,30f</Size>
+                            <Alignment>left</Alignment>
+                          </Label>
+                          <Key>
+                            <ObjectName>KeyFX_DeckKey</ObjectName>
+                            <TooltipId>visual_key</TooltipId>
+                            <Size>72max,30f</Size>
+                            <Alignment>right</Alignment>
+                            <Channel>2</Channel>
+                            <Connection>
+                              <ConfigKey>[Channel2],visual_key</ConfigKey>
+                            </Connection>
+                            <Connection>
+                              <ConfigKey>[Channel2],key_shifted</ConfigKey>
+                              <BindProperty>highlight</BindProperty>
+                            </Connection>
+                          </Key>
+                        </Children>
+                      </WidgetGroup>
+                      <Number>
+                        <ObjectName>RailPitch2</ObjectName>
+                        <Text>%1 semitones</Text>
+                        <NumberOfDigits>1</NumberOfDigits>
+                        <Size>0me,28f</Size>
+                        <Alignment>center</Alignment>
+                        <Connection>
+                          <ConfigKey>[Channel2],pitch</ConfigKey>
+                          <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                        </Connection>
+                      </Number>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailKeyDown2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>−1</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],pitch_down</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyUp2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>+1</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],pitch_up</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyLock2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>2</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Lock</Text>
+                            </State>
+                            <State>
+                              <Number>1</Number>
+                              <Text>Lock</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],keylock</ConfigKey>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailKeyMatch2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Match</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],sync_key</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailKeyReset2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Reset</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],reset_key</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                    </Children>
+                  </WidgetGroup>
                 </Children>
+                <Style>WWidgetGroup { background-color: #101014; } QLabel { color: #ddd; }</Style>
               </WidgetGroup>
-
-              <!--
-                Parameter rows. Mixxx allocates kDefaultMaxParameters (16) knob
-                parameter slots per effect; only Beats-typed (bucket) slots are
-                visible by default. Each row auto-hides when its
-                parameter{N}_loaded is 0 so simple effects don't leave gaps.
-              -->
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">1</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">2</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">3</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">4</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">5</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">6</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">7</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">8</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">9</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">10</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">11</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">12</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">13</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">14</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">15</SetVariable>
-              </Template>
-              <Template src="skin:templates/effect_param_row.xml">
-                <SetVariable name="rack">1</SetVariable>
-                <SetVariable name="unit">1</SetVariable>
-                <SetVariable name="effect">1</SetVariable>
-                <SetVariable name="param">16</SetVariable>
-              </Template>
-
-              <WidgetGroup>
-                <ObjectName>BeatFX_Spacer</ObjectName>
-                <Size>0me,0me</Size>
-              </WidgetGroup>
-
             </Children>
-          </WidgetGroup>
-
-          <!--
-            KEY page: one block per deck, stacked. No shared "selected deck"
-            state exists in this skin, so each block targets its own
-            [ChannelN] controls.
-          -->
-          <WidgetGroup trigger="[FxPanel],key">
-            <ObjectName>FxPanel_Page</ObjectName>
-            <Layout>vertical</Layout>
-            <SizePolicy>me,me</SizePolicy>
+          </Scrollable>
+          <Scrollable trigger="[FxPanel],wave">
+            <ObjectName>RailScroll2</ObjectName>
+            <HorizontalScrollBarPolicy>off</HorizontalScrollBarPolicy>
+            <Style>QScrollArea { qproperty-widgetResizable: true; border: none; background-color: #101014; } QScrollArea &gt; QWidget { background-color: #101014; } QScrollBar:vertical { width: 22px; background: #181820; } QScrollBar::handle:vertical { background: #555563; min-height: 36px; }</Style>
             <Children>
-
-              <Template src="skin:templates/keyfx_deck_row.xml">
-                <SetVariable name="channel">1</SetVariable>
-              </Template>
-              <Template src="skin:templates/keyfx_deck_row.xml">
-                <SetVariable name="channel">2</SetVariable>
-              </Template>
-
               <WidgetGroup>
-                <ObjectName>BeatFX_Spacer</ObjectName>
-                <Size>0me,0me</Size>
-              </WidgetGroup>
-
-            </Children>
-          </WidgetGroup>
-
-          <WidgetGroup trigger="[FxPanel],wave">
-            <ObjectName>FxPanel_Page</ObjectName>
-            <Layout>vertical</Layout>
-            <SizePolicy>me,me</SizePolicy>
-            <Children>
-
-              <Label>
-                <ObjectName>WavePanel_Title</ObjectName>
-                <Text>Linked waveform zoom</Text>
-                <Size>0me,34f</Size>
-                <Alignment>center</Alignment>
-              </Label>
-
-              <WidgetGroup>
-                <ObjectName>WavePanel_ButtonRow</ObjectName>
-                <Layout>horizontal</Layout>
-                <Size>0me,58f</Size>
+                <ObjectName>FxPanel_Page</ObjectName>
+                <Layout>vertical</Layout>
+                <SizePolicy>me,me</SizePolicy>
                 <Children>
-                  <PushButton>
-                    <ObjectName>WavePanel_ZoomOut</ObjectName>
-                    <Size>0me,58f</Size>
-                    <NumberStates>1</NumberStates>
-                    <State><Number>0</Number><Text>Out</Text></State>
+                  <Label>
+                    <ObjectName>WavePanel_Title</ObjectName>
+                    <Text>Waveform zoom</Text>
+                    <Size>0me,34f</Size>
+                    <Alignment>center</Alignment>
+                  </Label>
+                  <Number>
+                    <ObjectName>RailZoom</ObjectName>
+                    <Text>Zoom %1</Text>
+                    <NumberOfDigits>1</NumberOfDigits>
+                    <Size>0me,28f</Size>
+                    <Alignment>center</Alignment>
                     <Connection>
-                      <ConfigKey>[Channel1],waveform_zoom_up</ConfigKey>
-                      <ConnectValueToWidget>false</ConnectValueToWidget>
-                      <EmitOnDownPress>true</EmitOnDownPress>
+                      <ConfigKey>[Channel1],waveform_zoom</ConfigKey>
+                      <ConnectValueFromWidget>false</ConnectValueFromWidget>
                     </Connection>
-                  </PushButton>
-                  <PushButton>
-                    <ObjectName>WavePanel_ZoomReset</ObjectName>
+                  </Number>
+                  <WidgetGroup>
+                    <ObjectName>WavePanel_ButtonRow</ObjectName>
+                    <Layout>horizontal</Layout>
                     <Size>0me,58f</Size>
-                    <NumberStates>1</NumberStates>
-                    <State><Number>0</Number><Text>Reset</Text></State>
-                    <Connection>
-                      <ConfigKey>[Channel1],waveform_zoom_set_default</ConfigKey>
-                      <ConnectValueToWidget>false</ConnectValueToWidget>
-                      <EmitOnDownPress>true</EmitOnDownPress>
-                    </Connection>
-                  </PushButton>
-                  <PushButton>
-                    <ObjectName>WavePanel_ZoomIn</ObjectName>
-                    <Size>0me,58f</Size>
-                    <NumberStates>1</NumberStates>
-                    <State><Number>0</Number><Text>In</Text></State>
-                    <Connection>
-                      <ConfigKey>[Channel1],waveform_zoom_down</ConfigKey>
-                      <ConnectValueToWidget>false</ConnectValueToWidget>
-                      <EmitOnDownPress>true</EmitOnDownPress>
-                    </Connection>
-                  </PushButton>
+                    <Children>
+                      <PushButton>
+                        <ObjectName>WavePanel_ZoomOut</ObjectName>
+                        <Size>0me,58f</Size>
+                        <NumberStates>1</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Out</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[Channel1],waveform_zoom_up</ConfigKey>
+                          <ConnectValueToWidget>false</ConnectValueToWidget>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                        </Connection>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>WavePanel_ZoomReset</ObjectName>
+                        <Size>0me,58f</Size>
+                        <NumberStates>1</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Reset</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[Channel1],waveform_zoom_set_default</ConfigKey>
+                          <ConnectValueToWidget>false</ConnectValueToWidget>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                        </Connection>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>WavePanel_ZoomIn</ObjectName>
+                        <Size>0me,58f</Size>
+                        <NumberStates>1</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>In</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[Channel1],waveform_zoom_down</ConfigKey>
+                          <ConnectValueToWidget>false</ConnectValueToWidget>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                        </Connection>
+                      </PushButton>
+                    </Children>
+                  </WidgetGroup>
+                  <Label>
+                    <ObjectName>WavePanel_Hint</ObjectName>
+                    <Text>FLX6: Shift + Browse</Text>
+                    <Size>0me,30f</Size>
+                    <Alignment>center</Alignment>
+                  </Label>
+                  <Label>
+                    <ObjectName>RailLabel</ObjectName>
+                    <Text>Waveform height</Text>
+                    <Size>0me,28f</Size>
+                    <Alignment>center</Alignment>
+                  </Label>
+                  <WidgetGroup>
+                    <ObjectName>RailRow</ObjectName>
+                    <Layout>horizontal</Layout>
+                    <Size>0me,44f</Size>
+                    <Children>
+                      <PushButton>
+                        <ObjectName>RailGainSlim</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Slim</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Slim</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[BiteDJ],waveform_gain</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                          <Transform>
+                            <IsEqual>0.8</IsEqual>
+                          </Transform>
+                        </Connection>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>RailGainNormal</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Normal</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Normal</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[BiteDJ],waveform_gain</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                          <Transform>
+                            <IsEqual>0.9</IsEqual>
+                          </Transform>
+                        </Connection>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>RailGainBold</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Bold</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Bold</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[BiteDJ],waveform_gain</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                          <Transform>
+                            <IsEqual>1</IsEqual>
+                          </Transform>
+                        </Connection>
+                      </PushButton>
+                    </Children>
+                  </WidgetGroup>
+                  <Label>
+                    <ObjectName>RailLabel</ObjectName>
+                    <Text>Waveform follows EQ</Text>
+                    <Size>0me,28f</Size>
+                    <Alignment>center</Alignment>
+                  </Label>
+                  <WidgetGroup>
+                    <ObjectName>RailRow</ObjectName>
+                    <Layout>horizontal</Layout>
+                    <Size>0me,44f</Size>
+                    <Children>
+                      <PushButton>
+                        <ObjectName>RailWaveFixed</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Fixed</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Fixed</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[Waveform],apply_eq_to_waveform</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                          <Transform>
+                            <IsEqual>0</IsEqual>
+                          </Transform>
+                        </Connection>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>RailWaveEQ</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>EQ</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>EQ</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[Waveform],apply_eq_to_waveform</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                          <Transform>
+                            <IsEqual>1</IsEqual>
+                          </Transform>
+                        </Connection>
+                      </PushButton>
+                    </Children>
+                  </WidgetGroup>
                 </Children>
+                <Style>WWidgetGroup { background-color: #101014; } QLabel { color: #ddd; }</Style>
               </WidgetGroup>
-
-              <Label>
-                <ObjectName>WavePanel_Hint</ObjectName>
-                <Text>FLX6: Shift + Browse</Text>
-                <Size>0me,30f</Size>
-                <Alignment>center</Alignment>
-              </Label>
-
-              <WidgetGroup><ObjectName>BeatFX_Spacer</ObjectName><Size>0me,0me</Size></WidgetGroup>
             </Children>
-          </WidgetGroup>
-
-          <WidgetGroup trigger="[FxPanel],grid">
-            <ObjectName>FxPanel_Page</ObjectName>
-            <Layout>vertical</Layout>
-            <SizePolicy>me,me</SizePolicy>
+          </Scrollable>
+          <Scrollable trigger="[FxPanel],grid">
+            <ObjectName>RailScroll3</ObjectName>
+            <HorizontalScrollBarPolicy>off</HorizontalScrollBarPolicy>
+            <Style>QScrollArea { qproperty-widgetResizable: true; border: none; background-color: #101014; } QScrollArea &gt; QWidget { background-color: #101014; } QScrollBar:vertical { width: 22px; background: #181820; } QScrollBar::handle:vertical { background: #555563; min-height: 36px; }</Style>
             <Children>
-
-              <Label>
-                <ObjectName>GridPanel_Title</ObjectName>
-                <Text>Beatgrid adjust</Text>
-                <Size>0me,32f</Size>
-                <Alignment>center</Alignment>
-              </Label>
-
-              <Template src="skin:templates/grid_deck_row.xml"><SetVariable name="channel">1</SetVariable></Template>
-              <Template src="skin:templates/grid_deck_row.xml"><SetVariable name="channel">2</SetVariable></Template>
-
-              <WidgetGroup><ObjectName>BeatFX_Spacer</ObjectName><Size>0me,0me</Size></WidgetGroup>
+              <WidgetGroup>
+                <ObjectName>FxPanel_Page</ObjectName>
+                <Layout>vertical</Layout>
+                <SizePolicy>me,me</SizePolicy>
+                <Children>
+                  <Label>
+                    <ObjectName>GridPanel_Title</ObjectName>
+                    <Text>Beatgrid adjust</Text>
+                    <Size>0me,28f</Size>
+                    <Alignment>center</Alignment>
+                  </Label>
+                  <WidgetGroup>
+                    <ObjectName>GridPanel_DeckBlock</ObjectName>
+                    <Layout>vertical</Layout>
+                    <Size>0me,184f</Size>
+                    <Children>
+                      <Number>
+                        <ObjectName>RailGridBpm1</ObjectName>
+                        <Text>Deck 1 · %1 BPM</Text>
+                        <NumberOfDigits>2</NumberOfDigits>
+                        <Size>0me,28f</Size>
+                        <Alignment>center</Alignment>
+                        <Connection>
+                          <ConfigKey>[Channel1],file_bpm</ConfigKey>
+                          <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                        </Connection>
+                      </Number>
+                      <WidgetGroup>
+                        <ObjectName>GridPanel_ButtonRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,54f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>◀</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_translate_earlier</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_SetButton</ObjectName>
+                            <Size>0me,54f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Set</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_translate_curpos</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>▶</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_translate_later</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>GridPanel_ButtonRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,54f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>BPM -</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_adjust_slower</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>BPM +</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_adjust_faster</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailGridHalf1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>½ BPM</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_set_halve</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailGridDouble1</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>2× BPM</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel1],beats_set_double</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                    </Children>
+                  </WidgetGroup>
+                  <WidgetGroup>
+                    <ObjectName>GridPanel_DeckBlock</ObjectName>
+                    <Layout>vertical</Layout>
+                    <Size>0me,184f</Size>
+                    <Children>
+                      <Number>
+                        <ObjectName>RailGridBpm2</ObjectName>
+                        <Text>Deck 2 · %1 BPM</Text>
+                        <NumberOfDigits>2</NumberOfDigits>
+                        <Size>0me,28f</Size>
+                        <Alignment>center</Alignment>
+                        <Connection>
+                          <ConfigKey>[Channel2],file_bpm</ConfigKey>
+                          <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                        </Connection>
+                      </Number>
+                      <WidgetGroup>
+                        <ObjectName>GridPanel_ButtonRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,54f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>◀</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_translate_earlier</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_SetButton</ObjectName>
+                            <Size>0me,54f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Set</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_translate_curpos</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>▶</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_translate_later</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>GridPanel_ButtonRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,54f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>BPM -</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_adjust_slower</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>GridPanel_Button</ObjectName>
+                            <Size>0me,54f</Size>
+                            <AutoRepeat>true</AutoRepeat>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>BPM +</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_adjust_faster</ConfigKey>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup>
+                        <ObjectName>RailRow</ObjectName>
+                        <Layout>horizontal</Layout>
+                        <Size>0me,44f</Size>
+                        <Children>
+                          <PushButton>
+                            <ObjectName>RailGridHalf2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>½ BPM</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_set_halve</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                          <PushButton>
+                            <ObjectName>RailGridDouble2</ObjectName>
+                            <Size>0me,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>2× BPM</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[Channel2],beats_set_double</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <ConnectValueToWidget>false</ConnectValueToWidget>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+                    </Children>
+                  </WidgetGroup>
+                </Children>
+                <Style>WWidgetGroup { background-color: #101014; } QLabel { color: #ddd; }</Style>
+              </WidgetGroup>
             </Children>
-          </WidgetGroup>
-
+          </Scrollable>
+          <Scrollable trigger="[FxPanel],loop">
+            <ObjectName>RailScroll4</ObjectName>
+            <HorizontalScrollBarPolicy>off</HorizontalScrollBarPolicy>
+            <Style>QScrollArea { qproperty-widgetResizable: true; border: none; background-color: #101014; } QScrollArea &gt; QWidget { background-color: #101014; } QScrollBar:vertical { width: 22px; background: #181820; } QScrollBar::handle:vertical { background: #555563; min-height: 36px; }</Style>
+            <Children>
+              <WidgetGroup>
+                <ObjectName>RailLoopPage</ObjectName>
+                <Layout>vertical</Layout>
+                <Children>
+                  <WidgetGroup>
+                    <ObjectName>RailRow</ObjectName>
+                    <Layout>horizontal</Layout>
+                    <Size>0me,44f</Size>
+                    <Children>
+                      <PushButton>
+                        <ObjectName>RailLoopDeck1</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Deck 1</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Deck 1</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[LoopPanel],deck1</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                        </Connection>
+                        <LeftClickIsPushButton>true</LeftClickIsPushButton>
+                      </PushButton>
+                      <PushButton>
+                        <ObjectName>RailLoopDeck2</ObjectName>
+                        <Size>0me,44f</Size>
+                        <NumberStates>2</NumberStates>
+                        <State>
+                          <Number>0</Number>
+                          <Text>Deck 2</Text>
+                        </State>
+                        <State>
+                          <Number>1</Number>
+                          <Text>Deck 2</Text>
+                        </State>
+                        <Connection>
+                          <ConfigKey>[LoopPanel],deck2</ConfigKey>
+                          <EmitOnDownPress>true</EmitOnDownPress>
+                        </Connection>
+                        <LeftClickIsPushButton>true</LeftClickIsPushButton>
+                      </PushButton>
+                    </Children>
+                  </WidgetGroup>
+                  <WidgetStack currentpage="[LoopPanel],current" persist="true">
+                    <ObjectName>RailLoopDeckStack</ObjectName>
+                    <Children>
+                      <WidgetGroup trigger="[LoopPanel],deck1">
+                        <ObjectName>RailLoopDeck1</ObjectName>
+                        <Layout>vertical</Layout>
+                        <Children>
+                          <Number>
+                            <ObjectName>RailLoopSize1</ObjectName>
+                            <Text>Loop · %1 beats</Text>
+                            <NumberOfDigits>1</NumberOfDigits>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                            <Connection>
+                              <ConfigKey>[Channel1],beatloop_size</ConfigKey>
+                              <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                            </Connection>
+                          </Number>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailLoopHalf1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>½</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],loop_halve</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailLoopDouble1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>2×</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],loop_double</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailLoopToggle1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Loop</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatloop_activate</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                                <Connection>
+                                  <ConfigKey>[Channel1],loop_enabled</ConfigKey>
+                                  <BindProperty>highlight</BindProperty>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailLoopRoll1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Hold roll</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatlooproll_activate</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <Number>
+                            <ObjectName>RailJumpSize1</ObjectName>
+                            <Text>Jump · %1 beats</Text>
+                            <NumberOfDigits>1</NumberOfDigits>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                            <Connection>
+                              <ConfigKey>[Channel1],beatjump_size</ConfigKey>
+                              <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                            </Connection>
+                          </Number>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailJumpHalf1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>½</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatjump_size_halve</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailJumpDouble1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>2×</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatjump_size_double</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailJumpBack1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>◀ Jump</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatjump_backward</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailJumpForward1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Jump ▶</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],beatjump_forward</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailSlip1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>2</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Slip</Text>
+                                </State>
+                                <State>
+                                  <Number>1</Number>
+                                  <Text>Slip</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],slip_enabled</ConfigKey>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailQuantize1</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>2</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Quantize</Text>
+                                </State>
+                                <State>
+                                  <Number>1</Number>
+                                  <Text>Quantize</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel1],quantize</ConfigKey>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                        </Children>
+                      </WidgetGroup>
+                      <WidgetGroup trigger="[LoopPanel],deck2">
+                        <ObjectName>RailLoopDeck2</ObjectName>
+                        <Layout>vertical</Layout>
+                        <Children>
+                          <Number>
+                            <ObjectName>RailLoopSize2</ObjectName>
+                            <Text>Loop · %1 beats</Text>
+                            <NumberOfDigits>1</NumberOfDigits>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                            <Connection>
+                              <ConfigKey>[Channel2],beatloop_size</ConfigKey>
+                              <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                            </Connection>
+                          </Number>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailLoopHalf2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>½</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],loop_halve</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailLoopDouble2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>2×</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],loop_double</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailLoopToggle2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Loop</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatloop_activate</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                                <Connection>
+                                  <ConfigKey>[Channel2],loop_enabled</ConfigKey>
+                                  <BindProperty>highlight</BindProperty>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailLoopRoll2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Hold roll</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatlooproll_activate</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <Number>
+                            <ObjectName>RailJumpSize2</ObjectName>
+                            <Text>Jump · %1 beats</Text>
+                            <NumberOfDigits>1</NumberOfDigits>
+                            <Size>0me,28f</Size>
+                            <Alignment>center</Alignment>
+                            <Connection>
+                              <ConfigKey>[Channel2],beatjump_size</ConfigKey>
+                              <ConnectValueFromWidget>false</ConnectValueFromWidget>
+                            </Connection>
+                          </Number>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailJumpHalf2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>½</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatjump_size_halve</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailJumpDouble2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>2×</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatjump_size_double</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailJumpBack2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>◀ Jump</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatjump_backward</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailJumpForward2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>1</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Jump ▶</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],beatjump_forward</ConfigKey>
+                                  <EmitOnDownPress>true</EmitOnDownPress>
+                                  <ConnectValueToWidget>false</ConnectValueToWidget>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                          <WidgetGroup>
+                            <ObjectName>RailRow</ObjectName>
+                            <Layout>horizontal</Layout>
+                            <Size>0me,44f</Size>
+                            <Children>
+                              <PushButton>
+                                <ObjectName>RailSlip2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>2</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Slip</Text>
+                                </State>
+                                <State>
+                                  <Number>1</Number>
+                                  <Text>Slip</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],slip_enabled</ConfigKey>
+                                </Connection>
+                              </PushButton>
+                              <PushButton>
+                                <ObjectName>RailQuantize2</ObjectName>
+                                <Size>0me,44f</Size>
+                                <NumberStates>2</NumberStates>
+                                <State>
+                                  <Number>0</Number>
+                                  <Text>Quantize</Text>
+                                </State>
+                                <State>
+                                  <Number>1</Number>
+                                  <Text>Quantize</Text>
+                                </State>
+                                <Connection>
+                                  <ConfigKey>[Channel2],quantize</ConfigKey>
+                                </Connection>
+                              </PushButton>
+                            </Children>
+                          </WidgetGroup>
+                        </Children>
+                      </WidgetGroup>
+                    </Children>
+                  </WidgetStack>
+                </Children>
+                <Style>WWidgetGroup { background-color: #101014; } QLabel { color: #ddd; }</Style>
+              </WidgetGroup>
+            </Children>
+          </Scrollable>
         </Children>
       </WidgetStack>
-
     </Children>
+    <Connection>
+      <ConfigKey>[Skin],player_right_tools</ConfigKey>
+      <BindProperty>visible</BindProperty>
+    </Connection>
   </WidgetGroup>
 </Template>

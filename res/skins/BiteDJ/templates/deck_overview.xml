@@ -1,0 +1,220 @@
+<Template>
+      <WidgetGroup>
+        <ObjectName>DeckOverviewContainer</ObjectName>
+        <Layout>vertical</Layout>
+        <Size>0me,98f</Size>
+        <Children>
+      <WidgetGroup>
+        <ObjectName>DeckWaveformClip</ObjectName>
+        <Layout>vertical</Layout>
+        <Size>0me,80f</Size>
+        <Children>
+          <Overview>
+            <ObjectName>DeckOverview</ObjectName>
+            <Size>0me,160f</Size>
+            <Channel><Variable name="channel"/></Channel>
+            <BgColor>#000</BgColor>
+            <!-- Match the scrolling view's frequency colors, not its gain.
+                 Rekordbox display envelopes keep their existing normalization. -->
+            <SignalColor>#32323c</SignalColor>
+            <SignalLowColor>#004ee4</SignalLowColor>
+            <SignalMidColor>#c95a00</SignalMidColor>
+            <SignalHighColor>#f6e9d3</SignalHighColor>
+            <PlayedOverlayColor>#40ffffff</PlayedOverlayColor>
+            <!-- Time left in the track, drawn straight onto the summary as a
+                 watermark: centred and translucent enough to read the signal
+                 through. Scale is a share of the height the summary is
+                 *visible* over, which here is the container's 80px and not the
+                 widget's own 160px above — the strip deliberately shows the top
+                 half of a double-height overview, so a scale against the widget
+                 would centre the digits on the cut edge and lose their bottom
+                 half. This strip is what the settings/browse/sampler pages show
+                 of a deck, so it is the one place the countdown has to be
+                 readable from — on the Play page the scrolling waveform and the
+                 big Time readout are both on screen, so the watermark is off
+                 there (bound below). -->
+            <TimeRemainingAlign>center</TimeRemainingAlign>
+            <TimeRemainingColor>#fff</TimeRemainingColor>
+            <TimeRemainingOpacity>0.55</TimeRemainingOpacity>
+            <TimeRemainingScale>0.57</TimeRemainingScale>
+            <Mark>
+              <Control>cue_point</Control>
+              <Color>#eb870f</Color>
+            </Mark>
+            <!-- Hot cue bank (slots 1-8 = rekordbox pads A-H, and the eight
+                 pads a controller maps). Declaring <Hotcue> rather than a
+                 position control binds the end position and type too, so a
+                 saved loop draws its range and the mark takes the cue's own
+                 colour and label; <Color> is only the fallback until a cue
+                 exists. -->
+            <Mark>
+              <Hotcue>1</Hotcue>
+              <Text>A</Text>
+              <Color>#f44040</Color>
+              <TextColor>#f44040</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>2</Hotcue>
+              <Text>B</Text>
+              <Color>#0ddcf2</Color>
+              <TextColor>#0ddcf2</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>3</Hotcue>
+              <Text>C</Text>
+              <Color>#a5df13</Color>
+              <TextColor>#a5df13</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>4</Hotcue>
+              <Text>D</Text>
+              <Color>#9d4cfd</Color>
+              <TextColor>#9d4cfd</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>5</Hotcue>
+              <Text>E</Text>
+              <Color>#3fec2b</Color>
+              <TextColor>#3fec2b</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>6</Hotcue>
+              <Text>F</Text>
+              <Color>#e6681c</Color>
+              <TextColor>#e6681c</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>7</Hotcue>
+              <Text>G</Text>
+              <Color>#2749c8</Color>
+              <TextColor>#2749c8</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>8</Hotcue>
+              <Text>H</Text>
+              <Color>#c7b205</Color>
+              <TextColor>#c7b205</TextColor>
+              <Align>top</Align>
+            </Mark>
+            <!-- Memory cue bank (slots 17-26, chronological). Bottom-aligned
+                 so a glance separates them from the hot cues on top; they sit
+                 alongside CUE, which is memory cue 1. Keep in step with
+                 kMemoryCueBankStart / kMemoryCueBankSize in cueinfo.h. -->
+            <Mark>
+              <Hotcue>17</Hotcue>
+              <Text>M1</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>18</Hotcue>
+              <Text>M2</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>19</Hotcue>
+              <Text>M3</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>20</Hotcue>
+              <Text>M4</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>21</Hotcue>
+              <Text>M5</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>22</Hotcue>
+              <Text>M6</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>23</Hotcue>
+              <Text>M7</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>24</Hotcue>
+              <Text>M8</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>25</Hotcue>
+              <Text>M9</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Hotcue>26</Hotcue>
+              <Text>M10</Text>
+              <Color>#9aa0a6</Color>
+              <TextColor>#9aa0a6</TextColor>
+              <Align>bottom</Align>
+            </Mark>
+            <Mark>
+              <Control>loop_start_position</Control>
+              <Color>#6ee128</Color>
+            </Mark>
+            <Mark>
+              <Control>loop_end_position</Control>
+              <Color>#6ee128</Color>
+            </Mark>
+            <MarkRange>
+              <StartControl>loop_start_position</StartControl>
+              <EndControl>loop_end_position</EndControl>
+              <EnabledControl>loop_enabled</EnabledControl>
+              <Color>#6ee128</Color>
+              <Opacity>0.8</Opacity>
+              <DisabledColor>#acacac</DisabledColor>
+              <DisabledOpacity>0.4</DisabledOpacity>
+            </MarkRange>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel"/>],playposition</ConfigKey>
+            </Connection>
+            <!-- The watermark is off on the Play page, where the scrolling
+                 waveform and the Time readout already carry the countdown.
+                 Kept next to the connection above because setupConnections
+                 walks siblings from the first <Connection> on. -->
+            <Connection>
+              <ConfigKey>[Tab],overview</ConfigKey>
+              <BindProperty>timeRemainingVisible</BindProperty>
+              <Transform><Not/></Transform>
+            </Connection>
+          </Overview>
+        </Children>
+      </WidgetGroup>
+          <!-- Keep phrases outside the 80px clip of the 160px waveform. -->
+          <PhraseOverview>
+            <ObjectName>DeckPhraseOverview</ObjectName>
+            <Size>0me,18f</Size>
+            <Channel><Variable name="channel"/></Channel>
+          </PhraseOverview>
+        </Children>
+      </WidgetGroup>
+</Template>
