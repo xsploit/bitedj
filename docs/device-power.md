@@ -28,3 +28,14 @@ application open. Repeated taps cannot submit concurrent power requests.
 
 The private Engine model and firmware files are not part of this change.
 This build does not add stem separation or stem playback to BiteDJ.
+
+Reproduce the refusal/cancellation test (no actual device power action):
+
+```sh
+python3 os/tests/test_device_power_app.py --build /path/to/build \
+  --output /path/to/results --xvfb /path/to/Xvfb
+```
+
+The test replaces `systemctl` in its own child environment and verifies the
+resolved executable before clicking. It does require logind's temporary delay
+inhibitor; an environment without that facility will fail the prerequisite path.
