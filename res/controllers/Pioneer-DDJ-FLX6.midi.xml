@@ -3995,12 +3995,12 @@
             </control>
             <control>
                 <group>[Tab]</group>
-                <key>library</key>
+                <key>PioneerDDJFLX6.viewPressed</key>
                 <description>VIEW - press - Open the Browse page</description>
                 <status>0x96</status>
                 <midino>0x7A</midino>
                 <options>
-                    <normal/>
+                    <script-binding/>
                 </options>
             </control>
             <control>
