@@ -17,13 +17,14 @@ class ControlObject;
 class ControlPushButton;
 class PlayerManager;
 class RecordingManager;
+class QDBusUnixFileDescriptor;
 
 // Bite DJ: backs the in-skin Settings -> System sub-page, including the
 // per-drive Record button (main-output recording onto a USB stick). Owns the [System],*
 // COs the skin binds to and a Qt signal carrying the USB mount labels (CO
 // transport carries doubles only, so list strings ride a signal alongside —
 // same pattern as ControllerSettings::rowsChanged / Notifications). Runs OS
-// actions (umount, shutdown) directly; the appliance process is root.
+// actions through the OS; device power requires the session's logind permission.
 //
 // Soft contract with stock Mixxx: every CO no-ops and tryInstance() returns
 // nullptr when the singleton isn't constructed, so the skin parses end-to-end
@@ -127,6 +128,8 @@ class SystemSettings : public QObject {
     void onRefreshRequested(double value);
     void onRestartAppRequested(double value);
     void onShutdownRequested(double value);
+    void onRebootRequested(double value);
+    void onPrepareForShutdown(bool active);
     void onVinylModeChanged(double value);
     void onVinylBrakeChanged(double value);
     void onHotcueActivatePlaysChanged(double value);
@@ -140,6 +143,9 @@ class SystemSettings : public QObject {
     void onRecordingStartTimeout();
 
   private:
+    void requestDevicePower(bool reboot);
+    bool m_devicePowerPending = false;
+    std::shared_ptr<QDBusUnixFileDescriptor> m_shutdownDelay;
     // Re-enumerates mounted USB drives. Unless `force` is set, returns without
     // touching anything when the mount set is unchanged from the last refresh —
     // this keeps the automatic watcher/poll from rebuilding the WUsbList on every
@@ -223,6 +229,7 @@ class SystemSettings : public QObject {
     std::unique_ptr<ControlPushButton> m_pCoRestartApp;
     std::unique_ptr<ControlObject> m_pCoShutdownArm;
     std::unique_ptr<ControlObject> m_pCoShutdown;
+    std::unique_ptr<ControlObject> m_pCoReboot;
     // [BiteDJ],vinyl_mode — 1 = Vinyl, 0 = CDJ jog behaviour. Persisted to
     // config; read by the controller mapping to toggle jog-touch scratching.
     std::unique_ptr<ControlObject> m_pCoVinylMode;
