@@ -9,7 +9,7 @@ const calls=[];
 const context={console, Date:{now:()=>now}, engine:{
   isScratching:()=>false,
   getValue:(g,k)=>values.get(g+':'+k)||0,
-  setValue:(g,k,v)=>calls.push([g,k,v]),
+  setValue:(g,k,v)=>{values.set(g+':'+k,v); calls.push([g,k,v]);},
 }, script:{triggerControl:(g,k)=>calls.push([g,k,1])}};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(root,'res/controllers/Pioneer-DDJ-FLX6-script.js'),'utf8'),context);
@@ -50,3 +50,28 @@ context.engine.scratchDisable=(deck,ramp)=>calls.push(['scratchDisable',deck,ram
 mapping.shiftPressed(0,0,127);
 assert.deepEqual(calls,[['scratchDisable',1,false]]);
 console.log('FLX6: acceleration, reversal, sidebar precision, linked zoom, four-deck shifted jog, residual reset, empty deck, FX preservation PASS');
+
+// Check the shipping XML as well as JS: testing viewPressed alone missed that
+// the physical button was still wired directly to a toggle control.
+const xml = fs.readFileSync(path.join(root,'res/controllers/Pioneer-DDJ-FLX6.midi.xml'),'utf8');
+const controls = [...xml.matchAll(/<control>([\s\S]*?)<\/control>/g)].map(m=>m[1]);
+const view = controls.filter(c=>/<status>0x96<\/status>/.test(c) && /<midino>0x7A<\/midino>/.test(c));
+assert.equal(view.length,1,'one physical VIEW binding');
+assert.match(view[0],/<key>PioneerDDJFLX6.viewPressed<\/key>/);
+assert.match(view[0],/<script-binding\s*\/>/);
+for (const collapsed of [0,1]) {
+  values.set('[Skin]:player_right_tools',collapsed);
+  values.set('[Skin]:player_left_rail',collapsed);
+  values.set('[Tab]:library',0);
+  for (let press=0;press<3;press++) {
+    mapping.viewPressed(6,0x7a,127);
+    mapping.viewPressed(6,0x7a,0);
+    assert.equal(values.get('[Tab]:library'),1,'VIEW stays in Browse');
+    calls.length=0; now+=200;
+    mapping.browseRotate(6,0x40,1);
+    assert.deepEqual(calls,[['[Library]','MoveVertical',1]]);
+    assert.equal(values.get('[Skin]:player_right_tools'),collapsed);
+    assert.equal(values.get('[Skin]:player_left_rail'),collapsed);
+  }
+}
+console.log('FLX6: shipping VIEW binding, repeated press/release, encoder after rail collapse PASS');

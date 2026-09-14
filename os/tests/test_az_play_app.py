@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix='bitedj-az-play-') as temporary:
                     subprocess.run([str(binary),'--settings-path',str(profile),'--resource-path',str(repo/'res'),*media],env=env,stdout=log,stderr=subprocess.STDOUT,timeout=60,check=True)
                 assert 'AZ_PLAY '+('PERSISTENCE PASS' if phase=='persistence' else 'PASS') in (out/f'{phase}.log').read_text()
             (out/'binary-sha256.txt').write_text(hashlib.sha256(binary.read_bytes()).hexdigest()+'\n')
-            print('PASS: panel independence/resize/reuse, time, quantize/keylock, loop start/exit, beat jump, hot cues, drawer, zoom/grid access, layout switching, restart persistence')
+            print('PASS: touch collapse, repeated controller-style Browse, panel independence/resize/reuse, time, quantize/keylock, loop start/exit, beat jump, hot cues, drawer, zoom/grid access, layout switching, restart persistence')
         finally:
             server.terminate()
             server.wait(timeout=5)

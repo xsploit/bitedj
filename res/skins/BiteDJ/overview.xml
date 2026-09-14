@@ -11,14 +11,14 @@
           <WidgetGroup>
             <ObjectName>PlayerSidebarHandle</ObjectName>
             <Layout>vertical</Layout>
-            <Size>30f,0me</Size>
+            <Size>44f,0me</Size>
             <Children>
               <WidgetGroup>
                 <Size>0me,0me</Size>
               </WidgetGroup>
               <PushButton>
                 <ObjectName>PlayerToggleLeft</ObjectName>
-                <Size>30f,60f</Size>
+                <Size>44f,88f</Size>
                 <NumberStates>2</NumberStates>
                 <State>
                   <Number>0</Number>
@@ -42,14 +42,14 @@
           <WidgetGroup>
             <ObjectName>PlayerSidebarHandle</ObjectName>
             <Layout>vertical</Layout>
-            <Size>30f,0me</Size>
+            <Size>44f,0me</Size>
             <Children>
               <WidgetGroup>
                 <Size>0me,0me</Size>
               </WidgetGroup>
               <PushButton>
                 <ObjectName>PlayerToggleRight</ObjectName>
-                <Size>30f,60f</Size>
+                <Size>44f,88f</Size>
                 <NumberStates>2</NumberStates>
                 <State>
                   <Number>0</Number>
