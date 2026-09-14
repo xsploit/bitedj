@@ -1076,11 +1076,13 @@ void SystemSettings::requestDevicePower(bool reboot) {
     auto* process = new QProcess(this);
     auto* deadline = new QTimer(process);
     deadline->setSingleShot(true);
-    auto fail = [this, process, deadline](const QString& error) {
+    auto completed = std::make_shared<bool>(false);
+    auto fail = [this, process, deadline, completed](const QString& error) {
         deadline->stop();
-        if (!m_devicePowerPending) {
+        if (*completed) {
             return;
         }
+        *completed = true;
         m_devicePowerPending = false;
         m_shutdownDelay.reset();
         m_pCoShutdownArm->set(0.0);
@@ -1097,12 +1099,13 @@ void SystemSettings::requestDevicePower(bool reboot) {
                 }
             });
     connect(process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
-            [process, deadline, fail](int code, QProcess::ExitStatus status) {
+            [process, deadline, completed, fail](int code, QProcess::ExitStatus status) {
                 if (status != QProcess::NormalExit || code != 0) {
                     const QString detail = QString::fromUtf8(process->readAllStandardError()).trimmed();
                     fail(detail.isEmpty() ? tr("OS command exited with code %1").arg(code) : detail);
                     return;
                 }
+                *completed = true;
                 deadline->stop();
                 // Keep the request latched until logind ends this session.
                 // Exiting here would cause the appliance supervisor to relaunch us.
