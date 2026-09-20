@@ -1,6 +1,10 @@
 #include "preferences/systemsettings.h"
 
 #include <QCoreApplication>
+#include <QDBusConnection>
+#include <QDBusInterface>
+#include <QDBusReply>
+#include <QDBusUnixFileDescriptor>
 #include <QDir>
 #include <QEventLoop>
 #include <QFileInfo>
@@ -196,8 +200,8 @@ SystemSettings::SystemSettings(UserSettingsPointer pConfig,
             this,
             &SystemSettings::onRestartAppRequested);
 
-    // Drives the shutdown confirm WidgetStack in settings.xml: 0 = "Shut Down"
-    // page, 1 = "Confirm / Cancel" page. Pre-created so the skin parser's
+    // Power WidgetStack: 0 = screen controls, 1 = power menu,
+    // 2 = shutdown confirmation, 3 = reboot confirmation. Pre-created so the skin parser's
     // controlFromConfigKey() reuses it and the WidgetStack has a value to read
     // on its first showEvent.
     m_pCoShutdownArm = std::make_unique<ControlObject>(ConfigKey(kGroup, "shutdown_arm"));
@@ -207,6 +211,17 @@ SystemSettings::SystemSettings(UserSettingsPointer pConfig,
             &ControlObject::valueChanged,
             this,
             &SystemSettings::onShutdownRequested);
+
+    m_pCoReboot = std::make_unique<ControlObject>(ConfigKey(kGroup, "reboot"));
+    connect(m_pCoReboot.get(),
+            &ControlObject::valueChanged,
+            this,
+            &SystemSettings::onRebootRequested);
+    QDBusConnection::systemBus().connect(QStringLiteral("org.freedesktop.login1"),
+            QStringLiteral("/org/freedesktop/login1"),
+            QStringLiteral("org.freedesktop.login1.Manager"),
+            QStringLiteral("PrepareForShutdown"),
+            this, SLOT(onPrepareForShutdown(bool)));
 
     // Vinyl/CDJ jog mode (General settings tab). Seeded from the persisted config
     // value and written back on every change so the choice survives restarts. The
@@ -1023,17 +1038,101 @@ void SystemSettings::onScreenRotationChanged(double value) {
 }
 
 void SystemSettings::onShutdownRequested(double value) {
-    if (value == 0.0) {
+    if (value != 0.0) {
+        requestDevicePower(false);
+    }
+}
+
+void SystemSettings::onRebootRequested(double value) {
+    if (value != 0.0) {
+        requestDevicePower(true);
+    }
+}
+
+void SystemSettings::onPrepareForShutdown(bool active) {
+    if (!active || !m_shutdownDelay) {
         return;
     }
+    // Hold logind's delay FD until QApplication is destroyed, after the
+    // library, recorder and settings have completed their normal cleanup.
+    // SystemSettings itself is destroyed earlier in CoreServices teardown.
+    connect(QCoreApplication::instance(), &QObject::destroyed,
+            [delay = m_shutdownDelay]() {});
+    QCoreApplication::quit();
+}
+
+void SystemSettings::requestDevicePower(bool reboot) {
+    // Serialize requests, including repeated taps while logind is responding.
+    if (m_devicePowerPending) {
+        return;
+    }
+    m_devicePowerPending = true;
+    m_pConfig->save();
     if (Notifications* pNotifications = Notifications::tryInstance()) {
-        pNotifications->publishSticky(tr("Shutting down..."),
+        pNotifications->publishSticky(reboot ? tr("Restarting device...") : tr("Shutting down device..."),
                 Notifications::Severity::Info);
     }
-    if (!QProcess::startDetached(QStringLiteral("poweroff"))) {
+
+    auto* process = new QProcess(this);
+    auto* deadline = new QTimer(process);
+    deadline->setSingleShot(true);
+    auto completed = std::make_shared<bool>(false);
+    auto fail = [this, process, deadline, completed](const QString& error) {
+        deadline->stop();
+        if (*completed) {
+            return;
+        }
+        *completed = true;
+        m_devicePowerPending = false;
+        m_shutdownDelay.reset();
         m_pCoShutdownArm->set(0.0);
         m_pCoShutdown->set(0.0);
-        notify(tr("Shutdown command failed to start"),
+        m_pCoReboot->set(0.0);
+        notify(tr("Device power request failed: %1").arg(error),
                 Notifications::Severity::Error);
+        process->deleteLater();
+    };
+    connect(process, &QProcess::errorOccurred, this,
+            [process, fail](QProcess::ProcessError error) {
+                if (error == QProcess::FailedToStart) {
+                    fail(process->errorString());
+                }
+            });
+    connect(process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
+            [process, deadline, completed, fail](int code, QProcess::ExitStatus status) {
+                if (status != QProcess::NormalExit || code != 0) {
+                    const QString detail = QString::fromUtf8(process->readAllStandardError()).trimmed();
+                    fail(detail.isEmpty() ? tr("OS command exited with code %1").arg(code) : detail);
+                    return;
+                }
+                *completed = true;
+                deadline->stop();
+                // Keep the request latched until logind ends this session.
+                // Exiting here would cause the appliance supervisor to relaunch us.
+                process->deleteLater();
+            });
+    connect(deadline, &QTimer::timeout, this, [process, fail] {
+        process->kill();
+        fail(tr("OS did not respond within 15 seconds"));
+    });
+    // Request a bounded save window before logind starts terminating sessions.
+    // Failure must leave the application running, with no power action sent.
+    QDBusInterface logind(QStringLiteral("org.freedesktop.login1"),
+            QStringLiteral("/org/freedesktop/login1"),
+            QStringLiteral("org.freedesktop.login1.Manager"),
+            QDBusConnection::systemBus());
+    logind.setTimeout(1500);
+    const QDBusReply<QDBusUnixFileDescriptor> delay = logind.call(QStringLiteral("Inhibit"),
+            QStringLiteral("shutdown"), QStringLiteral("BiteDJ"),
+            QStringLiteral("Save library and recording"), QStringLiteral("delay"));
+    if (!delay.isValid() || !delay.value().isValid()) {
+        fail(tr("Could not reserve time to save: %1").arg(delay.error().message()));
+        return;
     }
+    m_shutdownDelay = std::make_shared<QDBusUnixFileDescriptor>(delay.value());
+    deadline->start(15000);
+    // Never bypass inhibitors or launch an invisible authentication prompt.
+    process->start(QStringLiteral("systemctl"),
+            {QStringLiteral("--no-ask-password"),
+                    reboot ? QStringLiteral("reboot") : QStringLiteral("poweroff")});
 }

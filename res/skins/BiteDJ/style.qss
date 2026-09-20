@@ -1822,3 +1822,68 @@ WBeatSpinBox::up-button {
 #SettingsDangerButton[pressed="true"] {
   background-color: #7a2622;
 }
+
+/* Full AZ-inspired play layout. Original Qt controls and BiteDJ rendering. */
+#AzRail { background: #202020; }
+#AzRailDeck { color: #2995ff; background: #292929; font-size: 15px; font-weight: bold; padding-left: 7px; }
+#AzRailDeck[highlight="1"] { color: #ff862c; }
+#AzRail WPushButton { font-size: 12px; border-radius: 0; }
+#AzRail WPushButton[value="1"], #AzRail WPushButton[highlight="1"] { color: #ff862c; background: #323232; }
+#AzRail WBeatSpinBox { font-size: 17px; background: #181818; color: white; border: 0; }
+#AzKey { font-size: 21px; color: white; }
+#AzCaption { color: #b9b9be; font-size: 10px; padding-left: 5px; }
+#AzDecks { qproperty-layoutSpacing: 10; }
+#AzDeckCard { background: #000; border: 1px solid #333; }
+#AzPadRow { qproperty-layoutSpacing: 5; }
+#AzPadRow WHotcueButton { background: #232323; border: 1px solid #333; border-radius: 0; font-size: 12px; color: white; }
+#AzTrackHeader { background: #252525; qproperty-layoutSpacing: 6; }
+#AzDeckBadge { background: #248ef3; color: #050505; font-size: 30px; qproperty-alignment: AlignCenter; }
+#AzTitle { color: #fff; font-size: 20px; }
+#AzArtist { color: #a9a9ae; font-size: 12px; }
+#AzTime1, #AzTime2, #AzEmptyTime { color: white; font-size: 42px; font-weight: normal; }
+#AzReadouts { qproperty-layoutSpacing: 6; }
+#AzRange { color: #ff862c; font-size: 13px; qproperty-alignment: AlignCenter; }
+#AzRate1, #AzRate2 { color: white; font-size: 23px; qproperty-alignment: AlignCenter; }
+#AzBpmBlock { border: 1px solid #eee; }
+#AzBpmBlock[highlight="1"] { border: 1px solid #ff862c; }
+#AzBpm1, #AzBpm2 { color: white; font-size: 36px; qproperty-alignment: AlignRight; padding-right: 4px; }
+#AzBpmBlock[highlight="1"] WNumber { color: #ff862c; }
+#AzTrackNumber { color: white; font-size: 26px; padding-left: 5px; }
+#AzQuantizeStatus { color: #666; padding-left: 5px; font-size: 11px; }
+#AzQuantizeStatus[highlight="1"] { color: #ff862c; }
+#AzDeckCard #DeckOverviewContainer { border: 0; }
+#AzLayoutChoice { font-size: 13px; }
+
+#Overview_Singleton[highlight="1"] #BeatFX_Container { background: #080808; }
+#Overview_Singleton[highlight="1"] #FxPanel_TabBar WPushButton { color: #aaa; background: #111; border: 1px solid #333; }
+#Overview_Singleton[highlight="1"] #FxPanel_TabBar WPushButton[value="1"] { color: #2995ff; background: #202020; }
+
+#AzTabControls { background: #090909; qproperty-layoutSpacing: 8; padding: 7px 6px; }
+#AzTabControls WPushButton { color: #aaa; background: #111; border: 1px solid #333; font-size: 15px; text-transform: uppercase; }
+#AzTabControls WPushButton[value="1"] { color: #2995ff; background: #191919; border-bottom: 2px solid #2995ff; }
+#AzTabButtonSettings[recording="1"] { color: #ff4a4a; }
+
+#CuePanel_Stack[highlight="0"] { min-height: 180px; max-height: 180px; }
+#CuePanel_Stack[highlight="1"] { min-height: 292px; max-height: 292px; }
+
+/* Handles remain outside the panels so either side can always be reopened. */
+#PlayerSidebarHandle { background: #000; }
+#PlayerToggleLeft, #PlayerToggleRight { font-size: 28px; color: #ddd; background: #242424; border: 1px solid #343434; border-radius: 3px; }
+#PlayerToggleLeft[value="0"], #PlayerToggleRight[value="0"] { color: #2995ff; }
+
+/* Performance rail: compact tabs, readable values and consistent touch targets. */
+#BeatFX_Container WPushButton { font-size: 13px; min-height: 40px; }
+#FxPanel_TabBar WPushButton { font-size: 11px; padding: 0; border-width: 1px; }
+#BeatFX_Container QScrollArea { background: #101014; }
+#BeatFX_Container QScrollBar:vertical { width: 18px; }
+#RailRow WPushButton { background: #202027; color: #ddd; border: 1px solid #444; }
+#RailRow WPushButton[value="1"], #RailRow WPushButton[displayValue="1"],
+#RailRow WPushButton[highlight="1"] { background: #205483; color: white; }
+#RailRow WPushButton:pressed { background: #367bb4; }
+#RailRow { margin: 1px 0; spacing: 2px; }
+#RailKeyBlock { margin-bottom: 12px; }
+#BeatFX_ParamRow { border-bottom: 1px solid #292932; }
+
+#RailLoopPage, #RailLoopDeck1, #RailLoopDeck2 { qproperty-layoutAlignment: 'AlignTop'; }
+#Overview_Singleton[highlight="1"] #BeatFX_DeckAssign1[displayValue="1"],
+#Overview_Singleton[highlight="1"] #BeatFX_DeckAssign2[displayValue="1"] { background: #205483; color: white; }

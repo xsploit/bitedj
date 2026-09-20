@@ -1,0 +1,297 @@
+<Template>
+  <WidgetGroup>
+    <ObjectName>AzRail</ObjectName>
+    <Layout>vertical</Layout>
+    <Size>126f,0me</Size>
+    <Children>
+      <Label>
+        <ObjectName>AzRailDeck</ObjectName>
+        <Text>DECK <Variable name="channel" />
+        </Text>
+        <Size>0me,26f</Size>
+        <Connection>
+          <ConfigKey>[Channel<Variable name="channel" />],play</ConfigKey>
+          <BindProperty>highlight</BindProperty>
+        </Connection>
+      </Label>
+      <WidgetGroup>
+        <ObjectName>AzKeyRow</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,32f</Size>
+        <Children>
+          <Label>
+            <ObjectName>AzCaption</ObjectName>
+            <Text>KEY</Text>
+            <Size>36f,0me</Size>
+          </Label>
+          <Key>
+            <ObjectName>AzKey</ObjectName>
+            <Channel>
+              <Variable name="channel" />
+            </Channel>
+            <DisplayCents>false</DisplayCents>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],visual_key</ConfigKey>
+            </Connection>
+          </Key>
+          <PushButton>
+            <ObjectName>AzKeyTools<Variable name="channel" />
+            </ObjectName>
+            <Size>30f,32f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>&#8250;</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>&#8250;</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[FxPanel],key</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+        </Children>
+      </WidgetGroup>
+      <Label>
+        <ObjectName>AzCaption</ObjectName>
+        <Text>BEAT JUMP</Text>
+        <Size>0me,16f</Size>
+      </Label>
+      <WidgetGroup>
+        <ObjectName>AzJump</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,36f</Size>
+        <Children>
+          <PushButton>
+            <ObjectName>AzJumpBack<Variable name="channel" />
+            </ObjectName>
+            <Size>34f,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>&#8249;</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>&#8249;</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],beatjump_backward</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+          <BeatSpinBox>
+            <ObjectName>AzJumpSize<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,36f</Size>
+            <Value>[Channel<Variable name="channel" />],beatjump_size</Value>
+          </BeatSpinBox>
+          <PushButton>
+            <ObjectName>AzJumpForward<Variable name="channel" />
+            </ObjectName>
+            <Size>34f,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>&#8250;</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>&#8250;</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],beatjump_forward</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzLoop</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,36f</Size>
+        <Children>
+          <PushButton>
+            <ObjectName>AzLoopToggle<Variable name="channel" />
+            </ObjectName>
+            <Size>58f,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>LOOP</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>LOOP</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],beatloop_activate</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],loop_enabled</ConfigKey>
+              <BindProperty>highlight</BindProperty>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],loop_enabled</ConfigKey>
+              <BindProperty>visible</BindProperty>
+              <Transform>
+                <Not />
+              </Transform>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzLoopExit<Variable name="channel" />
+            </ObjectName>
+            <Size>58f,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>EXIT</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>EXIT</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],reloop_toggle</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],loop_enabled</ConfigKey>
+              <BindProperty>highlight</BindProperty>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],loop_enabled</ConfigKey>
+              <BindProperty>visible</BindProperty>
+            </Connection>
+          </PushButton>
+          <BeatSpinBox>
+            <ObjectName>AzLoopSize<Variable name="channel" />
+            </ObjectName>
+            <Value>[Channel<Variable name="channel" />],beatloop_size</Value>
+            <Size>0me,36f</Size>
+          </BeatSpinBox>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzToggles</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,36f</Size>
+        <Children>
+          <PushButton>
+            <ObjectName>AzQuantize<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Q</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Q</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],quantize</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzMasterTempo<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>MT</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>MT</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],keylock</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzSync<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,36f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>SYNC</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>SYNC</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],sync_enabled</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzTransport</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,42f</Size>
+        <Children>
+          <PushButton>
+            <ObjectName>AzCue<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,42f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>CUE</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>CUE</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],cue_default</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzPlay<Variable name="channel" />
+            </ObjectName>
+            <Size>0me,42f</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>PLAY</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>PLAY</Text>
+            </State>
+            <Connection>
+              <ConfigKey>[Channel<Variable name="channel" />],play</ConfigKey>
+              <EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+            </Connection>
+          </PushButton>
+        </Children>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzRailSpacer</ObjectName>
+        <Layout>vertical</Layout>
+        <Size>0me,0me</Size>
+        <Children />
+      </WidgetGroup>
+    </Children>
+  </WidgetGroup>
+</Template>

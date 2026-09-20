@@ -30,6 +30,158 @@
             <SetVariable name="config_key">settings</SetVariable>
           </Template>
         </Children>
+        <Connection>
+          <ConfigKey>[BiteDJ],main_view_style</ConfigKey>
+          <BindProperty>visible</BindProperty>
+          <Transform>
+            <IsEqual>3</IsEqual>
+            <Not />
+          </Transform>
+        </Connection>
+      </WidgetGroup>
+      <WidgetGroup>
+        <ObjectName>AzTabControls</ObjectName>
+        <Layout>horizontal</Layout>
+        <Size>0me,60f</Size>
+        <Children>
+          <PushButton>
+            <ObjectName>AzTabButtonPlay</ObjectName>
+            <Size>12me,12me</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Play</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Play</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Tab],overview</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Recording],status</ConfigKey>
+              <Transform>
+                <Not />
+                <Not />
+              </Transform>
+              <BindProperty>recording</BindProperty>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzTabButtonBrowse</ObjectName>
+            <Size>12me,12me</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Browse</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Browse</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Tab],library</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Recording],status</ConfigKey>
+              <Transform>
+                <Not />
+                <Not />
+              </Transform>
+              <BindProperty>recording</BindProperty>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzTabButtonSampler</ObjectName>
+            <Size>12me,12me</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Sampler</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Sampler</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Tab],samplers</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Recording],status</ConfigKey>
+              <Transform>
+                <Not />
+                <Not />
+              </Transform>
+              <BindProperty>recording</BindProperty>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzTabButtonLevels</ObjectName>
+            <Size>12me,12me</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Levels</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Levels</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Tab],levels</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Recording],status</ConfigKey>
+              <Transform>
+                <Not />
+                <Not />
+              </Transform>
+              <BindProperty>recording</BindProperty>
+            </Connection>
+          </PushButton>
+          <PushButton>
+            <ObjectName>AzTabButtonSettings</ObjectName>
+            <Size>12me,12me</Size>
+            <NumberStates>2</NumberStates>
+            <State>
+              <Number>0</Number>
+              <Text>Settings</Text>
+            </State>
+            <State>
+              <Number>1</Number>
+              <Text>Settings</Text>
+            </State>
+            <LeftClickIsPushButton>true</LeftClickIsPushButton>
+            <Connection>
+              <ConfigKey>[Tab],settings</ConfigKey>
+              <EmitOnDownPress>true</EmitOnDownPress>
+            </Connection>
+            <Connection>
+              <ConfigKey>[Recording],status</ConfigKey>
+              <Transform>
+                <Not />
+                <Not />
+              </Transform>
+              <BindProperty>recording</BindProperty>
+            </Connection>
+          </PushButton>
+        </Children>
+        <Connection>
+          <ConfigKey>[BiteDJ],main_view_style</ConfigKey>
+          <BindProperty>visible</BindProperty>
+          <Transform>
+            <IsEqual>3</IsEqual>
+          </Transform>
+        </Connection>
       </WidgetGroup>
     </Children>
   </WidgetGroup>
