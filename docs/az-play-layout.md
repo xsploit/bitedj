@@ -88,9 +88,9 @@ models this self-notification suppression too; it previously broadcast changes
 back to the setter and missed the defect.
 
 Verified desktop run: all app checks above passed, including restart persistence
-and returning to the original 180px deck strip after switching layouts. At
-1280×800, waveform width was 864px expanded, 990px with the left rail hidden,
-and 1220px with both sides hidden. The presentation fixture also passed.
+and returning to the original 180px deck strip after switching layouts. With the enlarged 44px rail handles at
+1280×800, waveform width is 836px expanded, 962px with the left rail hidden,
+and 1192px with both sides hidden. The presentation fixture also passed.
 
 Target screenshot size is 1280×800. Physical touch hit accuracy, narrow-screen
 fit, four-deck behavior and Pi CPU/RAM/frame-time measurements remain unverified.
@@ -102,3 +102,32 @@ Actual desktop app with synthesized test tracks:
 ![FX parameters](images/az-rail-fx.png)
 
 ![Loop and beat-jump tools](images/az-rail-loop.png)
+
+## FLX6 navigation and touch follow-up
+
+A physical-screen report found unreliable FLX6 Browse/View after folding the
+right rail and a left rail that would not collapse. The shipping XML bound VIEW
+(`96 7A`) directly to the skin's toggle control even though the script already
+contained a select-only `viewPressed` handler. Repeated VIEW could therefore
+close Browse. The XML now calls that handler; BACK, encoder acceleration,
+Shift/zoom and other controller bindings are unchanged.
+
+Both collapse buttons now have 44×88px touch targets (previously 30×60px).
+Desktop window-routed touch contacts collapse/reopen both rails, preserve their
+independent state across Browse/Play, and retain the AZ layout. The app test also
+sends repeated Browse control writes without clicking the Browse tab, modelling
+the mapped VIEW action. It uses the trigger's real ControlProxy and supplies the
+external-change notification suppressed when that proxy is itself the setter.
+The JS workflow test checks the actual XML binding and press/release/encoder
+sequences with both rail states. These are simulated inputs, not physical MIDI.
+
+The left rail's reported failure has **not** been reproduced on the desktop.
+The larger touch target is a usability improvement, not proof that this symptom
+is resolved. Next Pi check: tap each rail, press/release VIEW repeatedly, turn
+the FLX6 encoder in both sidebar and track-list views, and confirm the very first
+step moves the selection. The Pi was off during this follow-up; these changes
+are not deployed there yet.
+
+```sh
+node os/tests/test_flx6_workflow.cjs
+```

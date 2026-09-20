@@ -831,13 +831,39 @@
                         </Children>
                       </WidgetGroup>
 
+                      <!-- Power menu is separate from both confirmation pages. -->
+                      <WidgetGroup>
+                        <Layout>horizontal</Layout>
+                        <SizePolicy>me,me</SizePolicy>
+                        <Children>
+                          <Template src="skin:templates/setting_segment_button.xml">
+                            <SetVariable name="ObjectName">SettingsActionButton</SetVariable>
+                            <SetVariable name="Text">Shut Down Device</SetVariable>
+                            <SetVariable name="ConfigKey">[System],shutdown_arm</SetVariable>
+                            <SetVariable name="Value">2</SetVariable>
+                          </Template>
+                          <Template src="skin:templates/setting_segment_button.xml">
+                            <SetVariable name="ObjectName">SettingsActionButton</SetVariable>
+                            <SetVariable name="Text">Restart Device</SetVariable>
+                            <SetVariable name="ConfigKey">[System],shutdown_arm</SetVariable>
+                            <SetVariable name="Value">3</SetVariable>
+                          </Template>
+                          <Template src="skin:templates/setting_segment_button.xml">
+                            <SetVariable name="ObjectName">SettingsActionButton</SetVariable>
+                            <SetVariable name="Text">Cancel</SetVariable>
+                            <SetVariable name="ConfigKey">[System],shutdown_arm</SetVariable>
+                            <SetVariable name="Value">0</SetVariable>
+                          </Template>
+                        </Children>
+                      </WidgetGroup>
+
                       <WidgetGroup>
                         <Layout>horizontal</Layout>
                         <SizePolicy>me,me</SizePolicy>
                         <Children>
                           <Label>
                             <ObjectName>SettingsRowLabel</ObjectName>
-                            <Text>Shut Down?</Text>
+                            <Text>Power off device?</Text>
                             <Size>0me,0me</Size>
                           </Label>
                           <PushButton>
@@ -850,6 +876,49 @@
                             </State>
                             <Connection>
                               <ConfigKey>[System],shutdown</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <Transform><IsEqual>1</IsEqual></Transform>
+                            </Connection>
+                          </PushButton>
+                          <WidgetGroup>
+                            <Size>12f,0me</Size>
+                          </WidgetGroup>
+                          <PushButton>
+                            <ObjectName>SettingsActionButton</ObjectName>
+                            <Size>120f,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Cancel</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[System],shutdown_arm</ConfigKey>
+                              <EmitOnDownPress>true</EmitOnDownPress>
+                              <Transform><IsEqual>0</IsEqual></Transform>
+                            </Connection>
+                          </PushButton>
+                        </Children>
+                      </WidgetGroup>
+
+                      <WidgetGroup>
+                        <Layout>horizontal</Layout>
+                        <SizePolicy>me,me</SizePolicy>
+                        <Children>
+                          <Label>
+                            <ObjectName>SettingsRowLabel</ObjectName>
+                            <Text>Restart device?</Text>
+                            <Size>0me,0me</Size>
+                          </Label>
+                          <PushButton>
+                            <ObjectName>SettingsDangerButton</ObjectName>
+                            <Size>120f,44f</Size>
+                            <NumberStates>1</NumberStates>
+                            <State>
+                              <Number>0</Number>
+                              <Text>Confirm</Text>
+                            </State>
+                            <Connection>
+                              <ConfigKey>[System],reboot</ConfigKey>
                               <EmitOnDownPress>true</EmitOnDownPress>
                               <Transform><IsEqual>1</IsEqual></Transform>
                             </Connection>

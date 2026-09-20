@@ -11,6 +11,7 @@
 #include <QScreen>
 #include <QStackedWidget>
 #include <QTimer>
+#include <QWindow>
 #include <QtTest/QTest>
 #include <cstdio>
 #include <stdexcept>
@@ -96,6 +97,64 @@ void run() {
             requireAzRails();
         }
         capture("-az-reopened");
+        // Route contacts through the window, as the touchscreen does. A direct
+        // mouseClick(widget) misses hit testing and grabs after a layout resize.
+        auto* touchDevice = QTest::createTouchDevice(QInputDevice::DeviceType::TouchScreen);
+        auto touch = [&](const QString& name) {
+            auto* w = visible(main, name);
+            require(w, "touch target exists");
+            const QPoint pos = w->mapTo(main, w->rect().center());
+            QTest::touchEvent(main->windowHandle(), touchDevice).press(0, pos).commit();
+            QTest::qWait(120);
+            QTest::touchEvent(main->windowHandle(), touchDevice).release(0, pos).commit();
+            QTest::qWait(180);
+        };
+        for (const QString side : {"PlayerToggleLeft", "PlayerToggleRight"}) {
+            touch(side);
+            require(visible(main, side)->property("value").toDouble() == 0,
+                    "touch collapses once");
+            touch("AzTabButtonBrowse");
+            require(!visible(main, "Waveform1"), "Browse opens after touch collapse");
+            touch("AzTabButtonPlay");
+            require(visible(main, "Waveform1"), "Play opens after touch collapse");
+            // The FLX6 viewPressed handler writes [Tab],library=1 without
+            // clicking a widget. Use the actual Browse trigger proxy, preserving
+            // the focus left by the folded layout; repeated VIEW must stay put.
+            auto* tabs = main->findChild<QStackedWidget*>("TabStack");
+            require(tabs, "tab stack exists");
+            QList<QObject*> triggers;
+            for (auto* child : tabs->children())
+                if (QString(child->metaObject()->className()) == "WidgetStackControlListener")
+                    triggers.append(child);
+            require(triggers.size() == 5, "five tab trigger controls");
+            QObject* browseControl = nullptr;
+            for (auto* child : triggers[1]->children())
+                if (QString(child->metaObject()->className()) == "ControlProxy")
+                    browseControl = child;
+            require(browseControl, "Browse trigger proxy exists");
+            for (int press = 0; press < 3; ++press) {
+                require(QMetaObject::invokeMethod(browseControl, "set", Q_ARG(double, 1.0)),
+                        "controller-style Browse write");
+                // ControlProxy suppresses notification to its own setter. MIDI
+                // writes from another proxy, so deliver that notification too.
+                require(QMetaObject::invokeMethod(browseControl, "valueChanged", Q_ARG(double, 1.0)),
+                        "external Browse notification");
+                QTest::qWait(100);
+                require(tabs->currentIndex() == 1 && !visible(main, "Waveform1"),
+                        "repeated controller VIEW stays in Browse after collapse");
+            }
+            touch("AzTabButtonPlay");
+            require(visible(main, side)->property("value").toDouble() == 0,
+                    "collapsed state survives browsing");
+            if (side == "PlayerToggleLeft")
+                require(!visible(main, "MainViewDeckInfoStack"), "left stays hidden after browsing");
+            else
+                require(!visible(main, "BeatFX_Container"), "right stays hidden after browsing");
+            touch(side);
+            require(visible(main, side)->property("value").toDouble() == 1,
+                    "touch reopens once");
+            requireAzRails();
+        }
         // A loaded, analyzed fixture is required: these exercise real control bindings.
         for (const QString channel : {"1", "2"}) {
             auto* time = qobject_cast<QLabel*>(visible(main, "AzTime" + channel));
